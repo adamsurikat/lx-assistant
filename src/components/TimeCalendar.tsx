@@ -1,5 +1,6 @@
 "use client";
 
+import type { SyntheticEvent } from "react";
 import { Calendar, dateFnsLocalizer } from "react-big-calendar";
 import withDragAndDrop, {
   type EventInteractionArgs,
@@ -65,6 +66,8 @@ export interface CalendarEventItem {
   // can't be dragged, resized, or opened in the editor modal.
   readOnly?: boolean;
   googleLink?: string;
+  ticketKey?: string;
+  ticketStatus?: string;
   // Which half of the day column this event renders in.
   resourceId: "time" | "google";
 }
@@ -82,7 +85,7 @@ interface TimeCalendarProps {
   onEventChange: (id: string, start: Date, end: Date) => void;
   onDropTicket: (ticketId: string, start: Date, end: Date) => void;
   onCreateBlankEvent: (start: Date, end: Date) => void;
-  onSelectEvent: (id: string) => void;
+  onSelectEvent: (event: CalendarEventItem, domEvent: SyntheticEvent<HTMLElement>) => void;
   draggedTicketId: string | null;
 }
 
@@ -121,13 +124,7 @@ export function TimeCalendar({
         onEventResize={({ event, start, end }: EventInteractionArgs<CalendarEventItem>) =>
           onEventChange(event.id, new Date(start), new Date(end))
         }
-        onSelectEvent={(event: CalendarEventItem) => {
-          if (event.readOnly) {
-            if (event.googleLink) window.open(event.googleLink, "_blank");
-            return;
-          }
-          onSelectEvent(event.id);
-        }}
+        onSelectEvent={(event: CalendarEventItem, domEvent) => onSelectEvent(event, domEvent)}
         onSelectSlot={(slotInfo) => {
           // The "Google Calendar" sub-column is read-only/view-only — time
           // entries can only be created in the "Time reporting" column.

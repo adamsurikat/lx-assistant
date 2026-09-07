@@ -121,7 +121,6 @@ h1, h2, h3, .nb-display {
 .rbc-time-content,
 .rbc-time-content > * + * > *,
 .rbc-time-header.rbc-overflowing,
-.rbc-day-slot .rbc-time-slot,
 .rbc-timeslot-group,
 .rbc-header,
 .rbc-header + .rbc-header,
@@ -130,6 +129,14 @@ h1, h2, h3, .nb-display {
 .rbc-month-row + .rbc-month-row,
 .rbc-day-bg + .rbc-day-bg {
   border-color: #e7e1d6 !important;
+}
+/* Drop the 15-minute sub-slot lines entirely; only the hourly
+   (.rbc-timeslot-group) divider remains, made a touch more visible. */
+.rbc-day-slot .rbc-time-slot {
+  border-top: none !important;
+}
+.rbc-timeslot-group {
+  border-bottom: 1px solid #d3cabb !important;
 }
 .rbc-header {
   font-weight: 700;

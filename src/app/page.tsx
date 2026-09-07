@@ -1,11 +1,12 @@
 "use client";
 
-import { useEffect, useState, useCallback } from "react";
+import { useEffect, useState, useCallback, type SyntheticEvent } from "react";
 import Link from "next/link";
 import { signOut, useSession } from "next-auth/react";
 import { TicketSidebar, type TicketSummary } from "@/components/TicketSidebar";
 import { TimeCalendar, type CalendarEventItem } from "@/components/TimeCalendar";
 import { EventEditorModal } from "@/components/EventEditorModal";
+import { EventPopover, type EventPopoverData } from "@/components/EventPopover";
 
 interface TimeEntryDTO {
   id: string;
@@ -44,8 +45,14 @@ export default function HomePage() {
   const [syncing, setSyncing] = useState(false);
   const [draggedTicketId, setDraggedTicketId] = useState<string | null>(null);
   const [jiraConnected, setJiraConnected] = useState<boolean | null>(null);
+  const [jiraSiteUrl, setJiraSiteUrl] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [editingEntryId, setEditingEntryId] = useState<string | null>(null);
+  const [popover, setPopover] = useState<{
+    data: EventPopoverData;
+    anchor: { x: number; y: number };
+    entryId: string | null;
+  } | null>(null);
 
   const weekStart = startOfWeekMonday(new Date());
   const weekEnd = new Date(weekStart);
@@ -79,6 +86,7 @@ export default function HomePage() {
     if (res.ok) {
       const data = await res.json();
       setJiraConnected(Boolean(data.connected));
+      setJiraSiteUrl(data.jiraSiteUrl ?? null);
     }
   }, []);
 
@@ -225,6 +233,31 @@ export default function HomePage() {
     }
   };
 
+  const handleSelectEvent = (
+    event: CalendarEventItem,
+    domEvent: SyntheticEvent<HTMLElement>
+  ) => {
+    const mouseEvent = domEvent.nativeEvent as MouseEvent;
+    const anchor = { x: mouseEvent.clientX, y: mouseEvent.clientY };
+    const data: EventPopoverData = {
+      title: event.title,
+      start: event.start,
+      end: event.end,
+      readOnly: Boolean(event.readOnly),
+      ticketKey: event.ticketKey,
+      ticketStatus: event.ticketStatus,
+      unassigned: event.unassigned,
+      synced: event.synced,
+      syncError: event.syncError,
+      jiraUrl:
+        event.ticketKey && jiraSiteUrl
+          ? `${jiraSiteUrl.replace(/\/$/, "")}/browse/${event.ticketKey}`
+          : undefined,
+      googleLink: event.googleLink,
+    };
+    setPopover({ data, anchor, entryId: event.readOnly ? null : event.id });
+  };
+
   const editingEntry = entries.find((e) => e.id === editingEntryId) ?? null;
 
   const calendarEvents: CalendarEventItem[] = entries.map((entry) => ({
@@ -238,6 +271,8 @@ export default function HomePage() {
     unassigned: !entry.ticket,
     synced: entry.syncedToJira,
     syncError: entry.lastSyncError,
+    ticketKey: entry.ticket?.key,
+    ticketStatus: entry.ticket?.status,
     resourceId: "time",
   }));
 
@@ -294,7 +329,7 @@ export default function HomePage() {
           onEventChange={handleEventChange}
           onDropTicket={handleDropTicket}
           onCreateBlankEvent={handleCreateBlankEvent}
-          onSelectEvent={setEditingEntryId}
+          onSelectEvent={handleSelectEvent}
           draggedTicketId={draggedTicketId}
         />
       </div>
@@ -315,6 +350,22 @@ export default function HomePage() {
           onSave={(payload) => handleSaveEntry(editingEntry.id, payload)}
           onDelete={() => handleDeleteEntry(editingEntry.id)}
           onLookupTicket={handleLookupTicket}
+        />
+      )}
+
+      {popover && (
+        <EventPopover
+          data={popover.data}
+          anchor={popover.anchor}
+          onClose={() => setPopover(null)}
+          onEdit={
+            popover.entryId
+              ? () => {
+                  setEditingEntryId(popover.entryId);
+                  setPopover(null);
+                }
+              : undefined
+          }
         />
       )}
     </div>
