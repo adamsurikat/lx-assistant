@@ -7,6 +7,7 @@ import { TicketSidebar, type TicketSummary } from "@/components/TicketSidebar";
 import { TimeCalendar, type CalendarEventItem } from "@/components/TimeCalendar";
 import { EventEditorModal, type EditableEntry, formatDuration } from "@/components/EventEditorModal";
 import { EventPopover, type EventPopoverData } from "@/components/EventPopover";
+import { HoursSummaryModal } from "@/components/HoursSummaryModal";
 
 interface TimeEntryDTO {
   id: string;
@@ -63,6 +64,7 @@ export default function HomePage() {
   const [syncing, setSyncing] = useState(false);
   const [draggedTicketId, setDraggedTicketId] = useState<string | null>(null);
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [summaryOpen, setSummaryOpen] = useState(false);
   const [jiraConnected, setJiraConnected] = useState<boolean | null>(null);
   const [jiraSiteUrl, setJiraSiteUrl] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -463,6 +465,13 @@ export default function HomePage() {
           <span className="ml-1 text-sm font-bold text-nb-ink/70">
             {formatWeekLabel(weekStart)}
           </span>
+          <button
+            type="button"
+            onClick={() => setSummaryOpen(true)}
+            className="nb-btn ml-auto px-3 py-1.5 text-sm"
+          >
+            📊 Summary
+          </button>
         </div>
         <div className="flex flex-1 overflow-hidden">
           {sidebarOpen && (
@@ -534,6 +543,8 @@ export default function HomePage() {
           }
         />
       )}
+
+      {summaryOpen && <HoursSummaryModal onClose={() => setSummaryOpen(false)} />}
     </div>
   );
 }
