@@ -189,6 +189,17 @@ h1, h2, h3, .nb-display {
 .rbc-time-view-resources .rbc-day-slot {
   min-width: 0 !important;
 }
+/* react-big-calendar reserves a 10px right-margin around events inside
+   every day-slot's events-container, meant as breathing room before a
+   single day's right border. With two resource sub-columns per day
+   this margin shows up twice: once at the seam between Time reporting
+   and Google Calendar (making events stop well short of that boundary,
+   which looks like an odd gap between the two sub-columns), and once
+   at the actual day boundary. Drop it so events fill their column
+   right up to its edge. */
+.rbc-day-slot .rbc-events-container {
+  margin-right: 0 !important;
+}
 /* Only the date row ("Mon 9/7") is useful in the header — the resource
    sub-header row ("Time reporting" / "Google Calendar") is redundant
    since each day's two sub-columns are already visually obvious from
