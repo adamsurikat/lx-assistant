@@ -285,13 +285,6 @@ export default function HomePage() {
       )}
 
       <div className="flex flex-1 overflow-hidden">
-        <TicketSidebar
-          tickets={tickets}
-          loading={loadingTickets}
-          syncing={syncing}
-          onSync={handleSync}
-          onDragStartTicket={setDraggedTicketId}
-        />
         <TimeCalendar
           events={calendarEvents}
           googleEvents={googleCalendarEvents}
@@ -302,6 +295,14 @@ export default function HomePage() {
           draggedTicketId={draggedTicketId}
         />
       </div>
+
+      <TicketSidebar
+        tickets={tickets}
+        loading={loadingTickets}
+        syncing={syncing}
+        onSync={handleSync}
+        onDragStartTicket={setDraggedTicketId}
+      />
 
       {editingEntry && (
         <EventEditorModal
