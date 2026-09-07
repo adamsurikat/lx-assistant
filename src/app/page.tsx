@@ -45,6 +45,7 @@ export default function HomePage() {
   const [loadingTickets, setLoadingTickets] = useState(true);
   const [syncing, setSyncing] = useState(false);
   const [draggedTicketId, setDraggedTicketId] = useState<string | null>(null);
+  const [sidebarOpen, setSidebarOpen] = useState(false);
   const [jiraConnected, setJiraConnected] = useState<boolean | null>(null);
   const [jiraSiteUrl, setJiraSiteUrl] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -385,7 +386,16 @@ export default function HomePage() {
         </div>
       )}
 
-      <div className="flex flex-1 overflow-hidden">
+      <div className="nb-panel-sm m-3 flex flex-1 overflow-hidden bg-nb-paper">
+        {sidebarOpen && (
+          <TicketSidebar
+            tickets={tickets}
+            loading={loadingTickets}
+            syncing={syncing}
+            onSync={handleSync}
+            onDragStartTicket={setDraggedTicketId}
+          />
+        )}
         <TimeCalendar
           events={calendarEvents}
           googleEvents={googleCalendarEvents}
@@ -396,16 +406,11 @@ export default function HomePage() {
           onCreateBlankEvent={handleCreateBlankEvent}
           onSelectEvent={handleSelectEvent}
           draggedTicketId={draggedTicketId}
+          sidebarOpen={sidebarOpen}
+          onToggleSidebar={() => setSidebarOpen((open) => !open)}
+          ticketCount={tickets.length}
         />
       </div>
-
-      <TicketSidebar
-        tickets={tickets}
-        loading={loadingTickets}
-        syncing={syncing}
-        onSync={handleSync}
-        onDragStartTicket={setDraggedTicketId}
-      />
 
       {modalEntry && (
         <EventEditorModal

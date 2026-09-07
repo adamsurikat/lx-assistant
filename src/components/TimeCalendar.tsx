@@ -1,7 +1,7 @@
 "use client";
 
 import type { SyntheticEvent } from "react";
-import { Calendar, dateFnsLocalizer } from "react-big-calendar";
+import { Calendar, dateFnsLocalizer, Navigate, type ToolbarProps } from "react-big-calendar";
 import withDragAndDrop, {
   type EventInteractionArgs,
 } from "react-big-calendar/lib/addons/dragAndDrop";
@@ -93,6 +93,9 @@ interface TimeCalendarProps {
   onCreateBlankEvent: (start: Date, end: Date) => void;
   onSelectEvent: (event: CalendarEventItem, domEvent: SyntheticEvent<HTMLElement>) => void;
   draggedTicketId: string | null;
+  sidebarOpen: boolean;
+  onToggleSidebar: () => void;
+  ticketCount: number;
 }
 
 export function TimeCalendar({
@@ -105,14 +108,50 @@ export function TimeCalendar({
   onCreateBlankEvent,
   onSelectEvent,
   draggedTicketId,
+  sidebarOpen,
+  onToggleSidebar,
+  ticketCount,
 }: TimeCalendarProps) {
   const allEvents = [...events, ...googleEvents];
+
+  // Extends the default toolbar (Today/Back/Next + date range label) with a
+  // toggle for the tickets sidebar, styled to match RBC's own toolbar
+  // buttons via its stock class names.
+  function CalendarToolbar({ label, onNavigate: navigate }: ToolbarProps<CalendarEventItem, object>) {
+    return (
+      <div className="rbc-toolbar">
+        <span className="rbc-btn-group">
+          <button
+            type="button"
+            onClick={onToggleSidebar}
+            className={sidebarOpen ? "rbc-active" : ""}
+          >
+            🎫 Tickets{ticketCount > 0 ? ` (${ticketCount})` : ""}
+          </button>
+        </span>
+        <span className="rbc-btn-group">
+          <button type="button" onClick={() => navigate(Navigate.TODAY)}>
+            Today
+          </button>
+          <button type="button" onClick={() => navigate(Navigate.PREVIOUS)}>
+            Back
+          </button>
+          <button type="button" onClick={() => navigate(Navigate.NEXT)}>
+            Next
+          </button>
+        </span>
+        <span className="rbc-toolbar-label">{label}</span>
+      </div>
+    );
+  }
+
   return (
-    <div className="h-full min-w-0 flex-1 bg-nb-paper p-3">
+    <div className="h-full min-w-0 flex-1 p-3">
       <DnDCalendar
         localizer={localizer}
         events={allEvents}
         resources={RESOURCES}
+        components={{ toolbar: CalendarToolbar }}
         resourceGroupingLayout
         defaultView="work_week"
         views={["work_week"]}
