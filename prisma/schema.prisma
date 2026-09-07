@@ -22,10 +22,10 @@ model User {
   jiraCloudId        String? // Jira Cloud site id (resolved via accessible-resources)
   jiraSiteUrl        String? // e.g. https://yourcompany.atlassian.net
 
-  accounts     Account[]
-  sessions     Session[]
-  timeEntries  TimeEntry[]
-  tickets      Ticket[]
+  accounts    Account[]
+  sessions    Session[]
+  timeEntries TimeEntry[]
+  tickets     Ticket[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -89,17 +89,17 @@ model Ticket {
 
 // A calendar time entry created by the user, optionally synced to Jira as a worklog
 model TimeEntry {
-  id        String   @id @default(cuid())
-  userId    String
-  ticketId  String? // null until a ticket is assigned ("blank" entry created by clicking/dragging on the calendar)
-  start     DateTime
-  end       DateTime
-  comment   String?
+  id       String   @id @default(cuid())
+  userId   String
+  ticketId String? // null until a ticket is assigned ("blank" entry created by clicking/dragging on the calendar)
+  start    DateTime
+  end      DateTime
+  comment  String?
 
-  syncedToJira   Boolean  @default(false)
-  jiraWorklogId  String?
-  lastSyncError  String?
-  lastSyncedAt   DateTime?
+  syncedToJira  Boolean   @default(false)
+  jiraWorklogId String?
+  lastSyncError String?
+  lastSyncedAt  DateTime?
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
