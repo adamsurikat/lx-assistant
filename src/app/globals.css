@@ -182,3 +182,12 @@ h1, h2, h3, .nb-display {
   background-color: var(--nb-pink);
   height: 2px;
 }
+
+/* The drag-and-drop addon hides the original event while it's being
+   dragged via this class — but our eventPropGetter sets an inline
+   `opacity` style, which normally wins over a plain class rule and left
+   a "ghost" of the event visible in its original spot. !important here
+   ensures the hide-while-dragging behavior always takes precedence. */
+.rbc-addons-dnd-dragged-event {
+  opacity: 0 !important;
+}
