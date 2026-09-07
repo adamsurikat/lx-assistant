@@ -127,6 +127,10 @@ h1, h2, h3, .nb-display {
 /* --- react-big-calendar overrides: keep the grid/events understated. --- */
 .rbc-calendar {
   font-family: var(--font-space-grotesk), Arial, Helvetica, sans-serif;
+  /* Clicking/dragging on the grid (to select slots or move events) shouldn't
+     highlight text, but popovers/modals rendered outside this tree keep the
+     browser default so their content stays selectable. */
+  user-select: none;
 }
 .rbc-time-view,
 .rbc-month-view {

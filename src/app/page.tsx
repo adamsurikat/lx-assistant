@@ -53,8 +53,9 @@ export default function HomePage() {
     anchor: { x: number; y: number };
     entryId: string | null;
   } | null>(null);
+  const [currentDate, setCurrentDate] = useState(() => new Date());
 
-  const weekStart = startOfWeekMonday(new Date());
+  const weekStart = startOfWeekMonday(currentDate);
   const weekEnd = new Date(weekStart);
   weekEnd.setDate(weekEnd.getDate() + 14); // load 2 weeks so week nav feels responsive
 
@@ -79,7 +80,7 @@ export default function HomePage() {
       setEntries(data.entries);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [currentDate]);
 
   const loadJiraStatus = useCallback(async () => {
     const res = await fetch("/api/jira/token");
@@ -101,15 +102,20 @@ export default function HomePage() {
       setGoogleEvents(data.events ?? []);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [currentDate]);
 
   useEffect(() => {
-    // eslint-disable-next-line react-hooks/set-state-in-effect -- intentional fetch-on-mount
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- intentional fetch-on-mount/navigate
     loadTickets();
-    loadEntries();
     loadJiraStatus();
+  }, [loadTickets, loadJiraStatus]);
+
+  useEffect(() => {
+    // Re-fetch whenever the visible week range changes (e.g. Back/Next).
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- intentional fetch-on-navigate
+    loadEntries();
     loadGoogleEvents();
-  }, [loadTickets, loadEntries, loadJiraStatus, loadGoogleEvents]);
+  }, [loadEntries, loadGoogleEvents]);
 
   const handleSync = async () => {
     setSyncing(true);
@@ -338,6 +344,8 @@ export default function HomePage() {
         <TimeCalendar
           events={calendarEvents}
           googleEvents={googleCalendarEvents}
+          date={currentDate}
+          onNavigate={setCurrentDate}
           onEventChange={handleEventChange}
           onDropTicket={handleDropTicket}
           onCreateBlankEvent={handleCreateBlankEvent}
@@ -375,6 +383,15 @@ export default function HomePage() {
               ? () => {
                   setEditingEntryId(popover.entryId);
                   setPopover(null);
+                }
+              : undefined
+          }
+          onDelete={
+            popover.entryId
+              ? () => {
+                  const entryId = popover.entryId as string;
+                  setPopover(null);
+                  handleDeleteEntry(entryId);
                 }
               : undefined
           }

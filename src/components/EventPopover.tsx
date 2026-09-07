@@ -21,6 +21,7 @@ interface EventPopoverProps {
   anchor: { x: number; y: number };
   onClose: () => void;
   onEdit?: () => void;
+  onDelete?: () => void;
 }
 
 function formatRange(start: Date, end: Date): string {
@@ -40,7 +41,7 @@ function formatRange(start: Date, end: Date): string {
  * summary plus a link out to the source (Jira ticket / Google Calendar
  * event) and, for editable time entries, a button into the full editor.
  */
-export function EventPopover({ data, anchor, onClose, onEdit }: EventPopoverProps) {
+export function EventPopover({ data, anchor, onClose, onEdit, onDelete }: EventPopoverProps) {
   const ref = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -125,6 +126,15 @@ export function EventPopover({ data, anchor, onClose, onEdit }: EventPopoverProp
             className="nb-btn px-3 py-1.5 text-xs font-semibold"
           >
             Edit
+          </button>
+        )}
+        {!data.readOnly && onDelete && (
+          <button
+            type="button"
+            onClick={onDelete}
+            className="nb-btn px-3 py-1.5 text-xs font-semibold text-nb-pink"
+          >
+            Delete
           </button>
         )}
       </div>

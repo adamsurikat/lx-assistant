@@ -82,6 +82,8 @@ const RESOURCES = [
 interface TimeCalendarProps {
   events: CalendarEventItem[];
   googleEvents: CalendarEventItem[];
+  date: Date;
+  onNavigate: (date: Date) => void;
   onEventChange: (id: string, start: Date, end: Date) => void;
   onDropTicket: (ticketId: string, start: Date, end: Date) => void;
   onCreateBlankEvent: (start: Date, end: Date) => void;
@@ -92,6 +94,8 @@ interface TimeCalendarProps {
 export function TimeCalendar({
   events,
   googleEvents,
+  date,
+  onNavigate,
   onEventChange,
   onDropTicket,
   onCreateBlankEvent,
@@ -108,6 +112,8 @@ export function TimeCalendar({
         resourceGroupingLayout
         defaultView="work_week"
         views={["work_week"]}
+        date={date}
+        onNavigate={onNavigate}
         step={15}
         timeslots={4}
         min={MIN_TIME}
