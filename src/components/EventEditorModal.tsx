@@ -37,6 +37,16 @@ function formatRange(startISO: string, endISO: string): string {
   })}`;
 }
 
+/** Formats the duration between two ISO timestamps as e.g. "1h 30m" or "45m". */
+export function formatDuration(startISO: string, endISO: string): string {
+  const minutes = Math.round((new Date(endISO).getTime() - new Date(startISO).getTime()) / 60000);
+  const hours = Math.floor(minutes / 60);
+  const mins = minutes % 60;
+  if (hours === 0) return `${mins}m`;
+  if (mins === 0) return `${hours}h`;
+  return `${hours}h ${mins}m`;
+}
+
 // Sentinel value for the "no ticket" dropdown option, distinct from the
 // empty string used by the disabled placeholder option.
 const NO_TICKET = "__no_ticket__";
@@ -129,8 +139,11 @@ export function EventEditorModal({
         onClick={(e) => e.stopPropagation()}
       >
         <h2 className="nb-display mb-2 text-lg">{isNew ? "New time entry" : "Time entry"}</h2>
-        <p className="mb-6 text-sm font-medium text-nb-ink/60">
+        <p className="text-sm font-medium text-nb-ink/60">
           {formatRange(entry.start, entry.end)}
+        </p>
+        <p className="mb-6 text-sm font-medium text-nb-ink/60">
+          {formatDuration(entry.start, entry.end)}
         </p>
 
         <label className="mb-2 block text-sm font-semibold tracking-wide text-nb-ink">

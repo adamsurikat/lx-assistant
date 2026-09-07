@@ -72,6 +72,9 @@ export interface CalendarEventItem {
   googleLink?: string;
   ticketKey?: string;
   ticketStatus?: string;
+  // Duration label (e.g. "1h 30m"), rendered on its own line below the
+  // title in the event tile.
+  duration?: string;
   // Which half of the day column this event renders in.
   resourceId: "time" | "google";
 }
@@ -159,6 +162,16 @@ export function TimeCalendar({
           onDropTicket(draggedTicketId, new Date(start), new Date(end));
         }}
         dragFromOutsideItem={makeDragPreviewItem}
+        components={{
+          event: ({ event }: { event: CalendarEventItem }) => (
+            <div>
+              <div>{event.title}</div>
+              {event.duration && (
+                <div className="text-[0.7rem] opacity-80">{event.duration}</div>
+              )}
+            </div>
+          ),
+        }}
         eventPropGetter={(event: CalendarEventItem) => ({
           style: event.pending
             ? {

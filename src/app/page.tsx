@@ -5,7 +5,7 @@ import Link from "next/link";
 import { signOut, useSession } from "next-auth/react";
 import { TicketSidebar, type TicketSummary } from "@/components/TicketSidebar";
 import { TimeCalendar, type CalendarEventItem } from "@/components/TimeCalendar";
-import { EventEditorModal, type EditableEntry } from "@/components/EventEditorModal";
+import { EventEditorModal, type EditableEntry, formatDuration } from "@/components/EventEditorModal";
 import { EventPopover, type EventPopoverData } from "@/components/EventPopover";
 
 interface TimeEntryDTO {
@@ -347,6 +347,7 @@ export default function HomePage() {
     title: entry.ticket
       ? `${entry.ticket.key} · ${entry.ticket.summary}`
       : entry.title?.trim() || "Unassigned",
+    duration: formatDuration(entry.start, entry.end),
     start: new Date(entry.start),
     end: new Date(entry.end),
     color: entry.ticket?.color ?? "#9ca3af",
