@@ -424,6 +424,9 @@ export default function HomePage() {
             </Link>
           )}
           <span>{session?.user?.name}</span>
+          <Link href="/tools" className="underline decoration-2">
+            Tools
+          </Link>
           <Link href="/settings" className="underline decoration-2">
             Settings
           </Link>
