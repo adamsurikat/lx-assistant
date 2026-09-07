@@ -160,6 +160,10 @@ h1, h2, h3, .nb-display {
 .rbc-timeslot-group {
   border-bottom: 1px solid #d3cabb !important;
 }
+.rbc-label {
+  font-size: 0.7rem;
+  color: rgba(17, 17, 17, 0.55);
+}
 .rbc-header {
   font-weight: 700;
   font-size: 0.75rem;
