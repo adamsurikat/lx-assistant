@@ -109,7 +109,7 @@ export function EventEditorModal({
           {formatRange(entry.start, entry.end)}
         </p>
 
-        <label className="mb-2 block text-sm font-bold uppercase tracking-wide text-nb-ink">
+        <label className="mb-2 block text-sm font-semibold tracking-wide text-nb-ink">
           Ticket
         </label>
         <select
@@ -143,7 +143,7 @@ export function EventEditorModal({
             type="button"
             onClick={handleSearch}
             disabled={searching || !searchKey.trim()}
-            className="nb-btn shrink-0 px-3 py-2 text-sm font-bold uppercase"
+            className="nb-btn shrink-0 px-3 py-2 text-sm font-semibold"
           >
             {searching ? "Searching…" : "Add"}
           </button>
@@ -152,7 +152,7 @@ export function EventEditorModal({
 
         {!hasTicket && (
           <div className="mb-5">
-            <label className="mb-2 block text-sm font-bold uppercase tracking-wide text-nb-ink">
+            <label className="mb-2 block text-sm font-semibold tracking-wide text-nb-ink">
               Title
             </label>
             <input
@@ -169,7 +169,7 @@ export function EventEditorModal({
         )}
 
         {entry.ticket && entry.syncedToJira && (
-          <p className="mb-3 text-xs font-bold uppercase text-nb-green">✓ Synced to Jira</p>
+          <p className="mb-3 text-xs font-semibold text-nb-green">✓ Synced to Jira</p>
         )}
         {entry.lastSyncError && (
           <p className="mb-3 text-xs font-bold text-nb-pink">
@@ -182,7 +182,7 @@ export function EventEditorModal({
             type="button"
             onClick={handleDelete}
             disabled={deleting}
-            className="nb-btn px-4 py-2 text-sm font-bold uppercase text-nb-pink"
+            className="nb-btn px-4 py-2 text-sm font-semibold text-nb-pink"
           >
             {deleting ? "Deleting…" : "Delete"}
           </button>
@@ -190,7 +190,7 @@ export function EventEditorModal({
             <button
               type="button"
               onClick={onClose}
-              className="nb-btn px-4 py-2 text-sm font-bold uppercase"
+              className="nb-btn px-4 py-2 text-sm font-semibold"
             >
               Cancel
             </button>
@@ -198,7 +198,7 @@ export function EventEditorModal({
               type="button"
               onClick={handleSave}
               disabled={saving || (!hasTicket && !trimmedTitle) || unchanged}
-              className="nb-btn nb-btn-orange px-4 py-2 text-sm font-bold uppercase"
+              className="nb-btn nb-btn-orange px-4 py-2 text-sm font-semibold"
             >
               {saving ? "Saving…" : "Save"}
             </button>

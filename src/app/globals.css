@@ -1,10 +1,10 @@
 @import "tailwindcss";
 
 /*
- * Neo-brutalist design system: bold flat colors (orange / pink / green),
- * thick black borders, hard offset shadows (no blur), no rounded corners,
- * chunky uppercase display type. Applied via the `.nb-*` utility classes
- * below, used throughout the app instead of soft/rounded Tailwind defaults.
+ * Soft, rounded design system: the same orange / pink / green accent
+ * palette as before, but with gentle rounded corners, subtle borders and
+ * soft blurred shadows instead of the earlier neo-brutalist hard edges.
+ * Applied via the `.nb-*` utility classes below.
  */
 :root {
   --nb-ink: #111111;
@@ -12,8 +12,8 @@
   --nb-orange: #ff5f1f;
   --nb-pink: #ff3ea5;
   --nb-green: #39d98a;
-  --nb-border-width: 3px;
-  --nb-shadow-offset: 6px;
+  --nb-radius: 14px;
+  --nb-radius-sm: 10px;
 }
 
 @theme inline {
@@ -28,10 +28,6 @@
   --font-display: var(--font-archivo-black);
 }
 
-* {
-  border-radius: 0 !important;
-}
-
 body {
   background: var(--nb-paper);
   color: var(--nb-ink);
@@ -40,44 +36,47 @@ body {
 
 h1, h2, h3, .nb-display {
   font-family: var(--font-archivo-black), Arial, Helvetica, sans-serif;
-  text-transform: uppercase;
-  letter-spacing: 0.01em;
+  letter-spacing: 0.005em;
 }
 
-/* Flat block with a thick black border and a hard offset shadow. */
+/* Soft card: subtle border, rounded corners, gentle blurred shadow. */
 .nb-panel {
   background: #fff;
-  border: var(--nb-border-width) solid var(--nb-ink);
-  box-shadow: var(--nb-shadow-offset) var(--nb-shadow-offset) 0 0 var(--nb-ink);
+  border: 1px solid rgba(17, 17, 17, 0.1);
+  border-radius: var(--nb-radius);
+  box-shadow: 0 8px 24px -8px rgba(17, 17, 17, 0.18);
 }
 
 .nb-panel-sm {
   background: #fff;
-  border: var(--nb-border-width) solid var(--nb-ink);
-  box-shadow: 4px 4px 0 0 var(--nb-ink);
+  border: 1px solid rgba(17, 17, 17, 0.1);
+  border-radius: var(--nb-radius-sm);
+  box-shadow: 0 4px 14px -6px rgba(17, 17, 17, 0.2);
 }
 
-/* Base button: thick border, hard shadow, presses flat on click. */
+/* Base button: soft rounded pill, gentle shadow lift on hover. */
 .nb-btn {
   display: inline-flex;
   align-items: center;
   justify-content: center;
   gap: 0.4rem;
-  border: var(--nb-border-width) solid var(--nb-ink);
+  border: 1px solid rgba(17, 17, 17, 0.12);
+  border-radius: 999px;
   background: #fff;
   color: var(--nb-ink);
-  font-weight: 700;
-  box-shadow: 4px 4px 0 0 var(--nb-ink);
-  transition: transform 0.08s ease, box-shadow 0.08s ease;
+  font-weight: 600;
+  box-shadow: 0 1px 2px rgba(17, 17, 17, 0.08);
+  transition: transform 0.12s ease, box-shadow 0.12s ease, filter 0.12s ease;
   cursor: pointer;
 }
 .nb-btn:hover:not(:disabled) {
-  transform: translate(-2px, -2px);
-  box-shadow: 6px 6px 0 0 var(--nb-ink);
+  transform: translateY(-1px);
+  box-shadow: 0 6px 16px -4px rgba(17, 17, 17, 0.25);
 }
 .nb-btn:active:not(:disabled) {
-  transform: translate(2px, 2px);
-  box-shadow: 1px 1px 0 0 var(--nb-ink);
+  transform: translateY(0);
+  filter: brightness(0.97);
+  box-shadow: 0 1px 2px rgba(17, 17, 17, 0.08);
 }
 .nb-btn:disabled {
   opacity: 0.5;
@@ -86,35 +85,54 @@ h1, h2, h3, .nb-display {
 
 .nb-btn-orange {
   background: var(--nb-orange);
-  color: var(--nb-ink);
+  border-color: var(--nb-orange);
+  color: #fff;
 }
 .nb-btn-pink {
   background: var(--nb-pink);
+  border-color: var(--nb-pink);
   color: #fff;
 }
 .nb-btn-green {
   background: var(--nb-green);
+  border-color: var(--nb-green);
   color: var(--nb-ink);
 }
 
 .nb-input {
-  border: var(--nb-border-width) solid var(--nb-ink);
+  border: 1px solid rgba(17, 17, 17, 0.15);
+  border-radius: var(--nb-radius-sm);
   background: #fff;
   font-weight: 500;
 }
 .nb-input:focus {
-  outline: 3px solid var(--nb-orange);
-  outline-offset: 0;
+  outline: none;
+  border-color: var(--nb-orange);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--nb-orange) 25%, transparent);
 }
 
-/* --- react-big-calendar overrides: keep the grid/events understated,
-   the bold neo-brutalist treatment is reserved for panels/buttons/modals. */
+/* A small rounded pill badge, e.g. for ticket status. */
+.nb-badge {
+  display: inline-block;
+  border-radius: 999px;
+  background: var(--nb-paper);
+  border: 1px solid rgba(17, 17, 17, 0.1);
+  color: var(--nb-ink);
+  font-weight: 600;
+  font-size: 0.65rem;
+  letter-spacing: 0.02em;
+  padding: 2px 10px;
+}
+
+/* --- react-big-calendar overrides: keep the grid/events understated. --- */
 .rbc-calendar {
   font-family: var(--font-space-grotesk), Arial, Helvetica, sans-serif;
 }
 .rbc-time-view,
 .rbc-month-view {
   border: 1px solid #d9d2c7 !important;
+  border-radius: var(--nb-radius);
+  overflow: hidden;
   background: #fff;
 }
 .rbc-time-header-content,
@@ -140,8 +158,7 @@ h1, h2, h3, .nb-display {
 }
 .rbc-header {
   font-weight: 700;
-  text-transform: uppercase;
-  font-size: 0.7rem;
+  font-size: 0.75rem;
   padding: 8px 4px;
 }
 .rbc-today {
@@ -149,6 +166,7 @@ h1, h2, h3, .nb-display {
 }
 .rbc-event {
   border: none !important;
+  border-radius: 6px !important;
   font-weight: 600;
   font-size: 0.75rem;
 }
@@ -158,8 +176,9 @@ h1, h2, h3, .nb-display {
 .rbc-slot-selection {
   background-color: color-mix(in srgb, var(--nb-orange) 35%, transparent);
   border: 1px dashed var(--nb-ink);
+  border-radius: 6px;
 }
 .rbc-current-time-indicator {
   background-color: var(--nb-pink);
-  height: 3px;
+  height: 2px;
 }

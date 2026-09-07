@@ -38,12 +38,12 @@ export function TicketSidebar({
     return (
       <button
         onClick={() => setExpanded(true)}
-        className="nb-btn nb-btn-green fixed bottom-4 left-4 z-40 gap-2 px-4 py-3 text-sm font-bold uppercase"
+        className="nb-btn nb-btn-green fixed bottom-4 left-4 z-40 gap-2 px-4 py-3 text-sm font-semibold"
         title="Show my open tickets"
       >
         🎫 Tickets
         {tickets.length > 0 && (
-          <span className="border-2 border-nb-ink bg-white px-2 py-0.5 text-xs">
+          <span className="nb-badge bg-white">
             {tickets.length}
           </span>
         )}
@@ -53,15 +53,15 @@ export function TicketSidebar({
 
   return (
     <div className="nb-panel fixed bottom-4 left-4 z-40 flex max-h-[70vh] w-72 flex-col">
-      <div className="flex items-center justify-between border-b-2 border-nb-ink bg-nb-green p-3">
-        <h2 className="text-sm font-bold uppercase tracking-wide text-nb-ink">
+      <div className="flex items-center justify-between rounded-t-[14px] border-b border-nb-ink/10 bg-nb-green p-3">
+        <h2 className="text-sm font-semibold tracking-wide text-nb-ink">
           My open tickets
         </h2>
         <div className="flex items-center gap-1">
           <button
             onClick={onSync}
             disabled={syncing}
-            className="nb-btn nb-btn-orange px-2 py-1 text-xs font-bold uppercase"
+            className="nb-btn nb-btn-orange px-2 py-1 text-xs font-semibold"
           >
             {syncing ? "Syncing…" : "Sync"}
           </button>
@@ -97,7 +97,7 @@ export function TicketSidebar({
             >
               <p className="text-sm font-bold text-nb-ink">{ticket.key}</p>
               <p className="truncate text-xs font-medium text-nb-ink/70">{ticket.summary}</p>
-              <span className="mt-1 inline-block border-2 border-nb-ink bg-nb-paper px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-nb-ink">
+              <span className="mt-1 nb-badge text-nb-ink">
                 {ticket.status}
               </span>
             </li>

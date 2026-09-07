@@ -57,7 +57,7 @@ export default function SettingsPage() {
 
   return (
     <main className="mx-auto max-w-lg p-8">
-      <Link href="/" className="mb-4 inline-block text-sm font-bold text-nb-ink underline decoration-nb-orange decoration-4">
+      <Link href="/" className="mb-4 inline-block text-sm font-bold text-nb-ink underline decoration-nb-orange decoration-2">
         ← Back to calendar
       </Link>
       <h1 className="nb-display mb-1 text-2xl">Connect Jira</h1>
@@ -76,7 +76,7 @@ export default function SettingsPage() {
 
       <form onSubmit={handleSave} className="nb-panel space-y-4 p-6">
         <div>
-          <label className="mb-1 block text-sm font-bold uppercase tracking-wide text-nb-ink">
+          <label className="mb-1 block text-sm font-semibold tracking-wide text-nb-ink">
             Jira site URL
           </label>
           <input
@@ -89,7 +89,7 @@ export default function SettingsPage() {
           />
         </div>
         <div>
-          <label className="mb-1 block text-sm font-bold uppercase tracking-wide text-nb-ink">
+          <label className="mb-1 block text-sm font-semibold tracking-wide text-nb-ink">
             Atlassian account email
           </label>
           <input
@@ -101,7 +101,7 @@ export default function SettingsPage() {
           />
         </div>
         <div>
-          <label className="mb-1 flex items-center justify-between text-sm font-bold uppercase tracking-wide text-nb-ink">
+          <label className="mb-1 flex items-center justify-between text-sm font-semibold tracking-wide text-nb-ink">
             <span>
               API token{" "}
               {connected && (
@@ -134,7 +134,7 @@ export default function SettingsPage() {
           <button
             type="submit"
             disabled={saving}
-            className="nb-btn nb-btn-orange px-4 py-2 text-sm font-bold uppercase"
+            className="nb-btn nb-btn-orange px-4 py-2 text-sm font-semibold"
           >
             {saving ? "Saving…" : "Save"}
           </button>
@@ -143,13 +143,13 @@ export default function SettingsPage() {
               type="button"
               onClick={handleDisconnect}
               disabled={saving}
-              className="nb-btn px-4 py-2 text-sm font-bold uppercase text-nb-pink"
+              className="nb-btn px-4 py-2 text-sm font-semibold text-nb-pink"
             >
               Disconnect
             </button>
           )}
           {connected && (
-            <span className="text-sm font-bold uppercase text-nb-green">✓ Connected</span>
+            <span className="text-sm font-semibold text-nb-green">✓ Connected</span>
           )}
         </div>
       </form>

@@ -78,13 +78,13 @@ export function EventPopover({ data, anchor, onClose, onEdit }: EventPopoverProp
       </p>
 
       {data.ticketStatus && (
-        <span className="mt-2 inline-block border-2 border-nb-ink bg-nb-paper px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-nb-ink">
+        <span className="mt-2 nb-badge">
           {data.ticketStatus}
         </span>
       )}
 
       {!data.readOnly && (
-        <p className="mt-2 text-xs font-bold uppercase">
+        <p className="mt-2 text-xs font-semibold">
           {data.unassigned ? (
             <span className="text-nb-ink/50">No ticket assigned</span>
           ) : data.syncError ? (
@@ -103,7 +103,7 @@ export function EventPopover({ data, anchor, onClose, onEdit }: EventPopoverProp
             href={data.jiraUrl}
             target="_blank"
             rel="noreferrer"
-            className="nb-btn nb-btn-orange px-3 py-1.5 text-xs font-bold uppercase"
+            className="nb-btn nb-btn-orange px-3 py-1.5 text-xs font-semibold"
           >
             Open in Jira ↗
           </a>
@@ -113,7 +113,7 @@ export function EventPopover({ data, anchor, onClose, onEdit }: EventPopoverProp
             href={data.googleLink}
             target="_blank"
             rel="noreferrer"
-            className="nb-btn nb-btn-green px-3 py-1.5 text-xs font-bold uppercase"
+            className="nb-btn nb-btn-green px-3 py-1.5 text-xs font-semibold"
           >
             Open in Google Calendar ↗
           </a>
@@ -122,7 +122,7 @@ export function EventPopover({ data, anchor, onClose, onEdit }: EventPopoverProp
           <button
             type="button"
             onClick={onEdit}
-            className="nb-btn px-3 py-1.5 text-xs font-bold uppercase"
+            className="nb-btn px-3 py-1.5 text-xs font-semibold"
           >
             Edit
           </button>
