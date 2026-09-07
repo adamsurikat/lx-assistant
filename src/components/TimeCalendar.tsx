@@ -60,10 +60,15 @@ export interface CalendarEventItem {
   synced: boolean;
   syncError?: string | null;
   unassigned?: boolean;
+  // True for read-only overlay events sourced from Google Calendar — these
+  // can't be dragged, resized, or opened in the editor modal.
+  readOnly?: boolean;
+  googleLink?: string;
 }
 
 interface TimeCalendarProps {
   events: CalendarEventItem[];
+  googleEvents: CalendarEventItem[];
   onEventChange: (id: string, start: Date, end: Date) => void;
   onDropTicket: (ticketId: string, start: Date, end: Date) => void;
   onCreateBlankEvent: (start: Date, end: Date) => void;
@@ -73,19 +78,21 @@ interface TimeCalendarProps {
 
 export function TimeCalendar({
   events,
+  googleEvents,
   onEventChange,
   onDropTicket,
   onCreateBlankEvent,
   onSelectEvent,
   draggedTicketId,
 }: TimeCalendarProps) {
+  const allEvents = [...events, ...googleEvents];
   return (
     <div className="h-full flex-1 bg-white p-4">
       <DnDCalendar
         localizer={localizer}
-        events={events}
-        defaultView="week"
-        views={["week"]}
+        events={allEvents}
+        defaultView="work_week"
+        views={["work_week"]}
         step={15}
         timeslots={4}
         min={MIN_TIME}
@@ -94,13 +101,21 @@ export function TimeCalendar({
         resizable
         selectable
         popup
+        draggableAccessor={(event: CalendarEventItem) => !event.readOnly}
+        resizableAccessor={(event: CalendarEventItem) => !event.readOnly}
         onEventDrop={({ event, start, end }: EventInteractionArgs<CalendarEventItem>) =>
           onEventChange(event.id, new Date(start), new Date(end))
         }
         onEventResize={({ event, start, end }: EventInteractionArgs<CalendarEventItem>) =>
           onEventChange(event.id, new Date(start), new Date(end))
         }
-        onSelectEvent={(event: CalendarEventItem) => onSelectEvent(event.id)}
+        onSelectEvent={(event: CalendarEventItem) => {
+          if (event.readOnly) {
+            if (event.googleLink) window.open(event.googleLink, "_blank");
+            return;
+          }
+          onSelectEvent(event.id);
+        }}
         onSelectSlot={(slotInfo) => {
           onCreateBlankEvent(new Date(slotInfo.start), new Date(slotInfo.end));
         }}
@@ -111,14 +126,18 @@ export function TimeCalendar({
         dragFromOutsideItem={makeDragPreviewItem}
         eventPropGetter={(event: CalendarEventItem) => ({
           style: {
-            backgroundColor: event.color,
-            borderColor: event.color,
-            opacity: event.syncError ? 0.6 : 1,
+            backgroundColor: event.readOnly ? "#e5e7eb" : event.color,
+            color: event.readOnly ? "#374151" : undefined,
+            borderColor: event.readOnly ? "#9ca3af" : event.color,
+            opacity: event.syncError ? 0.6 : event.readOnly ? 0.85 : 1,
+            cursor: event.readOnly ? "pointer" : undefined,
             border: event.syncError
               ? "2px dashed #dc2626"
-              : event.unassigned
-                ? "2px dashed #9ca3af"
-                : undefined,
+              : event.readOnly
+                ? "1px solid #9ca3af"
+                : event.unassigned
+                  ? "2px dashed #9ca3af"
+                  : undefined,
           },
         })}
       />

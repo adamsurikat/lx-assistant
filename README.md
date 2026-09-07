@@ -10,9 +10,9 @@ with a local SQLite copy kept as a backup/report.
 - Next.js (App Router) + React + TypeScript
 - Prisma + SQLite (swappable for Postgres/Supabase later — just change the
   Prisma datasource and run a migration)
-- NextAuth v5 — Google login for the app
+- NextAuth v5 — Google login for the app, also used to read your Google Calendar
 - Jira Cloud REST API (API token auth) for tickets + worklogs
-- `react-big-calendar` with the drag-and-drop addon for the weekly view
+- `react-big-calendar` with the drag-and-drop addon for the weekly view (Mon–Fri only)
 
 ## Setup
 
@@ -23,7 +23,11 @@ with a local SQLite copy kept as a backup/report.
    - `AUTH_SECRET`, `TOKEN_ENCRYPTION_KEY`: generate with `openssl rand -base64 32`
    - `AUTH_GOOGLE_ID` / `AUTH_GOOGLE_SECRET`: create an OAuth 2.0 Client ID in the
      [Google Cloud Console](https://console.cloud.google.com/apis/credentials)
-     with authorized redirect URI `http://localhost:3456/api/auth/callback/google`
+     with authorized redirect URI `http://localhost:3456/api/auth/callback/google`.
+     The app requests the read-only Google Calendar scope in addition to basic
+     profile/email, so also enable the **Google Calendar API** for your project
+     under APIs & Services, and add `.../auth/calendar.readonly` as a scope on
+     the OAuth consent screen if using External/testing mode.
 
 2. Install dependencies and set up the database (already done once, re-run if
    you pull schema changes):
@@ -37,7 +41,9 @@ with a local SQLite copy kept as a backup/report.
    npm run dev
    ```
 
-4. Sign in with Google, then go to **Settings** and connect Jira:
+4. Sign in with Google (accept the Calendar read-only permission prompt — this
+   is needed to show your meetings on the calendar), then go to **Settings**
+   and connect Jira:
    - Your Jira Cloud site URL (e.g. `https://yourcompany.atlassian.net`)
    - Your Atlassian account email
    - An API token from https://id.atlassian.com/manage-profile/security/api-tokens

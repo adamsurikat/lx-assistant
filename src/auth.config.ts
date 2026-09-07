@@ -7,7 +7,21 @@ import Google from "next-auth/providers/google";
  * with the Prisma adapter for use in API routes / server components.
  */
 export const authConfig: NextAuthConfig = {
-  providers: [Google],
+  providers: [
+    Google({
+      authorization: {
+        params: {
+          // Request offline access + a refresh token (needed since we call
+          // the Calendar API from the backend, outside the login flow), and
+          // the read-only Calendar scope to show the user's meetings.
+          access_type: "offline",
+          prompt: "consent",
+          scope:
+            "openid email profile https://www.googleapis.com/auth/calendar.readonly",
+        },
+      },
+    }),
+  ],
   session: {
     strategy: "jwt",
   },

@@ -17,6 +17,15 @@ interface TimeEntryDTO {
   ticket: TicketSummary | null;
 }
 
+interface GoogleCalendarEventDTO {
+  id: string;
+  title: string;
+  start: string;
+  end: string;
+  allDay: boolean;
+  htmlLink?: string;
+}
+
 function startOfWeekMonday(d: Date): Date {
   const date = new Date(d);
   const day = date.getDay();
@@ -30,6 +39,7 @@ export default function HomePage() {
   const { data: session } = useSession();
   const [tickets, setTickets] = useState<TicketSummary[]>([]);
   const [entries, setEntries] = useState<TimeEntryDTO[]>([]);
+  const [googleEvents, setGoogleEvents] = useState<GoogleCalendarEventDTO[]>([]);
   const [loadingTickets, setLoadingTickets] = useState(true);
   const [syncing, setSyncing] = useState(false);
   const [draggedTicketId, setDraggedTicketId] = useState<string | null>(null);
@@ -72,12 +82,26 @@ export default function HomePage() {
     }
   }, []);
 
+  const loadGoogleEvents = useCallback(async () => {
+    const params = new URLSearchParams({
+      from: weekStart.toISOString(),
+      to: weekEnd.toISOString(),
+    });
+    const res = await fetch(`/api/google-calendar/events?${params}`);
+    if (res.ok) {
+      const data = await res.json();
+      setGoogleEvents(data.events ?? []);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
   useEffect(() => {
     // eslint-disable-next-line react-hooks/set-state-in-effect -- intentional fetch-on-mount
     loadTickets();
     loadEntries();
     loadJiraStatus();
-  }, [loadTickets, loadEntries, loadJiraStatus]);
+    loadGoogleEvents();
+  }, [loadTickets, loadEntries, loadJiraStatus, loadGoogleEvents]);
 
   const handleSync = async () => {
     setSyncing(true);
@@ -216,6 +240,19 @@ export default function HomePage() {
     syncError: entry.lastSyncError,
   }));
 
+  const googleCalendarEvents: CalendarEventItem[] = googleEvents
+    .filter((event) => !event.allDay)
+    .map((event) => ({
+      id: `google-${event.id}`,
+      title: event.title,
+      start: new Date(event.start),
+      end: new Date(event.end),
+      color: "#e5e7eb",
+      synced: true,
+      readOnly: true,
+      googleLink: event.htmlLink,
+    }));
+
   return (
     <div className="flex h-screen flex-col">
       <header className="flex items-center justify-between border-b border-gray-200 bg-gradient-to-r from-indigo-600 to-purple-600 px-6 py-3 text-white">
@@ -255,6 +292,7 @@ export default function HomePage() {
         />
         <TimeCalendar
           events={calendarEvents}
+          googleEvents={googleCalendarEvents}
           onEventChange={handleEventChange}
           onDropTicket={handleDropTicket}
           onCreateBlankEvent={handleCreateBlankEvent}
