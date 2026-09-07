@@ -1,7 +1,7 @@
 "use client";
 
-import { useEffect, useState } from "react";
 import CodeMirror, { EditorView } from "@uiw/react-codemirror";
+import { CopyPasteButtons } from "./CopyPasteButtons";
 
 interface CodeFieldProps {
   value: string;
@@ -13,17 +13,9 @@ interface CodeFieldProps {
 
 /**
  * A code-style textarea (CodeMirror) used across the developer tools page,
- * with a copy-to-clipboard button and an optional valid/invalid badge.
+ * with copy/paste buttons and an optional valid/invalid badge.
  */
 export function CodeField({ value, onChange, disabled, status, height = "190px" }: CodeFieldProps) {
-  const [copied, setCopied] = useState(false);
-
-  useEffect(() => {
-    if (!copied) return;
-    const timeout = setTimeout(() => setCopied(false), 1500);
-    return () => clearTimeout(timeout);
-  }, [copied]);
-
   return (
     <div
       className={`relative overflow-hidden rounded-[10px] border ${
@@ -39,17 +31,11 @@ export function CodeField({ value, onChange, disabled, status, height = "190px" 
         height={height}
         basicSetup={{ highlightActiveLine: false, highlightActiveLineGutter: false }}
       />
-      <button
-        type="button"
-        onClick={() => {
-          navigator.clipboard.writeText(value ?? "");
-          setCopied(true);
-        }}
-        className="nb-btn absolute right-2 top-2 h-7 w-7 p-0 text-sm"
-        aria-label="Copy to clipboard"
-      >
-        {copied ? "✓" : "📋"}
-      </button>
+      <CopyPasteButtons
+        value={value}
+        onPaste={disabled ? undefined : onChange}
+        className="absolute right-2 top-2"
+      />
       {status && (
         <span
           className={`absolute bottom-0 right-0 rounded-tl-[10px] px-3 py-1 text-xs font-bold ${
