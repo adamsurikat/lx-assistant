@@ -24,6 +24,12 @@ const localizer = dateFnsLocalizer({
 
 const DnDCalendar = withDragAndDrop<CalendarEventItem>(Calendar);
 
+// Restrict the week/day view's visible time range to 07:00–18:00. The Date
+// objects' year/month/day are irrelevant to react-big-calendar; only the
+// hours/minutes are used.
+const MIN_TIME = new Date(1970, 0, 1, 7, 0, 0);
+const MAX_TIME = new Date(1970, 0, 1, 18, 0, 0);
+
 export interface CalendarEventItem {
   id: string;
   title: string;
@@ -58,6 +64,8 @@ export function TimeCalendar({
         views={["week", "day"]}
         step={15}
         timeslots={4}
+        min={MIN_TIME}
+        max={MAX_TIME}
         style={{ height: "100%" }}
         resizable
         selectable
