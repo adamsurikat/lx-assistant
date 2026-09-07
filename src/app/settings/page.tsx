@@ -2,10 +2,14 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
+import { useSession } from "next-auth/react";
+
+const DEFAULT_JIRA_SITE_URL = "https://surikat.atlassian.net";
 
 export default function SettingsPage() {
+  const { data: session } = useSession();
   const [jiraEmail, setJiraEmail] = useState("");
-  const [siteUrl, setSiteUrl] = useState("");
+  const [siteUrl, setSiteUrl] = useState(DEFAULT_JIRA_SITE_URL);
   const [apiToken, setApiToken] = useState("");
   const [connected, setConnected] = useState(false);
   const [saving, setSaving] = useState(false);
@@ -16,10 +20,12 @@ export default function SettingsPage() {
       .then((res) => res.json())
       .then((data) => {
         setConnected(Boolean(data.connected));
-        setJiraEmail(data.jiraEmail ?? "");
-        setSiteUrl(data.jiraSiteUrl ?? "");
+        // Prefill with saved values if present, otherwise default the site URL
+        // and use the signed-in Google account's email as the Jira email.
+        setJiraEmail(data.jiraEmail ?? session?.user?.email ?? "");
+        setSiteUrl(data.jiraSiteUrl ?? DEFAULT_JIRA_SITE_URL);
       });
-  }, []);
+  }, [session?.user?.email]);
 
   const handleSave = async (e: React.FormEvent) => {
     e.preventDefault();
