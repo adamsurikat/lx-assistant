@@ -59,12 +59,14 @@ export interface CalendarEventItem {
   color: string;
   synced: boolean;
   syncError?: string | null;
+  unassigned?: boolean;
 }
 
 interface TimeCalendarProps {
   events: CalendarEventItem[];
   onEventChange: (id: string, start: Date, end: Date) => void;
   onDropTicket: (ticketId: string, start: Date, end: Date) => void;
+  onCreateBlankEvent: (start: Date, end: Date) => void;
   onSelectEvent: (id: string) => void;
   draggedTicketId: string | null;
 }
@@ -73,6 +75,7 @@ export function TimeCalendar({
   events,
   onEventChange,
   onDropTicket,
+  onCreateBlankEvent,
   onSelectEvent,
   draggedTicketId,
 }: TimeCalendarProps) {
@@ -98,9 +101,8 @@ export function TimeCalendar({
           onEventChange(event.id, new Date(start), new Date(end))
         }
         onSelectEvent={(event: CalendarEventItem) => onSelectEvent(event.id)}
-        onSelectSlot={() => {
-          // Reserved for future "create blank entry" flow; ticket entries are
-          // created by dragging from the sidebar instead.
+        onSelectSlot={(slotInfo) => {
+          onCreateBlankEvent(new Date(slotInfo.start), new Date(slotInfo.end));
         }}
         onDropFromOutside={({ start, end }) => {
           if (!draggedTicketId) return;
@@ -112,7 +114,11 @@ export function TimeCalendar({
             backgroundColor: event.color,
             borderColor: event.color,
             opacity: event.syncError ? 0.6 : 1,
-            border: event.syncError ? "2px dashed #dc2626" : undefined,
+            border: event.syncError
+              ? "2px dashed #dc2626"
+              : event.unassigned
+                ? "2px dashed #9ca3af"
+                : undefined,
           },
         })}
       />

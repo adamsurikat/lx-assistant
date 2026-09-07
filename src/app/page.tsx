@@ -5,14 +5,16 @@ import Link from "next/link";
 import { signOut, useSession } from "next-auth/react";
 import { TicketSidebar, type TicketSummary } from "@/components/TicketSidebar";
 import { TimeCalendar, type CalendarEventItem } from "@/components/TimeCalendar";
+import { EventEditorModal } from "@/components/EventEditorModal";
 
 interface TimeEntryDTO {
   id: string;
   start: string;
   end: string;
+  comment: string | null;
   syncedToJira: boolean;
   lastSyncError: string | null;
-  ticket: TicketSummary;
+  ticket: TicketSummary | null;
 }
 
 function startOfWeekMonday(d: Date): Date {
@@ -33,6 +35,7 @@ export default function HomePage() {
   const [draggedTicketId, setDraggedTicketId] = useState<string | null>(null);
   const [jiraConnected, setJiraConnected] = useState<boolean | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [editingEntryId, setEditingEntryId] = useState<string | null>(null);
 
   const weekStart = startOfWeekMonday(new Date());
   const weekEnd = new Date(weekStart);
@@ -108,6 +111,27 @@ export default function HomePage() {
     await loadEntries();
   };
 
+  const handleCreateBlankEvent = async (start: Date, end: Date) => {
+    setError(null);
+    const res = await fetch("/api/time-entries", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        start: start.toISOString(),
+        end: end.toISOString(),
+      }),
+    });
+    if (!res.ok) {
+      const data = await res.json().catch(() => ({}));
+      setError(data.error ?? "Failed to create time entry.");
+      return;
+    }
+    const data = await res.json();
+    await loadEntries();
+    // Immediately open the editor so the user can assign a ticket.
+    setEditingEntryId(data.entry.id);
+  };
+
   const handleEventChange = async (id: string, start: Date, end: Date) => {
     setError(null);
     const res = await fetch(`/api/time-entries/${id}`, {
@@ -123,22 +147,39 @@ export default function HomePage() {
     await loadEntries();
   };
 
-  const handleSelectEvent = async (id: string) => {
-    if (!confirm("Delete this time entry? This will also remove the Jira worklog.")) {
+  const handleAssignTicket = async (entryId: string, ticketId: string) => {
+    setError(null);
+    const res = await fetch(`/api/time-entries/${entryId}`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ ticketId }),
+    });
+    if (!res.ok) {
+      const data = await res.json().catch(() => ({}));
+      setError(data.error ?? "Failed to assign ticket.");
       return;
     }
-    const res = await fetch(`/api/time-entries/${id}`, { method: "DELETE" });
+    await loadEntries();
+    setEditingEntryId(null);
+  };
+
+  const handleDeleteEntry = async (entryId: string) => {
+    const res = await fetch(`/api/time-entries/${entryId}`, { method: "DELETE" });
     if (res.ok) {
       await loadEntries();
+      setEditingEntryId(null);
     }
   };
 
+  const editingEntry = entries.find((e) => e.id === editingEntryId) ?? null;
+
   const calendarEvents: CalendarEventItem[] = entries.map((entry) => ({
     id: entry.id,
-    title: `${entry.ticket.key} · ${entry.ticket.summary}`,
+    title: entry.ticket ? `${entry.ticket.key} · ${entry.ticket.summary}` : "Unassigned",
     start: new Date(entry.start),
     end: new Date(entry.end),
-    color: entry.ticket.color ?? "#6366f1",
+    color: entry.ticket?.color ?? "#9ca3af",
+    unassigned: !entry.ticket,
     synced: entry.syncedToJira,
     syncError: entry.lastSyncError,
   }));
@@ -184,10 +225,21 @@ export default function HomePage() {
           events={calendarEvents}
           onEventChange={handleEventChange}
           onDropTicket={handleDropTicket}
-          onSelectEvent={handleSelectEvent}
+          onCreateBlankEvent={handleCreateBlankEvent}
+          onSelectEvent={setEditingEntryId}
           draggedTicketId={draggedTicketId}
         />
       </div>
+
+      {editingEntry && (
+        <EventEditorModal
+          entry={editingEntry}
+          tickets={tickets}
+          onClose={() => setEditingEntryId(null)}
+          onAssignTicket={(ticketId) => handleAssignTicket(editingEntry.id, ticketId)}
+          onDelete={() => handleDeleteEntry(editingEntry.id)}
+        />
+      )}
     </div>
   );
 }

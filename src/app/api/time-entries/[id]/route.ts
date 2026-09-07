@@ -23,6 +23,7 @@ export async function PATCH(
     start?: string;
     end?: string;
     comment?: string;
+    ticketId?: string | null;
   };
 
   const existing = await prisma.timeEntry.findFirst({
@@ -39,18 +40,42 @@ export async function PATCH(
     return NextResponse.json({ error: "Invalid start/end range" }, { status: 400 });
   }
 
+  // ticketId can be set to assign a ticket to a previously "blank" entry
+  // (created by clicking/dragging on empty calendar space), or explicitly
+  // set to null to unassign it.
+  let ticketId = existing.ticketId;
+  if (body.ticketId !== undefined) {
+    if (body.ticketId === null) {
+      ticketId = null;
+    } else {
+      const ticket = await prisma.ticket.findFirst({
+        where: { id: body.ticketId, userId: session.user.id },
+      });
+      if (!ticket) {
+        return NextResponse.json({ error: "Ticket not found" }, { status: 404 });
+      }
+      ticketId = ticket.id;
+    }
+  }
+
   let entry = await prisma.timeEntry.update({
     where: { id },
     data: {
       start,
       end,
+      ticketId,
       ...(body.comment !== undefined ? { comment: body.comment } : {}),
     },
     include: { ticket: true },
   });
 
-  // Push the move/resize to the existing Jira worklog, or create one if it
-  // was never successfully synced before.
+  // Nothing to sync yet if no ticket is assigned.
+  if (!entry.ticket) {
+    return NextResponse.json({ entry });
+  }
+
+  // Push the move/resize/assignment to the existing Jira worklog, or create
+  // one if it was never successfully synced before.
   try {
     const config = await getJiraConfigForUser(session.user.id);
     const timeSpentSeconds = Math.round(
@@ -120,7 +145,7 @@ export async function DELETE(
     return NextResponse.json({ error: "Not found" }, { status: 404 });
   }
 
-  if (existing.syncedToJira && existing.jiraWorklogId) {
+  if (existing.syncedToJira && existing.jiraWorklogId && existing.ticket) {
     try {
       const config = await getJiraConfigForUser(session.user.id);
       await deleteWorklog(config, existing.ticket.jiraId, existing.jiraWorklogId);

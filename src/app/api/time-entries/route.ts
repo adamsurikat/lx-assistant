@@ -40,18 +40,22 @@ export async function POST(request: Request) {
     comment?: string;
   };
 
-  if (!body.ticketId || !body.start || !body.end) {
+  if (!body.start || !body.end) {
     return NextResponse.json(
-      { error: "ticketId, start and end are required" },
+      { error: "start and end are required" },
       { status: 400 }
     );
   }
 
-  const ticket = await prisma.ticket.findFirst({
-    where: { id: body.ticketId, userId: session.user.id },
-  });
-  if (!ticket) {
-    return NextResponse.json({ error: "Ticket not found" }, { status: 404 });
+  let ticketId: string | null = null;
+  if (body.ticketId) {
+    const ticket = await prisma.ticket.findFirst({
+      where: { id: body.ticketId, userId: session.user.id },
+    });
+    if (!ticket) {
+      return NextResponse.json({ error: "Ticket not found" }, { status: 404 });
+    }
+    ticketId = ticket.id;
   }
 
   const start = new Date(body.start);
@@ -63,7 +67,7 @@ export async function POST(request: Request) {
   const entry = await prisma.timeEntry.create({
     data: {
       userId: session.user.id,
-      ticketId: ticket.id,
+      ticketId,
       start,
       end,
       comment: body.comment,
@@ -71,8 +75,9 @@ export async function POST(request: Request) {
     include: { ticket: true },
   });
 
-  // Attempt to push the worklog to Jira immediately (both local + Jira sync).
-  const synced = await trySyncToJira(session.user.id, entry.id);
+  // Attempt to push the worklog to Jira immediately, but only if a ticket is
+  // already assigned — "blank" entries are synced later once a ticket is set.
+  const synced = ticketId ? await trySyncToJira(session.user.id, entry.id) : null;
 
   return NextResponse.json({ entry: synced ?? entry });
 }
@@ -87,7 +92,7 @@ export async function trySyncToJira(userId: string, timeEntryId: string) {
     where: { id: timeEntryId, userId },
     include: { ticket: true },
   });
-  if (!entry) return null;
+  if (!entry || !entry.ticket) return entry;
 
   try {
     const config = await getJiraConfigForUser(userId);
