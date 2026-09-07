@@ -170,8 +170,11 @@ h1, h2, h3, .nb-display {
 /* Only the date row ("Mon 9/7") is useful in the header — the resource
    sub-header row ("Time reporting" / "Google Calendar") is redundant
    since each day's two sub-columns are already visually obvious from
-   the events themselves, so hide just that row. */
-.rbc-time-header-content.rbc-resource-grouping > .rbc-row:nth-child(2) {
+   the events themselves, so hide just that row. The third row is an
+   empty all-day event strip (unused by this app) that otherwise leaves
+   a blank gap between the date row and the hourly grid — hide that too. */
+.rbc-time-header-content.rbc-resource-grouping > .rbc-row:nth-child(2),
+.rbc-time-header-content.rbc-resource-grouping > .rbc-row:nth-child(3) {
   display: none !important;
 }
 .rbc-label {
@@ -182,6 +185,12 @@ h1, h2, h3, .nb-display {
   font-weight: 700;
   font-size: 0.75rem;
   padding: 8px 4px;
+  /* Its own border-bottom now sits flush against .rbc-time-content's
+     top border (no more all-day row gap between them), doubling up
+     into a visibly thicker line over day columns only (the time
+     gutter has no .rbc-header border). Drop it so the time-content
+     border is the single divider under the whole header row. */
+  border-bottom: none !important;
 }
 .rbc-today {
   background-color: color-mix(in srgb, var(--nb-green) 12%, #fff);
