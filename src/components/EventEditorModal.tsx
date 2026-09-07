@@ -101,21 +101,21 @@ export function EventEditorModal({
       onClick={onClose}
     >
       <div
-        className="nb-panel w-full max-w-sm bg-white p-6"
+        className="nb-panel w-full max-w-md bg-white p-8"
         onClick={(e) => e.stopPropagation()}
       >
-        <h2 className="nb-display mb-1 text-lg">Time entry</h2>
-        <p className="mb-4 text-sm font-medium text-nb-ink/60">
+        <h2 className="nb-display mb-2 text-lg">Time entry</h2>
+        <p className="mb-6 text-sm font-medium text-nb-ink/60">
           {formatRange(entry.start, entry.end)}
         </p>
 
-        <label className="mb-1 block text-sm font-bold uppercase tracking-wide text-nb-ink">
+        <label className="mb-2 block text-sm font-bold uppercase tracking-wide text-nb-ink">
           Ticket
         </label>
         <select
           value={selectedTicketId}
           onChange={(e) => setSelectedTicketId(e.target.value)}
-          className="nb-input mb-3 w-full px-3 py-2 text-sm"
+          className="nb-input mb-5 w-full px-3 py-2 text-sm"
         >
           <option value={NO_TICKET}>No ticket — use a custom title</option>
           {tickets.map((ticket) => (
@@ -125,7 +125,7 @@ export function EventEditorModal({
           ))}
         </select>
 
-        <div className="mb-3 flex items-center gap-2">
+        <div className="mb-5 flex items-center gap-2">
           <input
             type="text"
             value={searchKey}
@@ -148,11 +148,11 @@ export function EventEditorModal({
             {searching ? "Searching…" : "Add"}
           </button>
         </div>
-        {searchError && <p className="mb-2 text-xs font-bold text-nb-pink">{searchError}</p>}
+        {searchError && <p className="mb-4 text-xs font-bold text-nb-pink">{searchError}</p>}
 
         {!hasTicket && (
-          <div className="mb-3">
-            <label className="mb-1 block text-sm font-bold uppercase tracking-wide text-nb-ink">
+          <div className="mb-5">
+            <label className="mb-2 block text-sm font-bold uppercase tracking-wide text-nb-ink">
               Title
             </label>
             <input
@@ -162,35 +162,35 @@ export function EventEditorModal({
               placeholder="e.g. Team meeting, PTO, focus time…"
               className="nb-input w-full px-3 py-2 text-sm"
             />
-            <p className="mt-1 text-xs font-medium text-nb-ink/50">
+            <p className="mt-2 text-xs font-medium text-nb-ink/50">
               Entries without a ticket aren&apos;t synced to Jira.
             </p>
           </div>
         )}
 
         {entry.ticket && entry.syncedToJira && (
-          <p className="mb-2 text-xs font-bold uppercase text-nb-green">✓ Synced to Jira</p>
+          <p className="mb-3 text-xs font-bold uppercase text-nb-green">✓ Synced to Jira</p>
         )}
         {entry.lastSyncError && (
-          <p className="mb-2 text-xs font-bold text-nb-pink">
+          <p className="mb-3 text-xs font-bold text-nb-pink">
             Sync error: {entry.lastSyncError}
           </p>
         )}
 
-        <div className="mt-4 flex items-center justify-between">
+        <div className="mt-6 flex items-center justify-between">
           <button
             type="button"
             onClick={handleDelete}
             disabled={deleting}
-            className="nb-btn px-3 py-2 text-sm font-bold uppercase text-nb-pink"
+            className="nb-btn px-4 py-2 text-sm font-bold uppercase text-nb-pink"
           >
             {deleting ? "Deleting…" : "Delete"}
           </button>
-          <div className="flex gap-2">
+          <div className="flex gap-3">
             <button
               type="button"
               onClick={onClose}
-              className="nb-btn px-3 py-2 text-sm font-bold uppercase"
+              className="nb-btn px-4 py-2 text-sm font-bold uppercase"
             >
               Cancel
             </button>
@@ -198,7 +198,7 @@ export function EventEditorModal({
               type="button"
               onClick={handleSave}
               disabled={saving || (!hasTicket && !trimmedTitle) || unchanged}
-              className="nb-btn nb-btn-orange px-3 py-2 text-sm font-bold uppercase"
+              className="nb-btn nb-btn-orange px-4 py-2 text-sm font-bold uppercase"
             >
               {saving ? "Saving…" : "Save"}
             </button>
