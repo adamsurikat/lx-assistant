@@ -82,7 +82,7 @@ export function TimeCalendar({
         localizer={localizer}
         events={events}
         defaultView="week"
-        views={["week", "day"]}
+        views={["week"]}
         step={15}
         timeslots={4}
         min={MIN_TIME}
