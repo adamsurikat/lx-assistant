@@ -420,28 +420,28 @@ export default function HomePage() {
       )}
 
       <div className="nb-panel-sm m-3 flex flex-1 flex-col overflow-hidden bg-nb-paper">
-        <div className="rbc-toolbar m-0">
-          <span className="rbc-btn-group">
-            <button
-              type="button"
-              onClick={() => setSidebarOpen((open) => !open)}
-              className={sidebarOpen ? "rbc-active" : ""}
-            >
-              🎫 Tickets{tickets.length > 0 ? ` (${tickets.length})` : ""}
-            </button>
-          </span>
-          <span className="rbc-btn-group">
-            <button type="button" onClick={handleToday}>
+        <div className="flex items-center gap-3 border-b border-nb-ink/10 bg-white px-4 py-3">
+          <button
+            type="button"
+            onClick={() => setSidebarOpen((open) => !open)}
+            className={`nb-btn px-3 py-1.5 text-sm ${sidebarOpen ? "nb-btn-green" : ""}`}
+          >
+            🎫 Tickets{tickets.length > 0 ? ` (${tickets.length})` : ""}
+          </button>
+          <div className="flex items-center gap-2">
+            <button type="button" onClick={handleToday} className="nb-btn px-3 py-1.5 text-sm">
               Today
             </button>
-            <button type="button" onClick={handleBack}>
+            <button type="button" onClick={handleBack} className="nb-btn px-3 py-1.5 text-sm">
               Back
             </button>
-            <button type="button" onClick={handleNextWeek}>
+            <button type="button" onClick={handleNextWeek} className="nb-btn px-3 py-1.5 text-sm">
               Next
             </button>
+          </div>
+          <span className="ml-1 text-sm font-bold text-nb-ink/70">
+            {formatWeekLabel(weekStart)}
           </span>
-          <span className="rbc-toolbar-label">{formatWeekLabel(weekStart)}</span>
         </div>
         <div className="flex flex-1 overflow-hidden">
           {sidebarOpen && (
