@@ -79,6 +79,17 @@ export async function POST() {
           timeEntries: { none: {} },
         },
       });
+      // Any stale tickets kept around because they're still referenced by a
+      // time entry (e.g. previously assigned/open, or added ad-hoc via the
+      // editor's ticket search before this "tracked" distinction existed)
+      // shouldn't linger in the sidebar's tracked list anymore.
+      await prisma.ticket.updateMany({
+        where: {
+          userId: session.user.id,
+          jiraId: { in: stale.map((t) => t.jiraId) },
+        },
+        data: { tracked: false },
+      });
     }
 
     return NextResponse.json({ tickets: results });
