@@ -160,6 +160,13 @@ h1, h2, h3, .nb-display {
 .rbc-timeslot-group {
   border-bottom: 1px solid #d3cabb !important;
 }
+/* With resourceGroupingLayout, each day is split into two resource
+   sub-columns (Time reporting / Google Calendar); the second sub-column
+   picks up the same border-left as day-to-day dividers. Remove just
+   that inner one so only the divider between days remains. */
+.rbc-time-content > * + * > *:nth-child(2) {
+  border-left: none !important;
+}
 .rbc-label {
   font-size: 0.7rem;
   color: rgba(17, 17, 17, 0.55);
