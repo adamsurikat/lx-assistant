@@ -2,7 +2,7 @@
 
 import { useEffect, useState, useCallback, type SyntheticEvent } from "react";
 import Link from "next/link";
-import { signOut, useSession } from "next-auth/react";
+import { AppHeader } from "@/components/AppHeader";
 import { TicketSidebar, type TicketSummary } from "@/components/TicketSidebar";
 import { TimeCalendar, type CalendarEventItem } from "@/components/TimeCalendar";
 import { EventEditorModal, type EditableEntry, formatDuration } from "@/components/EventEditorModal";
@@ -56,7 +56,6 @@ function formatWeekLabel(weekStart: Date): string {
 }
 
 export default function HomePage() {
-  const { data: session } = useSession();
   const [tickets, setTickets] = useState<TicketSummary[]>([]);
   const [entries, setEntries] = useState<TimeEntryDTO[]>([]);
   const [googleEvents, setGoogleEvents] = useState<GoogleCalendarEventDTO[]>([]);
@@ -412,32 +411,19 @@ export default function HomePage() {
 
   return (
     <div className="flex h-screen flex-col">
-      <header className="nb-panel-sm m-3 mb-0 flex items-center justify-between bg-nb-orange px-6 py-3">
-        <h1 className="nb-display text-lg">🗓️ lx-assistant</h1>
-        <div className="flex items-center gap-4 text-sm font-bold">
-          {jiraConnected === false && (
+      <AppHeader
+        active="calendar"
+        extra={
+          jiraConnected === false && (
             <Link
               href="/settings"
               className="nb-btn nb-btn-pink px-3 py-1 text-xs"
             >
               Connect Jira in Settings
             </Link>
-          )}
-          <span>{session?.user?.name}</span>
-          <Link href="/tools" className="underline decoration-2">
-            Tools
-          </Link>
-          <Link href="/settings" className="underline decoration-2">
-            Settings
-          </Link>
-          <button
-            onClick={() => signOut({ callbackUrl: "/login" })}
-            className="underline decoration-2"
-          >
-            Sign out
-          </button>
-        </div>
-      </header>
+          )
+        }
+      />
 
       {error && (
         <div className="nb-panel-sm m-3 mb-0 bg-nb-pink px-6 py-2 text-sm font-bold text-white">
