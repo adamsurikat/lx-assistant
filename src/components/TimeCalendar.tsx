@@ -104,7 +104,7 @@ export function TimeCalendar({
 }: TimeCalendarProps) {
   const allEvents = [...events, ...googleEvents];
   return (
-    <div className="h-full flex-1 bg-nb-paper p-3">
+    <div className="h-full min-w-0 flex-1 bg-nb-paper p-3">
       <DnDCalendar
         localizer={localizer}
         events={allEvents}
