@@ -175,11 +175,13 @@ h1, h2, h3, .nb-display {
 .rbc-event {
   border: none !important;
   border-radius: 6px !important;
+  box-shadow: 0 2px 6px rgba(17, 17, 17, 0.18);
   font-weight: 600;
   font-size: 0.75rem;
 }
 .rbc-event.rbc-selected {
   filter: brightness(0.92);
+  box-shadow: 0 4px 10px rgba(17, 17, 17, 0.28);
 }
 .rbc-slot-selection {
   background-color: color-mix(in srgb, var(--nb-orange) 35%, transparent);
