@@ -178,6 +178,17 @@ h1, h2, h3, .nb-display {
 .rbc-time-content > * > * {
   min-width: 0;
 }
+/* react-big-calendar's own stylesheet hardcodes a 140px min-width per
+   resource sub-column (.rbc-time-view-resources .rbc-day-slot), i.e. a
+   280px floor per day (Time reporting + Google Calendar). That's wider
+   than the available per-day share on most screens, so the grid
+   silently overflowed .rbc-time-content and drifted out of sync with
+   the header row (and the "today" background, split across both
+   sub-columns, no longer lined up with either). Remove the floor so
+   columns can shrink to their real flex share. */
+.rbc-time-view-resources .rbc-day-slot {
+  min-width: 0 !important;
+}
 /* Only the date row ("Mon 9/7") is useful in the header — the resource
    sub-header row ("Time reporting" / "Google Calendar") is redundant
    since each day's two sub-columns are already visually obvious from
