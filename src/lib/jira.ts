@@ -101,6 +101,42 @@ export async function fetchAssignedOpenTickets(
   }));
 }
 
+/**
+ * Fetches a single Jira issue by its key or id (e.g. "PROJ-123"), regardless
+ * of assignee/status, for the "add any ticket manually" free-text lookup.
+ * Returns null if the issue doesn't exist or isn't accessible.
+ */
+export async function fetchTicketByKey(
+  config: JiraUserConfig,
+  keyOrId: string
+): Promise<JiraTicket | null> {
+  const res = await jiraFetch(
+    config,
+    `/rest/api/3/issue/${encodeURIComponent(keyOrId)}?fields=summary,status`
+  );
+
+  if (res.status === 404) {
+    return null;
+  }
+  if (!res.ok) {
+    const body = await res.text();
+    throw new Error(`Jira issue lookup failed (${res.status}): ${body}`);
+  }
+
+  const issue = (await res.json()) as {
+    id: string;
+    key: string;
+    fields: { summary: string; status: { name: string } };
+  };
+
+  return {
+    id: issue.id,
+    key: issue.key,
+    summary: issue.fields.summary,
+    status: issue.fields.status.name,
+  };
+}
+
 export interface WorklogInput {
   issueIdOrKey: string;
   startedISO: string; // ISO 8601 timestamp

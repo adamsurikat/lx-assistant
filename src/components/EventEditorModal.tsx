@@ -19,6 +19,7 @@ interface EventEditorModalProps {
   onClose: () => void;
   onAssignTicket: (ticketId: string) => Promise<void>;
   onDelete: () => Promise<void>;
+  onLookupTicket: (key: string) => Promise<TicketSummary | null>;
 }
 
 function formatRange(startISO: string, endISO: string): string {
@@ -41,10 +42,14 @@ export function EventEditorModal({
   onClose,
   onAssignTicket,
   onDelete,
+  onLookupTicket,
 }: EventEditorModalProps) {
   const [selectedTicketId, setSelectedTicketId] = useState(entry.ticket?.id ?? "");
   const [saving, setSaving] = useState(false);
   const [deleting, setDeleting] = useState(false);
+  const [searchKey, setSearchKey] = useState("");
+  const [searching, setSearching] = useState(false);
+  const [searchError, setSearchError] = useState<string | null>(null);
 
   const handleAssign = async () => {
     if (!selectedTicketId) return;
@@ -57,6 +62,21 @@ export function EventEditorModal({
     setDeleting(true);
     await onDelete();
     setDeleting(false);
+  };
+
+  const handleSearch = async () => {
+    const key = searchKey.trim();
+    if (!key) return;
+    setSearching(true);
+    setSearchError(null);
+    const ticket = await onLookupTicket(key);
+    if (ticket) {
+      setSelectedTicketId(ticket.id);
+      setSearchKey("");
+    } else {
+      setSearchError(`No Jira ticket found for "${key}"`);
+    }
+    setSearching(false);
   };
 
   return (
@@ -86,6 +106,31 @@ export function EventEditorModal({
             </option>
           ))}
         </select>
+
+        <div className="mb-3 flex items-center gap-2">
+          <input
+            type="text"
+            value={searchKey}
+            onChange={(e) => setSearchKey(e.target.value)}
+            onKeyDown={(e) => {
+              if (e.key === "Enter") {
+                e.preventDefault();
+                handleSearch();
+              }
+            }}
+            placeholder="Or type a ticket number, e.g. PROJ-123"
+            className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm"
+          />
+          <button
+            type="button"
+            onClick={handleSearch}
+            disabled={searching || !searchKey.trim()}
+            className="shrink-0 rounded-md border border-gray-300 px-3 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 disabled:opacity-50"
+          >
+            {searching ? "Searching…" : "Add"}
+          </button>
+        </div>
+        {searchError && <p className="mb-2 text-xs text-red-600">{searchError}</p>}
 
         {entry.ticket && entry.syncedToJira && (
           <p className="mb-2 text-xs font-medium text-green-600">✓ Synced to Jira</p>

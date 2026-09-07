@@ -163,6 +163,27 @@ export default function HomePage() {
     setEditingEntryId(null);
   };
 
+  // Looks up any Jira ticket by key (not just ones already synced/assigned),
+  // adds it to the local ticket cache/sidebar, and returns it for selection.
+  const handleLookupTicket = async (key: string): Promise<TicketSummary | null> => {
+    const res = await fetch("/api/jira/tickets/lookup", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ key }),
+    });
+    if (!res.ok) {
+      return null;
+    }
+    const data = await res.json();
+    const ticket: TicketSummary = data.ticket;
+    setTickets((prev) =>
+      prev.some((t) => t.id === ticket.id)
+        ? prev.map((t) => (t.id === ticket.id ? ticket : t))
+        : [ticket, ...prev]
+    );
+    return ticket;
+  };
+
   const handleDeleteEntry = async (entryId: string) => {
     const res = await fetch(`/api/time-entries/${entryId}`, { method: "DELETE" });
     if (res.ok) {
@@ -238,6 +259,7 @@ export default function HomePage() {
           onClose={() => setEditingEntryId(null)}
           onAssignTicket={(ticketId) => handleAssignTicket(editingEntry.id, ticketId)}
           onDelete={() => handleDeleteEntry(editingEntry.id)}
+          onLookupTicket={handleLookupTicket}
         />
       )}
     </div>
