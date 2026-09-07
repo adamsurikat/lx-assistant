@@ -166,6 +166,17 @@ export default function HomePage() {
 
   const handleEventChange = async (id: string, start: Date, end: Date) => {
     setError(null);
+    // Update local state immediately so the event stays at the dropped
+    // position instead of snapping back to its old spot while the PATCH
+    // request is in flight, then jumping to the new spot once it resolves.
+    const previousEntries = entries;
+    setEntries((prev) =>
+      prev.map((entry) =>
+        entry.id === id
+          ? { ...entry, start: start.toISOString(), end: end.toISOString() }
+          : entry
+      )
+    );
     const res = await fetch(`/api/time-entries/${id}`, {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
@@ -174,6 +185,7 @@ export default function HomePage() {
     if (!res.ok) {
       const data = await res.json().catch(() => ({}));
       setError(data.error ?? "Failed to update time entry.");
+      setEntries(previousEntries);
       return;
     }
     await loadEntries();
