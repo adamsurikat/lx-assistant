@@ -107,13 +107,14 @@ h1, h2, h3, .nb-display {
   outline-offset: 0;
 }
 
-/* --- react-big-calendar overrides for the brutalist grid --- */
+/* --- react-big-calendar overrides: keep the grid/events understated,
+   the bold neo-brutalist treatment is reserved for panels/buttons/modals. */
 .rbc-calendar {
   font-family: var(--font-space-grotesk), Arial, Helvetica, sans-serif;
 }
 .rbc-time-view,
 .rbc-month-view {
-  border: var(--nb-border-width) solid var(--nb-ink) !important;
+  border: 1px solid #d9d2c7 !important;
   background: #fff;
 }
 .rbc-time-header-content,
@@ -128,7 +129,7 @@ h1, h2, h3, .nb-display {
 .rbc-time-header-gutter,
 .rbc-month-row + .rbc-month-row,
 .rbc-day-bg + .rbc-day-bg {
-  border-color: var(--nb-ink) !important;
+  border-color: #e7e1d6 !important;
 }
 .rbc-header {
   font-weight: 700;
@@ -137,20 +138,19 @@ h1, h2, h3, .nb-display {
   padding: 8px 4px;
 }
 .rbc-today {
-  background-color: color-mix(in srgb, var(--nb-green) 25%, #fff);
+  background-color: color-mix(in srgb, var(--nb-green) 12%, #fff);
 }
 .rbc-event {
-  border: 2px solid var(--nb-ink) !important;
-  box-shadow: 3px 3px 0 0 var(--nb-ink);
-  font-weight: 700;
+  border: none !important;
+  font-weight: 600;
   font-size: 0.75rem;
 }
 .rbc-event.rbc-selected {
-  box-shadow: 1px 1px 0 0 var(--nb-ink);
+  filter: brightness(0.92);
 }
 .rbc-slot-selection {
-  background-color: color-mix(in srgb, var(--nb-orange) 40%, transparent);
-  border: 2px dashed var(--nb-ink);
+  background-color: color-mix(in srgb, var(--nb-orange) 35%, transparent);
+  border: 1px dashed var(--nb-ink);
 }
 .rbc-current-time-indicator {
   background-color: var(--nb-pink);

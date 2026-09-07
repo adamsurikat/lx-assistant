@@ -145,7 +145,9 @@ export function TimeCalendar({
             color: event.readOnly ? "#111111" : event.unassigned ? "#111111" : "#fff",
             opacity: event.syncError ? 0.6 : 1,
             cursor: event.readOnly ? "pointer" : undefined,
-            borderStyle: event.syncError || event.unassigned ? "dashed" : "solid",
+            outline:
+              event.syncError || event.unassigned ? "1px dashed rgba(17,17,17,0.4)" : undefined,
+            outlineOffset: "-1px",
           },
         })}
       />
