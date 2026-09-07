@@ -1,26 +1,158 @@
 @import "tailwindcss";
 
+/*
+ * Neo-brutalist design system: bold flat colors (orange / pink / green),
+ * thick black borders, hard offset shadows (no blur), no rounded corners,
+ * chunky uppercase display type. Applied via the `.nb-*` utility classes
+ * below, used throughout the app instead of soft/rounded Tailwind defaults.
+ */
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  --nb-ink: #111111;
+  --nb-paper: #fdf6ec;
+  --nb-orange: #ff5f1f;
+  --nb-pink: #ff3ea5;
+  --nb-green: #39d98a;
+  --nb-border-width: 3px;
+  --nb-shadow-offset: 6px;
 }
 
 @theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+  --color-background: var(--nb-paper);
+  --color-foreground: var(--nb-ink);
+  --color-nb-ink: var(--nb-ink);
+  --color-nb-paper: var(--nb-paper);
+  --color-nb-orange: var(--nb-orange);
+  --color-nb-pink: var(--nb-pink);
+  --color-nb-green: var(--nb-green);
+  --font-sans: var(--font-space-grotesk);
+  --font-display: var(--font-archivo-black);
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+* {
+  border-radius: 0 !important;
 }
 
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  background: var(--nb-paper);
+  color: var(--nb-ink);
+  font-family: var(--font-space-grotesk), Arial, Helvetica, sans-serif;
+}
+
+h1, h2, h3, .nb-display {
+  font-family: var(--font-archivo-black), Arial, Helvetica, sans-serif;
+  text-transform: uppercase;
+  letter-spacing: 0.01em;
+}
+
+/* Flat block with a thick black border and a hard offset shadow. */
+.nb-panel {
+  background: #fff;
+  border: var(--nb-border-width) solid var(--nb-ink);
+  box-shadow: var(--nb-shadow-offset) var(--nb-shadow-offset) 0 0 var(--nb-ink);
+}
+
+.nb-panel-sm {
+  background: #fff;
+  border: var(--nb-border-width) solid var(--nb-ink);
+  box-shadow: 4px 4px 0 0 var(--nb-ink);
+}
+
+/* Base button: thick border, hard shadow, presses flat on click. */
+.nb-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.4rem;
+  border: var(--nb-border-width) solid var(--nb-ink);
+  background: #fff;
+  color: var(--nb-ink);
+  font-weight: 700;
+  box-shadow: 4px 4px 0 0 var(--nb-ink);
+  transition: transform 0.08s ease, box-shadow 0.08s ease;
+  cursor: pointer;
+}
+.nb-btn:hover:not(:disabled) {
+  transform: translate(-2px, -2px);
+  box-shadow: 6px 6px 0 0 var(--nb-ink);
+}
+.nb-btn:active:not(:disabled) {
+  transform: translate(2px, 2px);
+  box-shadow: 1px 1px 0 0 var(--nb-ink);
+}
+.nb-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.nb-btn-orange {
+  background: var(--nb-orange);
+  color: var(--nb-ink);
+}
+.nb-btn-pink {
+  background: var(--nb-pink);
+  color: #fff;
+}
+.nb-btn-green {
+  background: var(--nb-green);
+  color: var(--nb-ink);
+}
+
+.nb-input {
+  border: var(--nb-border-width) solid var(--nb-ink);
+  background: #fff;
+  font-weight: 500;
+}
+.nb-input:focus {
+  outline: 3px solid var(--nb-orange);
+  outline-offset: 0;
+}
+
+/* --- react-big-calendar overrides for the brutalist grid --- */
+.rbc-calendar {
+  font-family: var(--font-space-grotesk), Arial, Helvetica, sans-serif;
+}
+.rbc-time-view,
+.rbc-month-view {
+  border: var(--nb-border-width) solid var(--nb-ink) !important;
+  background: #fff;
+}
+.rbc-time-header-content,
+.rbc-time-content,
+.rbc-time-content > * + * > *,
+.rbc-time-header.rbc-overflowing,
+.rbc-day-slot .rbc-time-slot,
+.rbc-timeslot-group,
+.rbc-header,
+.rbc-header + .rbc-header,
+.rbc-time-gutter,
+.rbc-time-header-gutter,
+.rbc-month-row + .rbc-month-row,
+.rbc-day-bg + .rbc-day-bg {
+  border-color: var(--nb-ink) !important;
+}
+.rbc-header {
+  font-weight: 700;
+  text-transform: uppercase;
+  font-size: 0.7rem;
+  padding: 8px 4px;
+}
+.rbc-today {
+  background-color: color-mix(in srgb, var(--nb-green) 25%, #fff);
+}
+.rbc-event {
+  border: 2px solid var(--nb-ink) !important;
+  box-shadow: 3px 3px 0 0 var(--nb-ink);
+  font-weight: 700;
+  font-size: 0.75rem;
+}
+.rbc-event.rbc-selected {
+  box-shadow: 1px 1px 0 0 var(--nb-ink);
+}
+.rbc-slot-selection {
+  background-color: color-mix(in srgb, var(--nb-orange) 40%, transparent);
+  border: 2px dashed var(--nb-ink);
+}
+.rbc-current-time-indicator {
+  background-color: var(--nb-pink);
+  height: 3px;
 }

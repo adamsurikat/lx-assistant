@@ -38,12 +38,12 @@ export function TicketSidebar({
     return (
       <button
         onClick={() => setExpanded(true)}
-        className="fixed bottom-4 left-4 z-40 flex items-center gap-2 rounded-full bg-indigo-600 px-4 py-3 text-sm font-medium text-white shadow-lg transition hover:bg-indigo-500"
+        className="nb-btn nb-btn-green fixed bottom-4 left-4 z-40 gap-2 px-4 py-3 text-sm font-bold uppercase"
         title="Show my open tickets"
       >
         🎫 Tickets
         {tickets.length > 0 && (
-          <span className="rounded-full bg-white/20 px-2 py-0.5 text-xs">
+          <span className="border-2 border-nb-ink bg-white px-2 py-0.5 text-xs">
             {tickets.length}
           </span>
         )}
@@ -52,20 +52,22 @@ export function TicketSidebar({
   }
 
   return (
-    <div className="fixed bottom-4 left-4 z-40 flex max-h-[70vh] w-72 flex-col rounded-xl border border-gray-200 bg-white shadow-2xl">
-      <div className="flex items-center justify-between border-b border-gray-200 p-3">
-        <h2 className="text-sm font-semibold text-gray-700">My open tickets</h2>
+    <div className="nb-panel fixed bottom-4 left-4 z-40 flex max-h-[70vh] w-72 flex-col">
+      <div className="flex items-center justify-between border-b-2 border-nb-ink bg-nb-green p-3">
+        <h2 className="text-sm font-bold uppercase tracking-wide text-nb-ink">
+          My open tickets
+        </h2>
         <div className="flex items-center gap-1">
           <button
             onClick={onSync}
             disabled={syncing}
-            className="rounded-md bg-indigo-600 px-2 py-1 text-xs font-medium text-white hover:bg-indigo-500 disabled:opacity-50"
+            className="nb-btn nb-btn-orange px-2 py-1 text-xs font-bold uppercase"
           >
             {syncing ? "Syncing…" : "Sync"}
           </button>
           <button
             onClick={() => setExpanded(false)}
-            className="rounded-md px-2 py-1 text-xs font-medium text-gray-500 hover:bg-gray-100"
+            className="nb-btn px-2 py-1 text-xs font-bold"
             title="Collapse"
           >
             ✕
@@ -73,9 +75,9 @@ export function TicketSidebar({
         </div>
       </div>
       <div className="flex-1 overflow-y-auto p-3">
-        {loading && <p className="text-sm text-gray-400">Loading…</p>}
+        {loading && <p className="text-sm font-medium text-nb-ink/50">Loading…</p>}
         {!loading && tickets.length === 0 && (
-          <p className="text-sm text-gray-400">
+          <p className="text-sm font-medium text-nb-ink/50">
             No open tickets. Click Sync to pull from Jira.
           </p>
         )}
@@ -89,13 +91,13 @@ export function TicketSidebar({
                 e.dataTransfer.setData("application/x-ticket-id", ticket.id);
                 e.dataTransfer.effectAllowed = "copy";
               }}
-              className="cursor-grab rounded-lg border border-gray-200 p-3 shadow-sm transition hover:shadow-md active:cursor-grabbing"
-              style={{ borderLeft: `4px solid ${ticket.color ?? "#6366f1"}` }}
+              className="nb-panel-sm cursor-grab p-3 transition active:cursor-grabbing"
+              style={{ borderLeft: `6px solid ${ticket.color ?? "#FF5F1F"}` }}
               title="Drag onto the calendar to log time"
             >
-              <p className="text-sm font-semibold text-gray-800">{ticket.key}</p>
-              <p className="truncate text-xs text-gray-500">{ticket.summary}</p>
-              <span className="mt-1 inline-block rounded-full bg-gray-100 px-2 py-0.5 text-[10px] uppercase tracking-wide text-gray-500">
+              <p className="text-sm font-bold text-nb-ink">{ticket.key}</p>
+              <p className="truncate text-xs font-medium text-nb-ink/70">{ticket.summary}</p>
+              <span className="mt-1 inline-block border-2 border-nb-ink bg-nb-paper px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-nb-ink">
                 {ticket.status}
               </span>
             </li>

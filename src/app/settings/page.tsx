@@ -57,26 +57,26 @@ export default function SettingsPage() {
 
   return (
     <main className="mx-auto max-w-lg p-8">
-      <Link href="/" className="mb-4 inline-block text-sm text-indigo-600 underline">
+      <Link href="/" className="mb-4 inline-block text-sm font-bold text-nb-ink underline decoration-nb-orange decoration-4">
         ← Back to calendar
       </Link>
-      <h1 className="mb-1 text-2xl font-bold text-gray-900">Connect Jira</h1>
-      <p className="mb-6 text-sm text-gray-500">
+      <h1 className="nb-display mb-1 text-2xl">Connect Jira</h1>
+      <p className="mb-6 text-sm font-medium text-nb-ink/70">
         Create an API token at{" "}
         <a
           href="https://id.atlassian.com/manage-profile/security/api-tokens"
           target="_blank"
           rel="noreferrer"
-          className="underline"
+          className="underline decoration-nb-pink decoration-2"
         >
           id.atlassian.com
         </a>{" "}
         and paste it below. It is encrypted before being stored.
       </p>
 
-      <form onSubmit={handleSave} className="space-y-4 rounded-xl border border-gray-200 p-6 shadow-sm">
+      <form onSubmit={handleSave} className="nb-panel space-y-4 p-6">
         <div>
-          <label className="mb-1 block text-sm font-medium text-gray-700">
+          <label className="mb-1 block text-sm font-bold uppercase tracking-wide text-nb-ink">
             Jira site URL
           </label>
           <input
@@ -85,11 +85,11 @@ export default function SettingsPage() {
             placeholder="https://yourcompany.atlassian.net"
             value={siteUrl}
             onChange={(e) => setSiteUrl(e.target.value)}
-            className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm"
+            className="nb-input w-full px-3 py-2 text-sm"
           />
         </div>
         <div>
-          <label className="mb-1 block text-sm font-medium text-gray-700">
+          <label className="mb-1 block text-sm font-bold uppercase tracking-wide text-nb-ink">
             Atlassian account email
           </label>
           <input
@@ -97,19 +97,24 @@ export default function SettingsPage() {
             required
             value={jiraEmail}
             onChange={(e) => setJiraEmail(e.target.value)}
-            className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm"
+            className="nb-input w-full px-3 py-2 text-sm"
           />
         </div>
         <div>
-          <label className="mb-1 flex items-center justify-between text-sm font-medium text-gray-700">
+          <label className="mb-1 flex items-center justify-between text-sm font-bold uppercase tracking-wide text-nb-ink">
             <span>
-              API token {connected && <span className="text-gray-400">(leave blank to keep current)</span>}
+              API token{" "}
+              {connected && (
+                <span className="font-normal normal-case text-nb-ink/50">
+                  (leave blank to keep current)
+                </span>
+              )}
             </span>
             <a
               href="https://id.atlassian.com/manage-profile/security/api-tokens"
               target="_blank"
               rel="noreferrer"
-              className="text-xs font-normal text-indigo-600 underline"
+              className="text-xs font-normal normal-case text-nb-pink underline"
             >
               Get an API token
             </a>
@@ -119,17 +124,17 @@ export default function SettingsPage() {
             required={!connected}
             value={apiToken}
             onChange={(e) => setApiToken(e.target.value)}
-            className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm"
+            className="nb-input w-full px-3 py-2 text-sm"
           />
         </div>
 
-        {message && <p className="text-sm text-gray-600">{message}</p>}
+        {message && <p className="text-sm font-bold text-nb-ink">{message}</p>}
 
         <div className="flex items-center gap-3">
           <button
             type="submit"
             disabled={saving}
-            className="rounded-md bg-indigo-600 px-4 py-2 text-sm font-medium text-white hover:bg-indigo-500 disabled:opacity-50"
+            className="nb-btn nb-btn-orange px-4 py-2 text-sm font-bold uppercase"
           >
             {saving ? "Saving…" : "Save"}
           </button>
@@ -138,13 +143,13 @@ export default function SettingsPage() {
               type="button"
               onClick={handleDisconnect}
               disabled={saving}
-              className="rounded-md border border-red-300 px-4 py-2 text-sm font-medium text-red-600 hover:bg-red-50"
+              className="nb-btn px-4 py-2 text-sm font-bold uppercase text-nb-pink"
             >
               Disconnect
             </button>
           )}
           {connected && (
-            <span className="text-sm font-medium text-green-600">✓ Connected</span>
+            <span className="text-sm font-bold uppercase text-nb-green">✓ Connected</span>
           )}
         </div>
       </form>

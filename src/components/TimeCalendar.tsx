@@ -97,7 +97,7 @@ export function TimeCalendar({
 }: TimeCalendarProps) {
   const allEvents = [...events, ...googleEvents];
   return (
-    <div className="h-full flex-1 bg-white p-4">
+    <div className="h-full flex-1 bg-nb-paper p-3">
       <DnDCalendar
         localizer={localizer}
         events={allEvents}
@@ -141,18 +141,11 @@ export function TimeCalendar({
         dragFromOutsideItem={makeDragPreviewItem}
         eventPropGetter={(event: CalendarEventItem) => ({
           style: {
-            backgroundColor: event.readOnly ? "#e5e7eb" : event.color,
-            color: event.readOnly ? "#374151" : undefined,
-            borderColor: event.readOnly ? "#9ca3af" : event.color,
-            opacity: event.syncError ? 0.6 : event.readOnly ? 0.85 : 1,
+            backgroundColor: event.readOnly ? "#cdeede" : event.color,
+            color: event.readOnly ? "#111111" : event.unassigned ? "#111111" : "#fff",
+            opacity: event.syncError ? 0.6 : 1,
             cursor: event.readOnly ? "pointer" : undefined,
-            border: event.syncError
-              ? "2px dashed #dc2626"
-              : event.readOnly
-                ? "1px solid #9ca3af"
-                : event.unassigned
-                  ? "2px dashed #9ca3af"
-                  : undefined,
+            borderStyle: event.syncError || event.unassigned ? "dashed" : "solid",
           },
         })}
       />

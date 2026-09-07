@@ -257,29 +257,32 @@ export default function HomePage() {
 
   return (
     <div className="flex h-screen flex-col">
-      <header className="flex items-center justify-between border-b border-gray-200 bg-gradient-to-r from-indigo-600 to-purple-600 px-6 py-3 text-white">
-        <h1 className="text-lg font-bold">🗓️ Jira Time Calendar</h1>
-        <div className="flex items-center gap-4 text-sm">
+      <header className="nb-panel-sm m-3 mb-0 flex items-center justify-between bg-nb-orange px-6 py-3">
+        <h1 className="nb-display text-lg">🗓️ Jira Time Calendar</h1>
+        <div className="flex items-center gap-4 text-sm font-bold">
           {jiraConnected === false && (
             <Link
               href="/settings"
-              className="rounded-full bg-yellow-400 px-3 py-1 font-medium text-yellow-900"
+              className="nb-btn nb-btn-pink px-3 py-1 text-xs uppercase"
             >
               Connect Jira in Settings
             </Link>
           )}
           <span>{session?.user?.name}</span>
-          <Link href="/settings" className="underline">
+          <Link href="/settings" className="underline decoration-2">
             Settings
           </Link>
-          <button onClick={() => signOut({ callbackUrl: "/login" })} className="underline">
+          <button
+            onClick={() => signOut({ callbackUrl: "/login" })}
+            className="underline decoration-2"
+          >
             Sign out
           </button>
         </div>
       </header>
 
       {error && (
-        <div className="border-b border-red-200 bg-red-50 px-6 py-2 text-sm text-red-700">
+        <div className="nb-panel-sm m-3 mb-0 bg-nb-pink px-6 py-2 text-sm font-bold text-white">
           {error}
         </div>
       )}

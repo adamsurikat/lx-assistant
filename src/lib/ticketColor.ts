@@ -1,11 +1,17 @@
-// A colorful, distinct palette used to assign UI colors to tickets on the
-// calendar. Shared between the Jira sync route (round-robin assignment) and
-// the manual ticket lookup route (deterministic hash-based assignment).
+// A neo-brutalist palette (orange / pink / green shades) used to assign UI
+// colors to tickets on the calendar. Shared between the Jira sync route
+// (round-robin assignment) and the manual ticket lookup route (deterministic
+// hash-based assignment).
 export const TICKET_COLOR_PALETTE = [
-  "#ef4444", "#f97316", "#f59e0b", "#eab308", "#84cc16",
-  "#22c55e", "#10b981", "#14b8a6", "#06b6d4", "#0ea5e9",
-  "#3b82f6", "#6366f1", "#8b5cf6", "#a855f7", "#d946ef",
-  "#ec4899", "#f43f5e",
+  "#FF5F1F", // orange
+  "#FF3EA5", // pink
+  "#39D98A", // green
+  "#FF8A3D", // light orange
+  "#FF7AC6", // light pink
+  "#7CF0B2", // light green
+  "#D94A0C", // dark orange
+  "#C4187E", // dark pink
+  "#1FA866", // dark green
 ];
 
 /**
