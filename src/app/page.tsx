@@ -5,7 +5,7 @@ import Link from "next/link";
 import { signOut, useSession } from "next-auth/react";
 import { TicketSidebar, type TicketSummary } from "@/components/TicketSidebar";
 import { TimeCalendar, type CalendarEventItem } from "@/components/TimeCalendar";
-import { EventEditorModal } from "@/components/EventEditorModal";
+import { EventEditorModal, type EditableEntry } from "@/components/EventEditorModal";
 import { EventPopover, type EventPopoverData } from "@/components/EventPopover";
 
 interface TimeEntryDTO {
@@ -49,6 +49,7 @@ export default function HomePage() {
   const [jiraSiteUrl, setJiraSiteUrl] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [editingEntryId, setEditingEntryId] = useState<string | null>(null);
+  const [draftEntry, setDraftEntry] = useState<{ start: Date; end: Date } | null>(null);
   const [popover, setPopover] = useState<{
     data: EventPopoverData;
     anchor: { x: number; y: number };
@@ -150,14 +151,29 @@ export default function HomePage() {
     await loadEntries();
   };
 
-  const handleCreateBlankEvent = async (start: Date, end: Date) => {
+  // Opens the editor with an uncommitted draft entry; nothing is written to
+  // the DB until the user presses Save (see handleCreateEntry).
+  const handleCreateBlankEvent = (start: Date, end: Date) => {
+    setError(null);
+    setDraftEntry({ start, end });
+  };
+
+  const handleCreateEntry = async (payload: {
+    ticketId: string | null;
+    title: string | null;
+    comment: string | null;
+  }) => {
+    if (!draftEntry) return;
     setError(null);
     const res = await fetch("/api/time-entries", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
-        start: start.toISOString(),
-        end: end.toISOString(),
+        ticketId: payload.ticketId ?? undefined,
+        start: draftEntry.start.toISOString(),
+        end: draftEntry.end.toISOString(),
+        title: payload.ticketId === null ? payload.title ?? "" : undefined,
+        comment: payload.comment ?? "",
       }),
     });
     if (!res.ok) {
@@ -165,10 +181,8 @@ export default function HomePage() {
       setError(data.error ?? "Failed to create time entry.");
       return;
     }
-    const data = await res.json();
     await loadEntries();
-    // Immediately open the editor so the user can assign a ticket.
-    setEditingEntryId(data.entry.id);
+    setDraftEntry(null);
   };
 
   const handleEventChange = async (id: string, start: Date, end: Date) => {
@@ -280,6 +294,23 @@ export default function HomePage() {
 
   const editingEntry = entries.find((e) => e.id === editingEntryId) ?? null;
 
+  // The modal shows either an existing entry being edited, or an in-progress
+  // draft (new blank slot) that hasn't been saved to the DB yet.
+  const modalEntry: EditableEntry | null = editingEntry
+    ? editingEntry
+    : draftEntry
+      ? {
+          id: null,
+          start: draftEntry.start.toISOString(),
+          end: draftEntry.end.toISOString(),
+          title: null,
+          comment: null,
+          syncedToJira: false,
+          lastSyncError: null,
+          ticket: null,
+        }
+      : null;
+
   const calendarEvents: CalendarEventItem[] = entries.map((entry) => ({
     id: entry.id,
     title: entry.ticket
@@ -364,13 +395,24 @@ export default function HomePage() {
         onDragStartTicket={setDraggedTicketId}
       />
 
-      {editingEntry && (
+      {modalEntry && (
         <EventEditorModal
-          entry={editingEntry}
+          entry={modalEntry}
           tickets={tickets}
-          onClose={() => setEditingEntryId(null)}
-          onSave={(payload) => handleSaveEntry(editingEntry.id, payload)}
-          onDelete={() => handleDeleteEntry(editingEntry.id)}
+          onClose={() => {
+            setEditingEntryId(null);
+            setDraftEntry(null);
+          }}
+          onSave={
+            modalEntry.id === null
+              ? handleCreateEntry
+              : (payload) => handleSaveEntry(modalEntry.id as string, payload)
+          }
+          onDelete={
+            modalEntry.id === null
+              ? async () => setDraftEntry(null)
+              : () => handleDeleteEntry(modalEntry.id as string)
+          }
           onLookupTicket={handleLookupTicket}
         />
       )}

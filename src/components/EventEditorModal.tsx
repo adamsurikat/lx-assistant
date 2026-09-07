@@ -4,7 +4,7 @@ import { useState } from "react";
 import type { TicketSummary } from "@/components/TicketSidebar";
 
 export interface EditableEntry {
-  id: string;
+  id: string | null;
   start: string;
   end: string;
   title: string | null;
@@ -64,6 +64,7 @@ export function EventEditorModal({
   const [searchError, setSearchError] = useState<string | null>(null);
 
   const hasTicket = selectedTicketId !== NO_TICKET;
+  const isNew = entry.id === null;
   const trimmedTitle = title.trim();
   const trimmedComment = comment.trim();
   const unchanged =
@@ -112,7 +113,7 @@ export function EventEditorModal({
         className="nb-panel w-full max-w-md bg-white p-8"
         onClick={(e) => e.stopPropagation()}
       >
-        <h2 className="nb-display mb-2 text-lg">Time entry</h2>
+        <h2 className="nb-display mb-2 text-lg">{isNew ? "New time entry" : "Time entry"}</h2>
         <p className="mb-6 text-sm font-medium text-nb-ink/60">
           {formatRange(entry.start, entry.end)}
         </p>
@@ -201,14 +202,18 @@ export function EventEditorModal({
         )}
 
         <div className="mt-6 flex items-center justify-between">
-          <button
-            type="button"
-            onClick={handleDelete}
-            disabled={deleting}
-            className="nb-btn px-4 py-2 text-sm font-semibold text-nb-pink"
-          >
-            {deleting ? "Deleting…" : "Delete"}
-          </button>
+          {isNew ? (
+            <span />
+          ) : (
+            <button
+              type="button"
+              onClick={handleDelete}
+              disabled={deleting}
+              className="nb-btn px-4 py-2 text-sm font-semibold text-nb-pink"
+            >
+              {deleting ? "Deleting…" : "Delete"}
+            </button>
+          )}
           <div className="flex gap-3">
             <button
               type="button"
