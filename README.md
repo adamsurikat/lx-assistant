@@ -23,7 +23,7 @@ with a local SQLite copy kept as a backup/report.
    - `AUTH_SECRET`, `TOKEN_ENCRYPTION_KEY`: generate with `openssl rand -base64 32`
    - `AUTH_GOOGLE_ID` / `AUTH_GOOGLE_SECRET`: create an OAuth 2.0 Client ID in the
      [Google Cloud Console](https://console.cloud.google.com/apis/credentials)
-     with authorized redirect URI `http://localhost:3000/api/auth/callback/google`
+     with authorized redirect URI `http://localhost:4000/api/auth/callback/google`
 
 2. Install dependencies and set up the database (already done once, re-run if
    you pull schema changes):
