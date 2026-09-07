@@ -22,6 +22,7 @@ export async function PATCH(
   const body = (await request.json()) as {
     start?: string;
     end?: string;
+    title?: string;
     comment?: string;
     ticketId?: string | null;
   };
@@ -64,6 +65,7 @@ export async function PATCH(
       start,
       end,
       ticketId,
+      ...(body.title !== undefined ? { title: body.title } : {}),
       ...(body.comment !== undefined ? { comment: body.comment } : {}),
     },
     include: { ticket: true },
@@ -86,6 +88,7 @@ export async function PATCH(
       await updateWorklog(config, entry.ticket.jiraId, entry.jiraWorklogId, {
         startedISO: entry.start.toISOString(),
         timeSpentSeconds,
+        comment: entry.comment ?? undefined,
       });
       entry = await prisma.timeEntry.update({
         where: { id },

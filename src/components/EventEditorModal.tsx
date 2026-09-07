@@ -7,6 +7,7 @@ export interface EditableEntry {
   id: string;
   start: string;
   end: string;
+  title: string | null;
   comment: string | null;
   syncedToJira: boolean;
   lastSyncError: string | null;
@@ -17,7 +18,11 @@ interface EventEditorModalProps {
   entry: EditableEntry;
   tickets: TicketSummary[];
   onClose: () => void;
-  onSave: (payload: { ticketId: string | null; title: string | null }) => Promise<void>;
+  onSave: (payload: {
+    ticketId: string | null;
+    title: string | null;
+    comment: string | null;
+  }) => Promise<void>;
   onDelete: () => Promise<void>;
   onLookupTicket: (key: string) => Promise<TicketSummary | null>;
 }
@@ -50,7 +55,8 @@ export function EventEditorModal({
   onLookupTicket,
 }: EventEditorModalProps) {
   const [selectedTicketId, setSelectedTicketId] = useState(entry.ticket?.id ?? NO_TICKET);
-  const [title, setTitle] = useState(entry.ticket ? "" : entry.comment ?? "");
+  const [title, setTitle] = useState(entry.ticket ? "" : entry.title ?? "");
+  const [comment, setComment] = useState(entry.comment ?? "");
   const [saving, setSaving] = useState(false);
   const [deleting, setDeleting] = useState(false);
   const [searchKey, setSearchKey] = useState("");
@@ -59,18 +65,20 @@ export function EventEditorModal({
 
   const hasTicket = selectedTicketId !== NO_TICKET;
   const trimmedTitle = title.trim();
+  const trimmedComment = comment.trim();
   const unchanged =
-    (hasTicket && selectedTicketId === entry.ticket?.id) ||
-    (!hasTicket && !entry.ticket && trimmedTitle === (entry.comment ?? "").trim());
+    selectedTicketId === (entry.ticket?.id ?? NO_TICKET) &&
+    (hasTicket || trimmedTitle === (entry.title ?? "").trim()) &&
+    trimmedComment === (entry.comment ?? "").trim();
 
   const handleSave = async () => {
     if (!hasTicket && !trimmedTitle) return;
     setSaving(true);
-    await onSave(
-      hasTicket
-        ? { ticketId: selectedTicketId, title: null }
-        : { ticketId: null, title: trimmedTitle }
-    );
+    await onSave({
+      ticketId: hasTicket ? selectedTicketId : null,
+      title: hasTicket ? null : trimmedTitle,
+      comment: trimmedComment,
+    });
     setSaving(false);
   };
 
@@ -165,6 +173,21 @@ export function EventEditorModal({
             <p className="mt-2 text-xs font-medium text-nb-ink/50">
               Entries without a ticket aren&apos;t synced to Jira.
             </p>
+          </div>
+        )}
+
+        {hasTicket && (
+          <div className="mb-5">
+            <label className="mb-2 block text-sm font-semibold tracking-wide text-nb-ink">
+              Comment
+            </label>
+            <textarea
+              value={comment}
+              onChange={(e) => setComment(e.target.value)}
+              placeholder="Optional note to add as a comment on the Jira worklog…"
+              rows={3}
+              className="nb-input w-full resize-none px-3 py-2 text-sm"
+            />
           </div>
         )}
 

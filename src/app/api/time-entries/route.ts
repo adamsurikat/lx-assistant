@@ -37,6 +37,7 @@ export async function POST(request: Request) {
     ticketId?: string;
     start?: string;
     end?: string;
+    title?: string;
     comment?: string;
   };
 
@@ -70,6 +71,7 @@ export async function POST(request: Request) {
       ticketId,
       start,
       end,
+      title: body.title,
       comment: body.comment,
     },
     include: { ticket: true },

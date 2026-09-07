@@ -12,6 +12,7 @@ interface TimeEntryDTO {
   id: string;
   start: string;
   end: string;
+  title: string | null;
   comment: string | null;
   syncedToJira: boolean;
   lastSyncError: string | null;
@@ -199,15 +200,16 @@ export default function HomePage() {
 
   const handleSaveEntry = async (
     entryId: string,
-    payload: { ticketId: string | null; title: string | null }
+    payload: { ticketId: string | null; title: string | null; comment: string | null }
   ) => {
     setError(null);
-    const body: { ticketId: string | null; comment?: string } = {
+    const body: { ticketId: string | null; title?: string; comment?: string } = {
       ticketId: payload.ticketId,
     };
     if (payload.ticketId === null) {
-      body.comment = payload.title ?? "";
+      body.title = payload.title ?? "";
     }
+    body.comment = payload.comment ?? "";
     const res = await fetch(`/api/time-entries/${entryId}`, {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
@@ -282,7 +284,7 @@ export default function HomePage() {
     id: entry.id,
     title: entry.ticket
       ? `${entry.ticket.key} · ${entry.ticket.summary}`
-      : entry.comment?.trim() || "Unassigned",
+      : entry.title?.trim() || "Unassigned",
     start: new Date(entry.start),
     end: new Date(entry.end),
     color: entry.ticket?.color ?? "#9ca3af",

@@ -145,12 +145,32 @@ export interface WorklogInput {
 }
 
 /**
+ * Builds the Atlassian Document Format payload Jira expects for a worklog
+ * comment. Returns undefined for a blank/absent comment so it can be spread
+ * into a request body without adding an empty `comment` field.
+ */
+function toJiraCommentDoc(comment?: string) {
+  if (!comment) return undefined;
+  return {
+    type: "doc",
+    version: 1,
+    content: [
+      {
+        type: "paragraph",
+        content: [{ type: "text", text: comment }],
+      },
+    ],
+  };
+}
+
+/**
  * Creates a new worklog entry on a Jira issue.
  */
 export async function createWorklog(
   config: JiraUserConfig,
   input: WorklogInput
 ): Promise<{ id: string }> {
+  const commentDoc = toJiraCommentDoc(input.comment);
   const res = await jiraFetch(
     config,
     `/rest/api/3/issue/${encodeURIComponent(input.issueIdOrKey)}/worklog`,
@@ -159,20 +179,7 @@ export async function createWorklog(
       body: JSON.stringify({
         started: toJiraDateTime(input.startedISO),
         timeSpentSeconds: Math.max(60, input.timeSpentSeconds),
-        ...(input.comment
-          ? {
-              comment: {
-                type: "doc",
-                version: 1,
-                content: [
-                  {
-                    type: "paragraph",
-                    content: [{ type: "text", text: input.comment }],
-                  },
-                ],
-              },
-            }
-          : {}),
+        ...(commentDoc ? { comment: commentDoc } : {}),
       }),
     }
   );
@@ -187,7 +194,8 @@ export async function createWorklog(
 }
 
 /**
- * Updates an existing worklog entry on a Jira issue (e.g. after a drag/resize).
+ * Updates an existing worklog entry on a Jira issue (e.g. after a
+ * drag/resize, or after the user edits its comment).
  */
 export async function updateWorklog(
   config: JiraUserConfig,
@@ -203,6 +211,9 @@ export async function updateWorklog(
       body: JSON.stringify({
         started: toJiraDateTime(input.startedISO),
         timeSpentSeconds: Math.max(60, input.timeSpentSeconds),
+        // Always send the comment field (even null) so clearing a comment
+        // locally also clears it on the Jira worklog.
+        comment: toJiraCommentDoc(input.comment) ?? null,
       }),
     }
   );

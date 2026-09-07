@@ -94,6 +94,10 @@ model TimeEntry {
   ticketId String? // null until a ticket is assigned ("blank" entry created by clicking/dragging on the calendar)
   start    DateTime
   end      DateTime
+  // User-entered display title, only used for entries with no ticket
+  // assigned (ticketed entries are titled from the ticket key instead).
+  title    String?
+  // Free-text note sent as the Jira worklog comment when synced.
   comment  String?
 
   syncedToJira  Boolean   @default(false)
