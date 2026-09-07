@@ -147,16 +147,25 @@ export default function HomePage() {
     await loadEntries();
   };
 
-  const handleAssignTicket = async (entryId: string, ticketId: string) => {
+  const handleSaveEntry = async (
+    entryId: string,
+    payload: { ticketId: string | null; title: string | null }
+  ) => {
     setError(null);
+    const body: { ticketId: string | null; comment?: string } = {
+      ticketId: payload.ticketId,
+    };
+    if (payload.ticketId === null) {
+      body.comment = payload.title ?? "";
+    }
     const res = await fetch(`/api/time-entries/${entryId}`, {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ ticketId }),
+      body: JSON.stringify(body),
     });
     if (!res.ok) {
       const data = await res.json().catch(() => ({}));
-      setError(data.error ?? "Failed to assign ticket.");
+      setError(data.error ?? "Failed to save time entry.");
       return;
     }
     await loadEntries();
@@ -196,7 +205,9 @@ export default function HomePage() {
 
   const calendarEvents: CalendarEventItem[] = entries.map((entry) => ({
     id: entry.id,
-    title: entry.ticket ? `${entry.ticket.key} · ${entry.ticket.summary}` : "Unassigned",
+    title: entry.ticket
+      ? `${entry.ticket.key} · ${entry.ticket.summary}`
+      : entry.comment?.trim() || "Unassigned",
     start: new Date(entry.start),
     end: new Date(entry.end),
     color: entry.ticket?.color ?? "#9ca3af",
@@ -257,7 +268,7 @@ export default function HomePage() {
           entry={editingEntry}
           tickets={tickets}
           onClose={() => setEditingEntryId(null)}
-          onAssignTicket={(ticketId) => handleAssignTicket(editingEntry.id, ticketId)}
+          onSave={(payload) => handleSaveEntry(editingEntry.id, payload)}
           onDelete={() => handleDeleteEntry(editingEntry.id)}
           onLookupTicket={handleLookupTicket}
         />

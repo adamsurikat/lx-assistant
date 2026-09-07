@@ -17,7 +17,7 @@ interface EventEditorModalProps {
   entry: EditableEntry;
   tickets: TicketSummary[];
   onClose: () => void;
-  onAssignTicket: (ticketId: string) => Promise<void>;
+  onSave: (payload: { ticketId: string | null; title: string | null }) => Promise<void>;
   onDelete: () => Promise<void>;
   onLookupTicket: (key: string) => Promise<TicketSummary | null>;
 }
@@ -32,29 +32,45 @@ function formatRange(startISO: string, endISO: string): string {
   })}`;
 }
 
+// Sentinel value for the "no ticket" dropdown option, distinct from the
+// empty string used by the disabled placeholder option.
+const NO_TICKET = "__no_ticket__";
+
 /**
  * Modal shown when a calendar time entry is clicked. Lets the user assign
- * (or change) the Jira ticket for the entry, or delete it entirely.
+ * (or change) the Jira ticket for the entry, give it a custom title instead
+ * of a ticket, or delete it entirely.
  */
 export function EventEditorModal({
   entry,
   tickets,
   onClose,
-  onAssignTicket,
+  onSave,
   onDelete,
   onLookupTicket,
 }: EventEditorModalProps) {
-  const [selectedTicketId, setSelectedTicketId] = useState(entry.ticket?.id ?? "");
+  const [selectedTicketId, setSelectedTicketId] = useState(entry.ticket?.id ?? NO_TICKET);
+  const [title, setTitle] = useState(entry.ticket ? "" : entry.comment ?? "");
   const [saving, setSaving] = useState(false);
   const [deleting, setDeleting] = useState(false);
   const [searchKey, setSearchKey] = useState("");
   const [searching, setSearching] = useState(false);
   const [searchError, setSearchError] = useState<string | null>(null);
 
-  const handleAssign = async () => {
-    if (!selectedTicketId) return;
+  const hasTicket = selectedTicketId !== NO_TICKET;
+  const trimmedTitle = title.trim();
+  const unchanged =
+    (hasTicket && selectedTicketId === entry.ticket?.id) ||
+    (!hasTicket && !entry.ticket && trimmedTitle === (entry.comment ?? "").trim());
+
+  const handleSave = async () => {
+    if (!hasTicket && !trimmedTitle) return;
     setSaving(true);
-    await onAssignTicket(selectedTicketId);
+    await onSave(
+      hasTicket
+        ? { ticketId: selectedTicketId, title: null }
+        : { ticketId: null, title: trimmedTitle }
+    );
     setSaving(false);
   };
 
@@ -95,11 +111,9 @@ export function EventEditorModal({
         <select
           value={selectedTicketId}
           onChange={(e) => setSelectedTicketId(e.target.value)}
-          className="mb-1 w-full rounded-md border border-gray-300 px-3 py-2 text-sm"
+          className="mb-3 w-full rounded-md border border-gray-300 px-3 py-2 text-sm"
         >
-          <option value="" disabled>
-            Select a ticket…
-          </option>
+          <option value={NO_TICKET}>No ticket — use a custom title</option>
           {tickets.map((ticket) => (
             <option key={ticket.id} value={ticket.id}>
               {ticket.key} · {ticket.summary}
@@ -132,6 +146,24 @@ export function EventEditorModal({
         </div>
         {searchError && <p className="mb-2 text-xs text-red-600">{searchError}</p>}
 
+        {!hasTicket && (
+          <div className="mb-3">
+            <label className="mb-1 block text-sm font-medium text-gray-700">
+              Title
+            </label>
+            <input
+              type="text"
+              value={title}
+              onChange={(e) => setTitle(e.target.value)}
+              placeholder="e.g. Team meeting, PTO, focus time…"
+              className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm"
+            />
+            <p className="mt-1 text-xs text-gray-500">
+              Entries without a ticket aren&apos;t synced to Jira.
+            </p>
+          </div>
+        )}
+
         {entry.ticket && entry.syncedToJira && (
           <p className="mb-2 text-xs font-medium text-green-600">✓ Synced to Jira</p>
         )}
@@ -158,8 +190,8 @@ export function EventEditorModal({
             </button>
             <button
               type="button"
-              onClick={handleAssign}
-              disabled={saving || !selectedTicketId || selectedTicketId === entry.ticket?.id}
+              onClick={handleSave}
+              disabled={saving || (!hasTicket && !trimmedTitle) || unchanged}
               className="rounded-md bg-indigo-600 px-3 py-2 text-sm font-medium text-white hover:bg-indigo-500 disabled:opacity-50"
             >
               {saving ? "Saving…" : "Save"}
