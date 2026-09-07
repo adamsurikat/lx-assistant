@@ -324,6 +324,21 @@ export default function HomePage() {
     resourceId: "time",
   }));
 
+  // Show a semi-transparent outline at the draft's slot while the "new
+  // entry" modal is open and it hasn't been saved to the DB yet.
+  if (draftEntry) {
+    calendarEvents.push({
+      id: "__draft__",
+      title: "New entry…",
+      start: draftEntry.start,
+      end: draftEntry.end,
+      color: "transparent",
+      synced: false,
+      pending: true,
+      resourceId: "time",
+    });
+  }
+
   const googleCalendarEvents: CalendarEventItem[] = googleEvents
     .filter((event) => !event.allDay)
     .map((event) => ({

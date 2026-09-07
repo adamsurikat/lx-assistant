@@ -65,6 +65,10 @@ export interface CalendarEventItem {
   // True for read-only overlay events sourced from Google Calendar — these
   // can't be dragged, resized, or opened in the editor modal.
   readOnly?: boolean;
+  // True for the placeholder shown at a not-yet-saved draft entry's slot
+  // while the create/edit modal is open — rendered as a semi-transparent
+  // outline until the user saves (or discards) it.
+  pending?: boolean;
   googleLink?: string;
   ticketKey?: string;
   ticketStatus?: string;
@@ -130,15 +134,18 @@ export function TimeCalendar({
         // instead checks real start/end time ranges, so sequential events
         // (e.g. back-to-back Google Calendar meetings) render full-width.
         dayLayoutAlgorithm="no-overlap"
-        draggableAccessor={(event: CalendarEventItem) => !event.readOnly}
-        resizableAccessor={(event: CalendarEventItem) => !event.readOnly}
+        draggableAccessor={(event: CalendarEventItem) => !event.readOnly && !event.pending}
+        resizableAccessor={(event: CalendarEventItem) => !event.readOnly && !event.pending}
         onEventDrop={({ event, start, end }: EventInteractionArgs<CalendarEventItem>) =>
           onEventChange(event.id, new Date(start), new Date(end))
         }
         onEventResize={({ event, start, end }: EventInteractionArgs<CalendarEventItem>) =>
           onEventChange(event.id, new Date(start), new Date(end))
         }
-        onSelectEvent={(event: CalendarEventItem, domEvent) => onSelectEvent(event, domEvent)}
+        onSelectEvent={(event: CalendarEventItem, domEvent) => {
+          if (event.pending) return;
+          onSelectEvent(event, domEvent);
+        }}
         onSelectSlot={(slotInfo) => {
           // The "Google Calendar" sub-column is read-only/view-only — time
           // entries can only be created in the "Time reporting" column.
@@ -151,15 +158,25 @@ export function TimeCalendar({
         }}
         dragFromOutsideItem={makeDragPreviewItem}
         eventPropGetter={(event: CalendarEventItem) => ({
-          style: {
-            backgroundColor: event.readOnly ? "#cdeede" : event.color,
-            color: event.readOnly ? "#111111" : event.unassigned ? "#111111" : "#fff",
-            opacity: event.syncError ? 0.6 : 1,
-            cursor: event.readOnly ? "pointer" : undefined,
-            outline:
-              event.syncError || event.unassigned ? "1px dashed rgba(17,17,17,0.4)" : undefined,
-            outlineOffset: "-1px",
-          },
+          style: event.pending
+            ? {
+                backgroundColor: "rgba(17,17,17,0.06)",
+                color: "#111111",
+                outline: "2px dashed rgba(17,17,17,0.5)",
+                outlineOffset: "-2px",
+                cursor: "default",
+              }
+            : {
+                backgroundColor: event.readOnly ? "#cdeede" : event.color,
+                color: event.readOnly ? "#111111" : event.unassigned ? "#111111" : "#fff",
+                opacity: event.syncError ? 0.6 : 1,
+                cursor: event.readOnly ? "pointer" : undefined,
+                outline:
+                  event.syncError || event.unassigned
+                    ? "1px dashed rgba(17,17,17,0.4)"
+                    : undefined,
+                outlineOffset: "-1px",
+              },
         })}
       />
     </div>
