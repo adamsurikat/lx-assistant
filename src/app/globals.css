@@ -167,6 +167,17 @@ h1, h2, h3, .nb-display {
 .rbc-time-content > * + * > *:nth-child(2) {
   border-left: none !important;
 }
+/* Each day column (and each Time reporting / Google Calendar
+   sub-column within it) is a flex:1 item, but flex items default to
+   min-width: auto, letting their content's intrinsic width push them
+   wider than their even share. That silently overflows
+   .rbc-time-content (which scrolls it away, out of view) while the
+   header row's cells resize correctly, so the two rows drift out of
+   alignment. Force every level to actually shrink to its flex share. */
+.rbc-time-content > * ,
+.rbc-time-content > * > * {
+  min-width: 0;
+}
 /* Only the date row ("Mon 9/7") is useful in the header — the resource
    sub-header row ("Time reporting" / "Google Calendar") is redundant
    since each day's two sub-columns are already visually obvious from
