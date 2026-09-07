@@ -15,7 +15,7 @@ const archivoBlack = Archivo_Black({
 });
 
 export const metadata: Metadata = {
-  title: "Jira Time Calendar",
+  title: "lx-assistant",
   description: "Plan your work week and log time to Jira.",
 };
 

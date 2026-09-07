@@ -344,7 +344,7 @@ export default function HomePage() {
   return (
     <div className="flex h-screen flex-col">
       <header className="nb-panel-sm m-3 mb-0 flex items-center justify-between bg-nb-orange px-6 py-3">
-        <h1 className="nb-display text-lg">🗓️ Jira Time Calendar</h1>
+        <h1 className="nb-display text-lg">🗓️ lx-assistant</h1>
         <div className="flex items-center gap-4 text-sm font-bold">
           {jiraConnected === false && (
             <Link
