@@ -15,7 +15,7 @@ export async function GET() {
   }
 
   const tickets = await prisma.ticket.findMany({
-    where: { userId: session.user.id },
+    where: { userId: session.user.id, tracked: true },
     orderBy: { updatedAt: "desc" },
   });
 
@@ -53,11 +53,15 @@ export async function POST() {
           summary: jt.summary,
           status: jt.status,
           color,
+          tracked: true,
         },
         update: {
           key: jt.key,
           summary: jt.summary,
           status: jt.status,
+          // Promote back to tracked in case this was previously only added
+          // ad-hoc via the event editor's ticket search.
+          tracked: true,
         },
       });
       results.push(ticket);

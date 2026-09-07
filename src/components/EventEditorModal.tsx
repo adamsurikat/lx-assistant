@@ -62,6 +62,18 @@ export function EventEditorModal({
   const [searchKey, setSearchKey] = useState("");
   const [searching, setSearching] = useState(false);
   const [searchError, setSearchError] = useState<string | null>(null);
+  // Tickets found via the search box (or the entry's own current ticket)
+  // that aren't in the tracked `tickets` list, kept only for this modal
+  // instance so they show up as a selectable option without being added to
+  // the sidebar's permanently tracked list.
+  const [adHocTickets, setAdHocTickets] = useState<TicketSummary[]>(
+    entry.ticket && !tickets.some((t) => t.id === entry.ticket!.id) ? [entry.ticket] : []
+  );
+
+  const ticketOptions = [
+    ...tickets,
+    ...adHocTickets.filter((t) => !tickets.some((existing) => existing.id === t.id)),
+  ];
 
   const hasTicket = selectedTicketId !== NO_TICKET;
   const isNew = entry.id === null;
@@ -96,6 +108,9 @@ export function EventEditorModal({
     setSearchError(null);
     const ticket = await onLookupTicket(key);
     if (ticket) {
+      setAdHocTickets((prev) =>
+        prev.some((t) => t.id === ticket.id) ? prev : [ticket, ...prev]
+      );
       setSelectedTicketId(ticket.id);
       setSearchKey("");
     } else {
@@ -127,7 +142,7 @@ export function EventEditorModal({
           className="nb-input mb-5 w-full px-3 py-2 text-sm"
         >
           <option value={NO_TICKET}>No ticket — use a custom title</option>
-          {tickets.map((ticket) => (
+          {ticketOptions.map((ticket) => (
             <option key={ticket.id} value={ticket.id}>
               {ticket.key} · {ticket.summary}
             </option>

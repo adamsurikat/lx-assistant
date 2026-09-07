@@ -78,6 +78,12 @@ model Ticket {
   summary   String
   status    String // Jira status name, e.g. "In Progress"
   color     String? // UI color assigned for calendar display
+  // Whether this ticket is shown in the sidebar's tracked ticket list.
+  // False for tickets added ad-hoc via the "search by key" box in the
+  // event editor, which should only be attached to that one time entry
+  // rather than permanently tracked (promoted to true if it later shows
+  // up in a real "assigned to me" sync).
+  tracked   Boolean  @default(true)
   updatedAt DateTime @updatedAt
   createdAt DateTime @default(now())
 

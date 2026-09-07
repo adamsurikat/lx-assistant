@@ -238,8 +238,10 @@ export default function HomePage() {
     setEditingEntryId(null);
   };
 
-  // Looks up any Jira ticket by key (not just ones already synced/assigned),
-  // adds it to the local ticket cache/sidebar, and returns it for selection.
+  // Looks up any Jira ticket by key (not just ones already synced/assigned)
+  // for use in the event editor's ticket search box. Deliberately does NOT
+  // add it to the sidebar's tracked ticket list — it's only attached to
+  // whichever single time entry the user assigns it to.
   const handleLookupTicket = async (key: string): Promise<TicketSummary | null> => {
     const res = await fetch("/api/jira/tickets/lookup", {
       method: "POST",
@@ -251,11 +253,6 @@ export default function HomePage() {
     }
     const data = await res.json();
     const ticket: TicketSummary = data.ticket;
-    setTickets((prev) =>
-      prev.some((t) => t.id === ticket.id)
-        ? prev.map((t) => (t.id === ticket.id ? ticket : t))
-        : [ticket, ...prev]
-    );
     return ticket;
   };
 

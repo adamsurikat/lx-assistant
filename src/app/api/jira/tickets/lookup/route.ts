@@ -49,6 +49,9 @@ export async function POST(request: Request) {
         summary: jiraTicket.summary,
         status: jiraTicket.status,
         color: existing?.color ?? colorForTicketKey(jiraTicket.key),
+        // Not added to the tracked sidebar list — only attached to whichever
+        // single time entry the user assigns it to from this search box.
+        tracked: false,
       },
       update: {
         key: jiraTicket.key,
