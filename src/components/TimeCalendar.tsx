@@ -30,6 +30,27 @@ const DnDCalendar = withDragAndDrop<CalendarEventItem>(Calendar);
 const MIN_TIME = new Date(1970, 0, 1, 7, 0, 0);
 const MAX_TIME = new Date(1970, 0, 1, 18, 0, 0);
 
+// Default duration (minutes) applied when a ticket is dropped onto the
+// calendar from the sidebar.
+const DEFAULT_DROP_DURATION_MINUTES = 30;
+
+// The dragAndDrop addon calls dragFromOutsideItem() internally to work out
+// the dropped event's duration (and to render the drag preview) — without
+// this prop it throws and the drop is silently lost, so a placeholder event
+// with a sensible default duration must always be returned here.
+function makeDragPreviewItem(): CalendarEventItem {
+  const start = new Date();
+  const end = new Date(start.getTime() + DEFAULT_DROP_DURATION_MINUTES * 60_000);
+  return {
+    id: "__drag-preview__",
+    title: "",
+    start,
+    end,
+    color: "#6366f1",
+    synced: false,
+  };
+}
+
 export interface CalendarEventItem {
   id: string;
   title: string;
@@ -85,6 +106,7 @@ export function TimeCalendar({
           if (!draggedTicketId) return;
           onDropTicket(draggedTicketId, new Date(start), new Date(end));
         }}
+        dragFromOutsideItem={makeDragPreviewItem}
         eventPropGetter={(event: CalendarEventItem) => ({
           style: {
             backgroundColor: event.color,

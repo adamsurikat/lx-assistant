@@ -101,8 +101,18 @@ export default function SettingsPage() {
           />
         </div>
         <div>
-          <label className="mb-1 block text-sm font-medium text-gray-700">
-            API token {connected && <span className="text-gray-400">(leave blank to keep current)</span>}
+          <label className="mb-1 flex items-center justify-between text-sm font-medium text-gray-700">
+            <span>
+              API token {connected && <span className="text-gray-400">(leave blank to keep current)</span>}
+            </span>
+            <a
+              href="https://id.atlassian.com/manage-profile/security/api-tokens"
+              target="_blank"
+              rel="noreferrer"
+              className="text-xs font-normal text-indigo-600 underline"
+            >
+              Get an API token
+            </a>
           </label>
           <input
             type="password"
