@@ -238,6 +238,7 @@ export default function HomePage() {
     unassigned: !entry.ticket,
     synced: entry.syncedToJira,
     syncError: entry.lastSyncError,
+    resourceId: "time",
   }));
 
   const googleCalendarEvents: CalendarEventItem[] = googleEvents
@@ -251,6 +252,7 @@ export default function HomePage() {
       synced: true,
       readOnly: true,
       googleLink: event.htmlLink,
+      resourceId: "google",
     }));
 
   return (

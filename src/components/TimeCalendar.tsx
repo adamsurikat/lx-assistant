@@ -48,6 +48,7 @@ function makeDragPreviewItem(): CalendarEventItem {
     end,
     color: "#6366f1",
     synced: false,
+    resourceId: "time",
   };
 }
 
@@ -64,7 +65,16 @@ export interface CalendarEventItem {
   // can't be dragged, resized, or opened in the editor modal.
   readOnly?: boolean;
   googleLink?: string;
+  // Which half of the day column this event renders in.
+  resourceId: "time" | "google";
 }
+
+// Splits each day into two side-by-side sub-columns: one for logged/loggable
+// time entries, one read-only column showing Google Calendar meetings.
+const RESOURCES = [
+  { id: "time", title: "Time reporting" },
+  { id: "google", title: "Google Calendar" },
+];
 
 interface TimeCalendarProps {
   events: CalendarEventItem[];
@@ -91,6 +101,8 @@ export function TimeCalendar({
       <DnDCalendar
         localizer={localizer}
         events={allEvents}
+        resources={RESOURCES}
+        resourceGroupingLayout
         defaultView="work_week"
         views={["work_week"]}
         step={15}
@@ -117,10 +129,13 @@ export function TimeCalendar({
           onSelectEvent(event.id);
         }}
         onSelectSlot={(slotInfo) => {
+          // The "Google Calendar" sub-column is read-only/view-only — time
+          // entries can only be created in the "Time reporting" column.
+          if (slotInfo.resourceId === "google") return;
           onCreateBlankEvent(new Date(slotInfo.start), new Date(slotInfo.end));
         }}
-        onDropFromOutside={({ start, end }) => {
-          if (!draggedTicketId) return;
+        onDropFromOutside={({ start, end, resource }) => {
+          if (!draggedTicketId || resource === "google") return;
           onDropTicket(draggedTicketId, new Date(start), new Date(end));
         }}
         dragFromOutsideItem={makeDragPreviewItem}
