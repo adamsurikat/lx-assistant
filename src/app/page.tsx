@@ -37,6 +37,23 @@ function startOfWeekMonday(d: Date): Date {
   return date;
 }
 
+const MONTH_DAY_FORMAT: Intl.DateTimeFormatOptions = { month: "long", day: "2-digit" };
+const DAY_FORMAT: Intl.DateTimeFormatOptions = { day: "2-digit" };
+
+// Mirrors react-big-calendar's own work_week range label (e.g. "September 07
+// – 11"), computed here directly since the toolbar is now rendered outside
+// the Calendar component (see the header above TicketSidebar/TimeCalendar).
+function formatWeekLabel(weekStart: Date): string {
+  const weekEnd = new Date(weekStart);
+  weekEnd.setDate(weekEnd.getDate() + 4); // Mon..Fri
+  const start = weekStart.toLocaleDateString(undefined, MONTH_DAY_FORMAT);
+  const end =
+    weekStart.getMonth() === weekEnd.getMonth()
+      ? weekEnd.toLocaleDateString(undefined, DAY_FORMAT)
+      : weekEnd.toLocaleDateString(undefined, MONTH_DAY_FORMAT);
+  return `${start} – ${end}`;
+}
+
 export default function HomePage() {
   const { data: session } = useSession();
   const [tickets, setTickets] = useState<TicketSummary[]>([]);
@@ -57,6 +74,22 @@ export default function HomePage() {
     entryId: string | null;
   } | null>(null);
   const [currentDate, setCurrentDate] = useState(() => new Date());
+
+  // Week navigation for the toolbar rendered above the sidebar/calendar row
+  // (previously RBC's own toolbar handled this internally).
+  const handleToday = () => setCurrentDate(new Date());
+  const handleBack = () =>
+    setCurrentDate((prev) => {
+      const d = new Date(prev);
+      d.setDate(d.getDate() - 7);
+      return d;
+    });
+  const handleNextWeek = () =>
+    setCurrentDate((prev) => {
+      const d = new Date(prev);
+      d.setDate(d.getDate() + 7);
+      return d;
+    });
 
   const weekStart = startOfWeekMonday(currentDate);
   const weekEnd = new Date(weekStart);
@@ -386,30 +419,52 @@ export default function HomePage() {
         </div>
       )}
 
-      <div className="nb-panel-sm m-3 flex flex-1 overflow-hidden bg-nb-paper">
-        {sidebarOpen && (
-          <TicketSidebar
-            tickets={tickets}
-            loading={loadingTickets}
-            syncing={syncing}
-            onSync={handleSync}
-            onDragStartTicket={setDraggedTicketId}
+      <div className="nb-panel-sm m-3 flex flex-1 flex-col overflow-hidden bg-nb-paper">
+        <div className="rbc-toolbar m-0">
+          <span className="rbc-btn-group">
+            <button
+              type="button"
+              onClick={() => setSidebarOpen((open) => !open)}
+              className={sidebarOpen ? "rbc-active" : ""}
+            >
+              🎫 Tickets{tickets.length > 0 ? ` (${tickets.length})` : ""}
+            </button>
+          </span>
+          <span className="rbc-btn-group">
+            <button type="button" onClick={handleToday}>
+              Today
+            </button>
+            <button type="button" onClick={handleBack}>
+              Back
+            </button>
+            <button type="button" onClick={handleNextWeek}>
+              Next
+            </button>
+          </span>
+          <span className="rbc-toolbar-label">{formatWeekLabel(weekStart)}</span>
+        </div>
+        <div className="flex flex-1 overflow-hidden">
+          {sidebarOpen && (
+            <TicketSidebar
+              tickets={tickets}
+              loading={loadingTickets}
+              syncing={syncing}
+              onSync={handleSync}
+              onDragStartTicket={setDraggedTicketId}
+            />
+          )}
+          <TimeCalendar
+            events={calendarEvents}
+            googleEvents={googleCalendarEvents}
+            date={currentDate}
+            onNavigate={setCurrentDate}
+            onEventChange={handleEventChange}
+            onDropTicket={handleDropTicket}
+            onCreateBlankEvent={handleCreateBlankEvent}
+            onSelectEvent={handleSelectEvent}
+            draggedTicketId={draggedTicketId}
           />
-        )}
-        <TimeCalendar
-          events={calendarEvents}
-          googleEvents={googleCalendarEvents}
-          date={currentDate}
-          onNavigate={setCurrentDate}
-          onEventChange={handleEventChange}
-          onDropTicket={handleDropTicket}
-          onCreateBlankEvent={handleCreateBlankEvent}
-          onSelectEvent={handleSelectEvent}
-          draggedTicketId={draggedTicketId}
-          sidebarOpen={sidebarOpen}
-          onToggleSidebar={() => setSidebarOpen((open) => !open)}
-          ticketCount={tickets.length}
-        />
+        </div>
       </div>
 
       {modalEntry && (
