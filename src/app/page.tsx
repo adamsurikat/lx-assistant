@@ -68,6 +68,20 @@ export default function HomePage() {
   const [error, setError] = useState<string | null>(null);
   const [editingEntryId, setEditingEntryId] = useState<string | null>(null);
   const [draftEntry, setDraftEntry] = useState<{ start: Date; end: Date } | null>(null);
+  // Ids of time entries (or "__draft__" for a not-yet-created entry) whose
+  // create/update request is currently in flight — the server awaits the
+  // Jira worklog sync before responding, so this drives a spinner on the
+  // affected calendar tile until Jira confirms the write.
+  const [syncingIds, setSyncingIds] = useState<Set<string>>(new Set());
+
+  const markSyncing = (id: string, value: boolean) => {
+    setSyncingIds((prev) => {
+      const next = new Set(prev);
+      if (value) next.add(id);
+      else next.delete(id);
+      return next;
+    });
+  };
   const [popover, setPopover] = useState<{
     data: EventPopoverData;
     anchor: { x: number; y: number };
@@ -199,6 +213,7 @@ export default function HomePage() {
   }) => {
     if (!draftEntry) return;
     setError(null);
+    markSyncing("__draft__", true);
     const res = await fetch("/api/time-entries", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -210,6 +225,7 @@ export default function HomePage() {
         comment: payload.comment ?? "",
       }),
     });
+    markSyncing("__draft__", false);
     if (!res.ok) {
       const data = await res.json().catch(() => ({}));
       setError(data.error ?? "Failed to create time entry.");
@@ -232,11 +248,13 @@ export default function HomePage() {
           : entry
       )
     );
+    markSyncing(id, true);
     const res = await fetch(`/api/time-entries/${id}`, {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ start: start.toISOString(), end: end.toISOString() }),
     });
+    markSyncing(id, false);
     if (!res.ok) {
       const data = await res.json().catch(() => ({}));
       setError(data.error ?? "Failed to update time entry.");
@@ -258,11 +276,13 @@ export default function HomePage() {
       body.title = payload.title ?? "";
     }
     body.comment = payload.comment ?? "";
+    markSyncing(entryId, true);
     const res = await fetch(`/api/time-entries/${entryId}`, {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(body),
     });
+    markSyncing(entryId, false);
     if (!res.ok) {
       const data = await res.json().catch(() => ({}));
       setError(data.error ?? "Failed to save time entry.");
@@ -344,9 +364,7 @@ export default function HomePage() {
 
   const calendarEvents: CalendarEventItem[] = entries.map((entry) => ({
     id: entry.id,
-    title: entry.ticket
-      ? `${entry.ticket.key} · ${entry.ticket.summary}`
-      : entry.title?.trim() || "Unassigned",
+    title: entry.ticket ? entry.ticket.key : entry.title?.trim() || "Unassigned",
     duration: formatDuration(entry.start, entry.end),
     start: new Date(entry.start),
     end: new Date(entry.end),
@@ -356,6 +374,7 @@ export default function HomePage() {
     syncError: entry.lastSyncError,
     ticketKey: entry.ticket?.key,
     ticketStatus: entry.ticket?.status,
+    syncing: syncingIds.has(entry.id),
     resourceId: "time",
   }));
 
@@ -370,6 +389,7 @@ export default function HomePage() {
       color: "transparent",
       synced: false,
       pending: true,
+      syncing: syncingIds.has("__draft__"),
       resourceId: "time",
     });
   }

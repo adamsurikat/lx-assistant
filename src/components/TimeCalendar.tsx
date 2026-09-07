@@ -75,6 +75,10 @@ export interface CalendarEventItem {
   // Duration label (e.g. "1h 30m"), rendered on its own line below the
   // title in the event tile.
   duration?: string;
+  // True while a create/update request for this entry is in flight and the
+  // server is awaiting confirmation from Jira — shows a small spinner on
+  // the tile until the request resolves.
+  syncing?: boolean;
   // Which half of the day column this event renders in.
   resourceId: "time" | "google";
 }
@@ -164,11 +168,19 @@ export function TimeCalendar({
         dragFromOutsideItem={makeDragPreviewItem}
         components={{
           event: ({ event }: { event: CalendarEventItem }) => (
-            <div>
-              <div>{event.title}</div>
-              {event.duration && (
-                <div className="text-[0.7rem] opacity-80">{event.duration}</div>
+            <div className="flex items-start gap-1">
+              {event.syncing && (
+                <span
+                  className="mt-0.5 h-2.5 w-2.5 shrink-0 animate-spin rounded-full border-2 border-current border-t-transparent opacity-80"
+                  aria-label="Syncing to Jira…"
+                />
               )}
+              <div>
+                <div>{event.title}</div>
+                {event.duration && (
+                  <div className="text-[0.7rem] opacity-80">{event.duration}</div>
+                )}
+              </div>
             </div>
           ),
         }}
