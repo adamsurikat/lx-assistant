@@ -34,7 +34,7 @@ export function TicketSidebar({
 }: TicketSidebarProps) {
   return (
     <div className="flex w-72 shrink-0 flex-col border-r border-nb-ink/10 bg-white">
-      <div className="flex items-center justify-between border-b border-nb-ink/10 bg-nb-green p-3">
+      <div className="flex items-center justify-between border-b border-nb-ink/10 p-3">
         <h2 className="text-sm font-semibold tracking-wide text-nb-ink">
           My open tickets
         </h2>
