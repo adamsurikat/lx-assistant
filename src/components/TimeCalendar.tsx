@@ -122,6 +122,14 @@ export function TimeCalendar({
         resizable
         selectable
         popup
+        // The default "overlap" layout algorithm treats any two events in the
+        // same column starting within half an hour-group (here, 30 minutes,
+        // derived from step*timeslots) of each other as "overlapping", even
+        // when they don't actually overlap in time — splitting them
+        // side-by-side and leaving a chunk of unused column width. "no-overlap"
+        // instead checks real start/end time ranges, so sequential events
+        // (e.g. back-to-back Google Calendar meetings) render full-width.
+        dayLayoutAlgorithm="no-overlap"
         draggableAccessor={(event: CalendarEventItem) => !event.readOnly}
         resizableAccessor={(event: CalendarEventItem) => !event.readOnly}
         onEventDrop={({ event, start, end }: EventInteractionArgs<CalendarEventItem>) =>
