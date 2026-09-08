@@ -83,10 +83,11 @@ export function EventEditorModal({
   const [deleting, setDeleting] = useState(false);
   const [searchKey, setSearchKey] = useState("");
   const [searching, setSearching] = useState(false);
-  // Only set when a search comes back empty — shown as a dismissable
-  // popover. A successful match is applied immediately, no confirmation
-  // needed.
+  // Only set when a search comes back empty — shown as a red border on
+  // the search input. A successful match is applied immediately.
   const [searchError, setSearchError] = useState<string | null>(null);
+  // Lets the user drag the modal panel around the screen by its header.
+  const [dragOffset, setDragOffset] = useState({ x: 0, y: 0 });
 
   // The custom search result (if any) takes precedence over the tracked
   // dropdown selection — the two are mutually exclusive.
@@ -122,6 +123,29 @@ export function EventEditorModal({
     setDeleting(false);
   };
 
+  // Dragging the header repositions the modal panel via a translate
+  // offset added on top of its normal centered position.
+  const handleDragStart = (e: React.MouseEvent) => {
+    e.preventDefault();
+    const startX = e.clientX;
+    const startY = e.clientY;
+    const originX = dragOffset.x;
+    const originY = dragOffset.y;
+
+    const onMove = (moveEvent: MouseEvent) => {
+      setDragOffset({
+        x: originX + (moveEvent.clientX - startX),
+        y: originY + (moveEvent.clientY - startY),
+      });
+    };
+    const onUp = () => {
+      window.removeEventListener("mousemove", onMove);
+      window.removeEventListener("mouseup", onUp);
+    };
+    window.addEventListener("mousemove", onMove);
+    window.addEventListener("mouseup", onUp);
+  };
+
   const handleSearch = async () => {
     const key = searchKey.trim();
     if (!key) return;
@@ -145,15 +169,22 @@ export function EventEditorModal({
     >
       <div
         className="nb-panel w-full max-w-md bg-white p-8"
+        style={{ transform: `translate(${dragOffset.x}px, ${dragOffset.y}px)` }}
         onClick={(e) => e.stopPropagation()}
       >
-        <h2 className="nb-display mb-2 text-lg">{isNew ? "New time entry" : "Time entry"}</h2>
-        <p className="text-sm font-medium text-nb-ink/60">
-          {formatRange(entry.start, entry.end)}
-        </p>
-        <p className="mb-6 text-sm font-medium text-nb-ink/60">
-          {formatDuration(entry.start, entry.end)}
-        </p>
+        <div
+          onMouseDown={handleDragStart}
+          className="-m-2 mb-6 cursor-move select-none rounded-lg p-2"
+        >
+          <h2 className="nb-display mb-2 text-lg">{isNew ? "New time entry" : "Time entry"}</h2>
+          <p className="text-sm font-medium text-nb-ink/60">
+            {formatRange(entry.start, entry.end)}
+          </p>
+          <p className="text-sm font-medium text-nb-ink/60">
+            {formatDuration(entry.start, entry.end)}
+          </p>
+        </div>
+
 
         <label className="mb-2 block text-sm font-semibold tracking-wide text-nb-ink">
           Ticket
