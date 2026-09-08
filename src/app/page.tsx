@@ -29,8 +29,6 @@ interface GoogleCalendarEventDTO {
   htmlLink?: string;
 }
 
-const BASELINE_HOURS_PER_WEEKDAY = 8;
-
 function toDateKey(date: Date): string {
   const y = date.getFullYear();
   const m = String(date.getMonth() + 1).padStart(2, "0");
@@ -408,23 +406,20 @@ export default function HomePage() {
     });
   }
 
-  // Per-day worked-vs-8h-baseline diff, shown on all of the calendar's day
-  // headers (future days just show the full -8h shortfall since nothing's
-  // logged yet).
+  // Total logged hours per day, shown on each of the calendar's day headers.
   const workedMinutesByDay = new Map<string, number>();
   for (const entry of entries) {
     const key = toDateKey(new Date(entry.start));
     const minutes = (new Date(entry.end).getTime() - new Date(entry.start).getTime()) / 60000;
     workedMinutesByDay.set(key, (workedMinutesByDay.get(key) ?? 0) + minutes);
   }
-  const dayHourDiffs: Record<string, string> = {};
+  const dayHourTotals: Record<string, string> = {};
   for (let i = 0; i < 5; i++) {
     const day = new Date(weekStart);
     day.setDate(day.getDate() + i);
     const key = toDateKey(day);
     const workedHours = (workedMinutesByDay.get(key) ?? 0) / 60;
-    const diff = workedHours - BASELINE_HOURS_PER_WEEKDAY;
-    dayHourDiffs[key] = diff >= 0 ? `+${formatHours(diff)}` : formatHours(diff);
+    if (workedHours > 0) dayHourTotals[key] = formatHours(workedHours);
   }
 
   const googleCalendarEvents: CalendarEventItem[] = googleEvents
@@ -508,7 +503,7 @@ export default function HomePage() {
             events={calendarEvents}
             googleEvents={googleCalendarEvents}
             date={currentDate}
-            dayHourDiffs={dayHourDiffs}
+            dayHourTotals={dayHourTotals}
             onNavigate={setCurrentDate}
             onEventChange={handleEventChange}
             onDropTicket={handleDropTicket}
