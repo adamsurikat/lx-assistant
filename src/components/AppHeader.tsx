@@ -9,9 +9,9 @@ interface AppHeaderProps {
   extra?: ReactNode;
 }
 
-const NAV_LINK_CLASS = "rounded-md px-3 py-2 -my-2 -mx-1 transition-colors";
-const NAV_LINK_ACTIVE = `${NAV_LINK_CLASS} text-nb-ink underline decoration-nb-ink decoration-2 underline-offset-4`;
-const NAV_LINK_INACTIVE = `${NAV_LINK_CLASS} text-nb-ink/60 hover:bg-white/40 hover:text-nb-ink`;
+const NAV_LINK_CLASS = "rounded-lg px-4 py-3 -my-3 -mx-1 transition-colors";
+const NAV_LINK_ACTIVE = `${NAV_LINK_CLASS} bg-nb-orange/20 text-nb-ink underline decoration-nb-ink decoration-2 underline-offset-4`;
+const NAV_LINK_INACTIVE = `${NAV_LINK_CLASS} text-nb-ink/60 hover:bg-nb-orange/10 hover:text-nb-ink`;
 
 export function AppHeader({ active, extra }: AppHeaderProps) {
   const { data: session } = useSession();
@@ -40,7 +40,7 @@ export function AppHeader({ active, extra }: AppHeaderProps) {
         <span>{session?.user?.name}</span>
         <button
           onClick={() => signOut({ callbackUrl: "/login" })}
-          className={`${NAV_LINK_CLASS} text-nb-ink/60 hover:bg-white/40 hover:text-nb-ink`}
+          className="nb-btn px-4 py-2 text-sm"
         >
           Sign out
         </button>
