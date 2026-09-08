@@ -101,10 +101,8 @@ function findToolbarFolder(root: BookmarkFolder): BookmarkFolder {
 // handful of related folders into one combined category, and drop folders
 // that aren't useful here. Adjust these lists as the bookmarks structure
 // changes.
-const MERGED_GROUPS: { title: string; folders: string[] }[] = [
-  { title: "Kontor", folders: ["Kontor", "Utveckling", "Deploy", "Felsökning"] },
-];
-const HIDDEN_FOLDERS = ["App"];
+const MERGED_GROUPS: { title: string; folders: string[] }[] = [];
+const HIDDEN_FOLDERS = ["App", "Kontor", "Utveckling", "Deploy", "Felsökning"];
 
 function applyMergedGroups(root: BookmarkFolder): BookmarkFolder {
   let children = root.children;
