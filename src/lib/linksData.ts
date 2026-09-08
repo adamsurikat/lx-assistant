@@ -129,7 +129,6 @@ export const LINK_FOLDERS: BookmarkFolder[] = [
       { type: "link", title: "TLE BELF Staging", url: "https://tle.lx.stagikat.com/embed?route=/yard-dashboard&state=port:BELF&token=REDACTED_SMART_YARD_TOKEN" },
       { type: "link", title: "TLE BELF1 Production", url: "https://tle.bylynx.com/embed?route=/yard-dashboard&state=port:BELF1&token=REDACTED_SMART_YARD_TOKEN" },
       { type: "link", title: "TLE BELF Production", url: "https://tle.bylynx.com/embed?route=/yard-dashboard&state=port:BELF&token=REDACTED_SMART_YARD_TOKEN" },
-      { type: "link", title: "Smart Yard weekly - Google Sheets", url: "https://docs.google.com/spreadsheets/d/1Ev1d0JmH9DvFzrzcfbRlTKHIGznvhT2XYczcfCfQKjk/edit?gid=0#gid=0" },
     ],
   },
   {
