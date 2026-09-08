@@ -77,15 +77,15 @@ export function EventEditorModal({
   const [customTicket, setCustomTicket] = useState<TicketSummary | null>(
     entry.ticket && !tickets.some((t) => t.id === entry.ticket!.id) ? entry.ticket : null
   );
-  // A search result awaiting the user's explicit confirm/decline via the
-  // popover, before it's applied as the entry's ticket.
-  const [pendingTicket, setPendingTicket] = useState<TicketSummary | null>(null);
   const [title, setTitle] = useState(entry.title ?? "");
   const [comment, setComment] = useState(entry.comment ?? "");
   const [saving, setSaving] = useState(false);
   const [deleting, setDeleting] = useState(false);
   const [searchKey, setSearchKey] = useState("");
   const [searching, setSearching] = useState(false);
+  // Only set when a search comes back empty — shown as a dismissable
+  // popover. A successful match is applied immediately, no confirmation
+  // needed.
   const [searchError, setSearchError] = useState<string | null>(null);
 
   // The custom search result (if any) takes precedence over the tracked
@@ -127,26 +127,15 @@ export function EventEditorModal({
     if (!key) return;
     setSearching(true);
     setSearchError(null);
-    setPendingTicket(null);
     const ticket = await onLookupTicket(key);
     if (ticket) {
-      setPendingTicket(ticket);
+      setCustomTicket(ticket);
+      setTrackedSelection(NO_TICKET);
+      setSearchKey("");
     } else {
       setSearchError(`No Jira ticket found for "${key}"`);
     }
     setSearching(false);
-  };
-
-  const handleConfirmPending = () => {
-    if (!pendingTicket) return;
-    setCustomTicket(pendingTicket);
-    setTrackedSelection(NO_TICKET);
-    setPendingTicket(null);
-    setSearchKey("");
-  };
-
-  const handleDeclinePending = () => {
-    setPendingTicket(null);
   };
 
   return (
@@ -175,7 +164,6 @@ export function EventEditorModal({
             const value = e.target.value;
             setTrackedSelection(value);
             setCustomTicket(null);
-            setPendingTicket(null);
             setSearchKey("");
             setSearchError(null);
           }}
@@ -196,7 +184,6 @@ export function EventEditorModal({
               value={searchKey}
               onChange={(e) => {
                 setSearchKey(e.target.value);
-                setPendingTicket(null);
                 setSearchError(null);
               }}
               onKeyDown={(e) => {
@@ -217,30 +204,17 @@ export function EventEditorModal({
               {searching ? "Searching…" : "Search"}
             </button>
           </div>
-          {searchError && <p className="mt-2 text-xs font-bold text-nb-pink">{searchError}</p>}
 
-          {pendingTicket && (
+          {searchError && (
             <div className="nb-panel absolute left-0 right-0 top-full z-10 mt-2 border-2 border-nb-ink/10 bg-white p-4">
-              <p className="mb-1 text-xs font-semibold uppercase tracking-wide text-nb-ink/50">
-                Is this the right ticket?
-              </p>
-              <p className="mb-3 text-sm font-semibold text-nb-ink">
-                {pendingTicket.key} · {pendingTicket.summary}
-              </p>
-              <div className="flex justify-end gap-2">
+              <p className="mb-3 text-sm font-semibold text-nb-pink">{searchError}</p>
+              <div className="flex justify-end">
                 <button
                   type="button"
-                  onClick={handleDeclinePending}
+                  onClick={() => setSearchError(null)}
                   className="nb-btn px-3 py-1.5 text-xs font-semibold"
                 >
-                  No, not this one
-                </button>
-                <button
-                  type="button"
-                  onClick={handleConfirmPending}
-                  className="nb-btn nb-btn-green px-3 py-1.5 text-xs font-semibold"
-                >
-                  Yes, use it
+                  OK
                 </button>
               </div>
             </div>
