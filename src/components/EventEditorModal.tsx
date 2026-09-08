@@ -64,33 +64,38 @@ export function EventEditorModal({
   onDelete,
   onLookupTicket,
 }: EventEditorModalProps) {
-  const [selectedTicketId, setSelectedTicketId] = useState(entry.ticket?.id ?? NO_TICKET);
+  // Whether the entry's current ticket (if any) is one of the tracked
+  // sidebar tickets, so the dropdown can preselect it; otherwise it must
+  // have been set via a one-off custom-ticket search (see `customTicket`).
+  const initialTrackedMatch =
+    entry.ticket && tickets.some((t) => t.id === entry.ticket!.id) ? entry.ticket.id : NO_TICKET;
+
+  const [trackedSelection, setTrackedSelection] = useState(initialTrackedMatch);
+  // A ticket found via the search box, kept only for this modal instance —
+  // it's never added to the tracked ticket list/dropdown, just used
+  // directly as the entry's ticket and shown as a summary below the box.
+  const [customTicket, setCustomTicket] = useState<TicketSummary | null>(
+    entry.ticket && !tickets.some((t) => t.id === entry.ticket!.id) ? entry.ticket : null
+  );
   const [title, setTitle] = useState(entry.ticket ? "" : entry.title ?? "");
   const [comment, setComment] = useState(entry.comment ?? "");
   const [saving, setSaving] = useState(false);
   const [deleting, setDeleting] = useState(false);
-  const [searchKey, setSearchKey] = useState("");
+  const [searchKey, setSearchKey] = useState(customTicket ? customTicket.key : "");
   const [searching, setSearching] = useState(false);
   const [searchError, setSearchError] = useState<string | null>(null);
-  // Tickets found via the search box (or the entry's own current ticket)
-  // that aren't in the tracked `tickets` list, kept only for this modal
-  // instance so they show up as a selectable option without being added to
-  // the sidebar's permanently tracked list.
-  const [adHocTickets, setAdHocTickets] = useState<TicketSummary[]>(
-    entry.ticket && !tickets.some((t) => t.id === entry.ticket!.id) ? [entry.ticket] : []
-  );
 
-  const ticketOptions = [
-    ...tickets,
-    ...adHocTickets.filter((t) => !tickets.some((existing) => existing.id === t.id)),
-  ];
+  // The custom search result (if any) takes precedence over the tracked
+  // dropdown selection — the two are mutually exclusive.
+  const effectiveTicket =
+    customTicket ?? (trackedSelection !== NO_TICKET ? tickets.find((t) => t.id === trackedSelection) ?? null : null);
 
-  const hasTicket = selectedTicketId !== NO_TICKET;
+  const hasTicket = effectiveTicket !== null;
   const isNew = entry.id === null;
   const trimmedTitle = title.trim();
   const trimmedComment = comment.trim();
   const unchanged =
-    selectedTicketId === (entry.ticket?.id ?? NO_TICKET) &&
+    (effectiveTicket?.id ?? null) === (entry.ticket?.id ?? null) &&
     (hasTicket || trimmedTitle === (entry.title ?? "").trim()) &&
     trimmedComment === (entry.comment ?? "").trim();
 
@@ -99,7 +104,7 @@ export function EventEditorModal({
     if (hasTicket && !trimmedComment) return;
     setSaving(true);
     await onSave({
-      ticketId: hasTicket ? selectedTicketId : null,
+      ticketId: hasTicket ? effectiveTicket!.id : null,
       title: hasTicket ? null : trimmedTitle,
       comment: trimmedComment,
     });
@@ -119,12 +124,10 @@ export function EventEditorModal({
     setSearchError(null);
     const ticket = await onLookupTicket(key);
     if (ticket) {
-      setAdHocTickets((prev) =>
-        prev.some((t) => t.id === ticket.id) ? prev : [ticket, ...prev]
-      );
-      setSelectedTicketId(ticket.id);
-      setSearchKey("");
+      setCustomTicket(ticket);
+      setTrackedSelection(NO_TICKET);
     } else {
+      setCustomTicket(null);
       setSearchError(`No Jira ticket found for "${key}"`);
     }
     setSearching(false);
@@ -151,19 +154,24 @@ export function EventEditorModal({
           Ticket
         </label>
         <select
-          value={selectedTicketId}
-          onChange={(e) => setSelectedTicketId(e.target.value)}
+          value={trackedSelection}
+          onChange={(e) => {
+            setTrackedSelection(e.target.value);
+            setCustomTicket(null);
+            setSearchKey("");
+            setSearchError(null);
+          }}
           className="nb-input mb-5 w-full px-3 py-2 text-sm"
         >
           <option value={NO_TICKET}>No ticket — use a custom title</option>
-          {ticketOptions.map((ticket) => (
+          {tickets.map((ticket) => (
             <option key={ticket.id} value={ticket.id}>
               {ticket.key} · {ticket.summary}
             </option>
           ))}
         </select>
 
-        <div className="mb-5 flex items-center gap-2">
+        <div className="mb-2 flex items-center gap-2">
           <input
             type="text"
             value={searchKey}
@@ -183,9 +191,14 @@ export function EventEditorModal({
             disabled={searching || !searchKey.trim()}
             className="nb-btn shrink-0 px-3 py-2 text-sm font-semibold"
           >
-            {searching ? "Searching…" : "Add"}
+            {searching ? "Searching…" : "Search"}
           </button>
         </div>
+        {customTicket && (
+          <p className="mb-4 text-xs font-semibold text-nb-ink/70">
+            {customTicket.key} · {customTicket.summary}
+          </p>
+        )}
         {searchError && <p className="mb-4 text-xs font-bold text-nb-pink">{searchError}</p>}
 
         {!hasTicket && (
