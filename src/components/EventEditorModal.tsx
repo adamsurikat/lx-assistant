@@ -169,7 +169,7 @@ export function EventEditorModal({
           }}
           className="nb-input mb-5 w-full px-3 py-2 text-sm"
         >
-          <option value={NO_TICKET}>No ticket — use a custom title</option>
+          <option value={NO_TICKET}>No ticket</option>
           {tickets.map((ticket) => (
             <option key={ticket.id} value={ticket.id}>
               {ticket.key} · {ticket.summary}
