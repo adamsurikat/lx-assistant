@@ -4,8 +4,8 @@ import { useEffect, useRef } from "react";
 
 export interface EventPopoverData {
   title: string;
-  start: Date;
-  end: Date;
+  start?: Date;
+  end?: Date;
   readOnly: boolean;
   ticketKey?: string;
   ticketStatus?: string;
@@ -74,9 +74,11 @@ export function EventPopover({ data, anchor, onClose, onEdit, onDelete }: EventP
       style={{ left: Math.max(left, 8), top: Math.max(top, 8) }}
     >
       <p className="pr-4 text-sm font-bold text-nb-ink">{data.title}</p>
-      <p className="mt-1 text-xs font-medium text-nb-ink/60">
-        {formatRange(data.start, data.end)}
-      </p>
+      {data.start && data.end && (
+        <p className="mt-1 text-xs font-medium text-nb-ink/60">
+          {formatRange(data.start, data.end)}
+        </p>
+      )}
 
       {data.ticketStatus && (
         <span className="mt-2 nb-badge">

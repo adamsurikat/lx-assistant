@@ -355,6 +355,21 @@ export default function HomePage() {
     setPopover({ data, anchor, entryId: event.readOnly ? null : event.id });
   };
 
+  const handleSelectTicket = (ticket: TicketSummary, domEvent: SyntheticEvent<HTMLElement>) => {
+    const mouseEvent = domEvent.nativeEvent as MouseEvent;
+    const anchor = { x: mouseEvent.clientX, y: mouseEvent.clientY };
+    const data: EventPopoverData = {
+      title: ticket.summary,
+      readOnly: true,
+      ticketKey: ticket.key,
+      ticketStatus: ticket.status,
+      jiraUrl: jiraSiteUrl
+        ? `${jiraSiteUrl.replace(/\/$/, "")}/browse/${ticket.key}`
+        : undefined,
+    };
+    setPopover({ data, anchor, entryId: null });
+  };
+
   const editingEntry = entries.find((e) => e.id === editingEntryId) ?? null;
 
   // The modal shows either an existing entry being edited, or an in-progress
@@ -511,6 +526,7 @@ export default function HomePage() {
               syncing={syncing}
               onSync={handleSync}
               onDragStartTicket={setDraggedTicketId}
+              onSelectTicket={handleSelectTicket}
             />
           )}
           <TimeCalendar
