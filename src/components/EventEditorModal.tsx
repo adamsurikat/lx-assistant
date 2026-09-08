@@ -193,9 +193,8 @@ export function EventEditorModal({
                 }
               }}
               placeholder="Or type a ticket number, e.g. PROJ-123"
-              className={`nb-input w-full px-3 py-2 text-sm ${
-                searchError ? "border-2 border-nb-pink" : ""
-              }`}
+              className="nb-input w-full px-3 py-2 text-sm"
+              style={searchError ? { borderColor: "var(--nb-pink)", borderWidth: 2 } : undefined}
             />
             <button
               type="button"
