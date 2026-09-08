@@ -35,8 +35,14 @@ export function parseBookmarksHtml(html: string): BookmarkFolder {
   const stack: BookmarkNode[][] = [];
   let pendingFolder: BookmarkFolder | null = null;
 
-  const tokenPattern =
-    /<DT><H3[^>]*>([\s\S]*?)<\/H3>|<DT><A\b([^>]*)>([\s\S]*?)<\/A>|<DL><p>|<\/DL>/gi;
+  // Attribute values (e.g. base64 favicon data URIs) can contain literal
+  // `>` characters inside quotes, so a naive `[^>]*` for the attribute list
+  // would truncate mid-tag. Match quoted strings as whole units instead.
+  const attrs = `(?:[^>"']|"[^"]*"|'[^']*')*`;
+  const tokenPattern = new RegExp(
+    `<DT><H3\\b${attrs}>([\\s\\S]*?)<\\/H3>|<DT><A\\b(${attrs})>([\\s\\S]*?)<\\/A>|<DL><p>|<\\/DL>`,
+    "gi"
+  );
   let match: RegExpExecArray | null;
 
   while ((match = tokenPattern.exec(html))) {
