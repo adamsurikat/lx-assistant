@@ -14,41 +14,47 @@ export function AppHeader({ active, extra }: AppHeaderProps) {
 
   return (
     <header className="nb-panel-sm sticky top-0 z-20 m-3 mb-0 flex items-center justify-between bg-nb-orange px-6 py-3">
-      <div className="flex items-center gap-4">
+      <div className="flex items-center gap-6">
         <h1 className="nb-display text-lg">🗓️ lx-assistant</h1>
-        <nav className="flex items-center gap-2 text-sm font-bold">
+        <nav className="flex items-center gap-5 text-sm font-bold">
           <Link
             href="/"
-            className={`nb-btn px-3 py-1 text-xs ${
-              active === "calendar" ? "nb-btn-green" : "bg-white"
-            }`}
+            className={
+              active === "calendar"
+                ? "text-nb-ink underline decoration-nb-ink decoration-2 underline-offset-4"
+                : "text-nb-ink/60 hover:text-nb-ink"
+            }
           >
             Calendar
           </Link>
           <Link
             href="/tools"
-            className={`nb-btn px-3 py-1 text-xs ${
-              active === "tools" ? "nb-btn-green" : "bg-white"
-            }`}
+            className={
+              active === "tools"
+                ? "text-nb-ink underline decoration-nb-ink decoration-2 underline-offset-4"
+                : "text-nb-ink/60 hover:text-nb-ink"
+            }
           >
             Tools
           </Link>
           <Link
             href="/settings"
-            className={`nb-btn px-3 py-1 text-xs ${
-              active === "settings" ? "nb-btn-green" : "bg-white"
-            }`}
+            className={
+              active === "settings"
+                ? "text-nb-ink underline decoration-nb-ink decoration-2 underline-offset-4"
+                : "text-nb-ink/60 hover:text-nb-ink"
+            }
           >
             Settings
           </Link>
         </nav>
       </div>
-      <div className="flex items-center gap-3 text-sm font-bold">
+      <div className="flex items-center gap-4 text-sm font-bold">
         {extra}
         <span>{session?.user?.name}</span>
         <button
           onClick={() => signOut({ callbackUrl: "/login" })}
-          className="nb-btn bg-white px-3 py-1 text-xs"
+          className="text-nb-ink/60 hover:text-nb-ink hover:underline"
         >
           Sign out
         </button>
