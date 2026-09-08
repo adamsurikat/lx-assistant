@@ -404,22 +404,19 @@ export default function HomePage() {
     });
   }
 
-  // Per-day worked-vs-8h-baseline diff, shown on the calendar's day headers
-  // for weekdays that have already passed (today counts; future doesn't —
-  // mirrors the same rule used by the monthly hours summary).
+  // Per-day worked-vs-8h-baseline diff, shown on all of the calendar's day
+  // headers (future days just show the full -8h shortfall since nothing's
+  // logged yet).
   const workedMinutesByDay = new Map<string, number>();
   for (const entry of entries) {
     const key = toDateKey(new Date(entry.start));
     const minutes = (new Date(entry.end).getTime() - new Date(entry.start).getTime()) / 60000;
     workedMinutesByDay.set(key, (workedMinutesByDay.get(key) ?? 0) + minutes);
   }
-  const today = new Date();
-  today.setHours(0, 0, 0, 0);
   const dayHourDiffs: Record<string, string> = {};
   for (let i = 0; i < 5; i++) {
     const day = new Date(weekStart);
     day.setDate(day.getDate() + i);
-    if (day.getTime() > today.getTime()) continue; // future day, no expectation yet
     const key = toDateKey(day);
     const workedHours = (workedMinutesByDay.get(key) ?? 0) / 60;
     const diff = workedHours - BASELINE_HOURS_PER_WEEKDAY;
