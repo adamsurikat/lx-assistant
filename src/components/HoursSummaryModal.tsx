@@ -150,8 +150,13 @@ export function HoursSummaryModal({ onClose }: HoursSummaryModalProps) {
                 </thead>
                 <tbody>
                   {data.days
-                    .filter((day) => day.weekday !== 0 && day.weekday !== 6)
+                    .filter((day) => day.weekday !== 0)
                     .map((day) => {
+                      if (day.weekday === 6) {
+                        // Saturday stands in for the whole weekend: render a
+                        // small blank spacer row instead of any data.
+                        return <tr key={day.date} aria-hidden className="h-2" />;
+                      }
                       const dayDiff = day.workedHours - day.expectedHours;
                       const dateObj = new Date(`${day.date}T00:00:00`);
                       return (
