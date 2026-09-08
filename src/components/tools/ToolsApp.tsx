@@ -33,8 +33,8 @@ export function ToolsApp() {
   const SelectedComponent = selected.Component;
 
   return (
-    <div className="flex flex-col gap-4">
-      <div className="flex flex-wrap gap-2">
+    <div className="flex flex-1 flex-col overflow-hidden">
+      <div className="flex flex-wrap items-center gap-2 border-b border-nb-ink/10 bg-white px-4 py-3">
         {TOOLS.map((tool) => (
           <button
             key={tool.key}
@@ -46,8 +46,10 @@ export function ToolsApp() {
           </button>
         ))}
       </div>
-      <div className="nb-panel bg-white p-6">
-        <SelectedComponent />
+      <div className="flex-1 overflow-y-auto p-4">
+        <div className="nb-panel mx-auto max-w-3xl bg-white p-6">
+          <SelectedComponent />
+        </div>
       </div>
     </div>
   );
