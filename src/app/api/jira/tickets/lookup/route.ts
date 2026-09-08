@@ -35,11 +35,6 @@ export async function POST(request: Request) {
       );
     }
 
-    const existing = await prisma.ticket.findUnique({
-      where: { userId_jiraId: { userId: session.user.id, jiraId: jiraTicket.id } },
-      select: { color: true },
-    });
-
     const ticket = await prisma.ticket.upsert({
       where: { userId_jiraId: { userId: session.user.id, jiraId: jiraTicket.id } },
       create: {
@@ -48,7 +43,7 @@ export async function POST(request: Request) {
         key: jiraTicket.key,
         summary: jiraTicket.summary,
         status: jiraTicket.status,
-        color: existing?.color ?? colorForTicketKey(jiraTicket.key),
+        color: colorForTicketKey(jiraTicket.key),
         // Not added to the tracked sidebar list — only attached to whichever
         // single time entry the user assigns it to from this search box.
         tracked: false,
@@ -57,6 +52,7 @@ export async function POST(request: Request) {
         key: jiraTicket.key,
         summary: jiraTicket.summary,
         status: jiraTicket.status,
+        color: colorForTicketKey(jiraTicket.key),
       },
     });
 

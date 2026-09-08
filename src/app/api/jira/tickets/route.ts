@@ -6,7 +6,7 @@ import {
   getJiraConfigForUser,
   JiraNotConfiguredError,
 } from "@/lib/jira";
-import { TICKET_COLOR_PALETTE as PALETTE } from "@/lib/ticketColor";
+import { colorForTicketKey } from "@/lib/ticketColor";
 
 export async function GET() {
   const session = await auth();
@@ -35,15 +35,15 @@ export async function POST() {
 
     const existing = await prisma.ticket.findMany({
       where: { userId: session.user.id },
-      select: { jiraId: true, color: true },
+      select: { jiraId: true },
     });
-    const colorByJiraId = new Map(existing.map((t) => [t.jiraId, t.color]));
 
-    let paletteIndex = existing.length;
     const results = [];
     for (const jt of jiraTickets) {
-      const color =
-        colorByJiraId.get(jt.id) ?? PALETTE[paletteIndex++ % PALETTE.length];
+      // Color is derived purely from the ticket's Jira project, so it's
+      // recomputed on every sync (also fixes any tickets that predate the
+      // per-project color scheme instead of keeping their old color).
+      const color = colorForTicketKey(jt.key);
       const ticket = await prisma.ticket.upsert({
         where: { userId_jiraId: { userId: session.user.id, jiraId: jt.id } },
         create: {
@@ -59,6 +59,7 @@ export async function POST() {
           key: jt.key,
           summary: jt.summary,
           status: jt.status,
+          color,
           // Promote back to tracked in case this was previously only added
           // ad-hoc via the event editor's ticket search.
           tracked: true,

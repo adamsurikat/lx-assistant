@@ -1,7 +1,7 @@
 // A neo-brutalist palette (orange / pink / green shades) used to assign UI
-// colors to tickets on the calendar. Shared between the Jira sync route
-// (round-robin assignment) and the manual ticket lookup route (deterministic
-// hash-based assignment).
+// colors to tickets on the calendar. Colors are assigned per Jira project
+// (the prefix before the "-" in a ticket key, e.g. "LSL" in "LSL-1634") so
+// every ticket in the same project shares a color on the calendar.
 export const TICKET_COLOR_PALETTE = [
   "#FF5F1F", // orange
   "#FF3EA5", // pink
@@ -14,14 +14,21 @@ export const TICKET_COLOR_PALETTE = [
   "#1FA866", // dark green
 ];
 
+/** Extracts the Jira project key prefix from a ticket key, e.g. "LSL-1634" -> "LSL". */
+function projectKeyOf(ticketKey: string): string {
+  return ticketKey.split("-")[0] ?? ticketKey;
+}
+
 /**
- * Deterministically picks a palette color for a given ticket key, so the
- * same ticket always gets the same color even across separate lookups.
+ * Deterministically picks a palette color for a given ticket's Jira project,
+ * so every ticket in the same project always gets the same color, regardless
+ * of which ticket triggers the lookup/sync first.
  */
 export function colorForTicketKey(key: string): string {
+  const project = projectKeyOf(key);
   let hash = 0;
-  for (let i = 0; i < key.length; i++) {
-    hash = (hash * 31 + key.charCodeAt(i)) | 0;
+  for (let i = 0; i < project.length; i++) {
+    hash = (hash * 31 + project.charCodeAt(i)) | 0;
   }
   const index = Math.abs(hash) % TICKET_COLOR_PALETTE.length;
   return TICKET_COLOR_PALETTE[index];
