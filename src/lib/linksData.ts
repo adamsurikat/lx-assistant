@@ -160,6 +160,13 @@ export const LINK_FOLDERS: BookmarkFolder[] = [
     children: [
       { type: "link", title: "NodeRed Local", url: "http://localhost:1880/#flow/f688d225c5e143b3" },
       { type: "link", title: "NodeRed Scandlines FAT", url: "https://scandlines.nodered.blx.fatikat.com/#flow/f688d225c5e143b3" },
+      { type: "link", title: "NodeRed Scandlines Staging", url: "https://scandlines.nodered.blx.stagikat.com/" },
+      { type: "link", title: "NodeRed Pof FAT", url: "https://pof.nodered.blx.fatikat.com/" },
+      { type: "link", title: "NodeRed Pof Staging", url: "https://pof.nodered.blx.stagikat.com/" },
+      { type: "link", title: "NodeRed Peelports FAT", url: "https://peelports.nodered.blx.fatikat.com/" },
+      { type: "link", title: "NodeRed Peelports Staging", url: "https://peelports.nodered.blx.stagikat.com/" },
+      { type: "link", title: "NodeRed Gncl FAT", url: "https://gncl.nodered.blx.fatikat.com/" },
+      { type: "link", title: "NodeRed Surikat FAT", url: "https://surikat.nodered.blx.fatikat.com/" },
     ],
   },
   {
