@@ -10,13 +10,13 @@ interface AppHeaderProps {
 }
 
 const NAV_LINK_CLASS = "rounded-lg px-4 py-3 -my-3 -mx-1 transition-colors";
-const NAV_LINK_ACTIVE = `${NAV_LINK_CLASS} bg-nb-orange/20 text-nb-ink underline decoration-nb-ink decoration-2 underline-offset-4`;
+const NAV_LINK_ACTIVE = `${NAV_LINK_CLASS} hover:bg-nb-orange/10 text-nb-ink underline decoration-nb-ink decoration-2 underline-offset-4`;
 const NAV_LINK_INACTIVE = `${NAV_LINK_CLASS} text-nb-ink/60 hover:bg-nb-orange/10 hover:text-nb-ink`;
 
 // Icon-only variants of the nav link styling above, used for Settings/Sign
 // out on the far right so they don't need to reserve space for a label.
 const ICON_BUTTON_CLASS = "rounded-lg p-2.5 transition-colors";
-const ICON_BUTTON_ACTIVE = `${ICON_BUTTON_CLASS} bg-nb-orange/20 text-nb-ink`;
+const ICON_BUTTON_ACTIVE = `${ICON_BUTTON_CLASS} hover:bg-nb-orange/10 text-nb-ink`;
 const ICON_BUTTON_INACTIVE = `${ICON_BUTTON_CLASS} text-nb-ink/60 hover:bg-nb-orange/10 hover:text-nb-ink`;
 
 function CogIcon() {
