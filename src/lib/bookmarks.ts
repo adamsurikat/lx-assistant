@@ -97,6 +97,48 @@ function findToolbarFolder(root: BookmarkFolder): BookmarkFolder {
   return root;
 }
 
+// Personal reorganization of the toolbar folder for the Links page: fold a
+// handful of related folders into one combined category, and drop folders
+// that aren't useful here. Adjust these lists as the bookmarks structure
+// changes.
+const MERGED_GROUPS: { title: string; folders: string[] }[] = [
+  { title: "Kontor", folders: ["Kontor", "Utveckling", "Deploy", "Felsökning"] },
+];
+const HIDDEN_FOLDERS = ["App"];
+
+function applyMergedGroups(root: BookmarkFolder): BookmarkFolder {
+  let children = root.children;
+  for (const group of MERGED_GROUPS) {
+    const wanted = new Set(group.folders.map((t) => t.toLowerCase()));
+    const nextChildren: BookmarkNode[] = [];
+    let mergedNode: BookmarkFolder | null = null;
+    for (const node of children) {
+      if (node.type === "folder" && wanted.has(node.title.toLowerCase())) {
+        if (!mergedNode) {
+          mergedNode = { type: "folder", title: group.title, children: [...node.children] };
+          nextChildren.push(mergedNode);
+        } else {
+          mergedNode.children.push(...node.children);
+        }
+      } else {
+        nextChildren.push(node);
+      }
+    }
+    children = nextChildren;
+  }
+  return { ...root, children };
+}
+
+function applyHiddenFolders(root: BookmarkFolder): BookmarkFolder {
+  const hidden = new Set(HIDDEN_FOLDERS.map((t) => t.toLowerCase()));
+  return {
+    ...root,
+    children: root.children.filter(
+      (node) => !(node.type === "folder" && hidden.has(node.title.toLowerCase()))
+    ),
+  };
+}
+
 /**
  * Reads and parses `bookmarks.html` from the project root. This file is a
  * personal Firefox/Chrome bookmark export, deliberately gitignored — it's
@@ -108,7 +150,8 @@ export async function readBookmarks(): Promise<BookmarkFolder> {
   const filePath = path.join(process.cwd(), "bookmarks.html");
   try {
     const html = await readFile(filePath, "utf-8");
-    return findToolbarFolder(parseBookmarksHtml(html));
+    const toolbar = findToolbarFolder(parseBookmarksHtml(html));
+    return applyHiddenFolders(applyMergedGroups(toolbar));
   } catch {
     return { type: "folder", title: "Bookmarks", children: [] };
   }
