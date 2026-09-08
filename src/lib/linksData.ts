@@ -174,6 +174,11 @@ export const LINK_FOLDERS: BookmarkFolder[] = [
     title: "lx-vms-kiosk-fe",
     children: [
       { type: "link", title: "kiosk-fe Rødby Local", url: "http://localhost:3672/ROF?tenant=scandlines" },
+      { type: "link", title: "kiosk-fe Visby Local", url: "http://localhost:3672/SEVBY?tenant=dg" },
+      { type: "link", title: "kiosk-fe Europoort Local", url: "http://localhost:3672/EURO?tenant=pof" },
+      { type: "link", title: "kiosk-fe Heysham Local", url: "http://localhost:3672/HEYS?tenant=peelports" },
+      { type: "link", title: "kiosk-fe Devonport Local", url: "http://localhost:3672/DPO?tenant=sot" },
+      { type: "link", title: "kiosk-fe Belfast VT4 Local", url: "http://localhost:3672/BELF?tenant=stena" },
     ],
   },
 ];
