@@ -233,7 +233,7 @@ export default function HomePage() {
         ticketId: payload.ticketId ?? undefined,
         start: draftEntry.start.toISOString(),
         end: draftEntry.end.toISOString(),
-        title: payload.ticketId === null ? payload.title ?? "" : undefined,
+        title: payload.title ?? "",
         comment: payload.comment ?? "",
       }),
     });
@@ -283,10 +283,8 @@ export default function HomePage() {
     setError(null);
     const body: { ticketId: string | null; title?: string; comment?: string } = {
       ticketId: payload.ticketId,
+      title: payload.title ?? "",
     };
-    if (payload.ticketId === null) {
-      body.title = payload.title ?? "";
-    }
     body.comment = payload.comment ?? "";
     markSyncing(entryId, true);
     const res = await fetch(`/api/time-entries/${entryId}`, {
