@@ -126,7 +126,6 @@ export function EventEditorModal({
     if (ticket) {
       setCustomTicket(ticket);
       setTrackedSelection(NO_TICKET);
-      if (!trimmedTitle) setTitle(ticket.key);
     } else {
       setCustomTicket(null);
       setSearchError(`No Jira ticket found for "${key}"`);
@@ -201,8 +200,17 @@ export function EventEditorModal({
           </button>
         </div>
         {customTicket && (
-          <p className="mb-4 text-xs font-semibold text-nb-ink/70">
-            {customTicket.key} · {customTicket.summary}
+          <p className="mb-4 flex items-center justify-between gap-2 text-xs font-semibold text-nb-ink/70">
+            <span>
+              {customTicket.key} · {customTicket.summary}
+            </span>
+            <button
+              type="button"
+              onClick={() => setTitle(customTicket.key)}
+              className="nb-btn shrink-0 px-2 py-1 text-xs font-semibold"
+            >
+              OK, use as title
+            </button>
           </p>
         )}
         {searchError && <p className="mb-4 text-xs font-bold text-nb-pink">{searchError}</p>}
