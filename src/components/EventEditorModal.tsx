@@ -25,9 +25,6 @@ interface EventEditorModalProps {
   }) => Promise<void>;
   onDelete: () => Promise<void>;
   onLookupTicket: (key: string) => Promise<TicketSummary | null>;
-  // Force-resyncs the entry's Jira worklog (delete then recreate). Only
-  // available for existing, ticketed entries.
-  onResync?: () => Promise<void>;
 }
 
 function formatRange(startISO: string, endISO: string): string {
@@ -66,7 +63,6 @@ export function EventEditorModal({
   onSave,
   onDelete,
   onLookupTicket,
-  onResync,
 }: EventEditorModalProps) {
   // Whether the entry's current ticket (if any) is one of the tracked
   // sidebar tickets, so the dropdown can preselect it; otherwise it must
@@ -85,7 +81,6 @@ export function EventEditorModal({
   const [comment, setComment] = useState(entry.comment ?? "");
   const [saving, setSaving] = useState(false);
   const [deleting, setDeleting] = useState(false);
-  const [resyncing, setResyncing] = useState(false);
   const [searchKey, setSearchKey] = useState("");
   const [searching, setSearching] = useState(false);
   // Only set when a search comes back empty — shown as a red border on
@@ -126,13 +121,6 @@ export function EventEditorModal({
     setDeleting(true);
     await onDelete();
     setDeleting(false);
-  };
-
-  const handleResync = async () => {
-    if (!onResync) return;
-    setResyncing(true);
-    await onResync();
-    setResyncing(false);
   };
 
   // Dragging the header repositions the modal panel via a translate
@@ -308,22 +296,12 @@ export function EventEditorModal({
         </div>
 
         {entry.ticket && entry.syncedToJira && (
-          <p className="mb-1 text-xs font-semibold text-nb-green">✓ Synced to Jira</p>
+          <p className="mb-3 text-xs font-semibold text-nb-green">✓ Synced to Jira</p>
         )}
         {entry.lastSyncError && (
-          <p className="mb-1 text-xs font-bold text-nb-pink">
+          <p className="mb-3 text-xs font-bold text-nb-pink">
             Sync error: {entry.lastSyncError}
           </p>
-        )}
-        {entry.ticket && onResync && (
-          <button
-            type="button"
-            onClick={handleResync}
-            disabled={resyncing}
-            className="nb-btn mb-3 px-3 py-1.5 text-xs font-semibold"
-          >
-            {resyncing ? "Resyncing…" : "Resync to Jira"}
-          </button>
         )}
 
         <div className="mt-6 flex items-center justify-between">
