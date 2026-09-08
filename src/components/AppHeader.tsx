@@ -20,7 +20,7 @@ export function AppHeader({ active, extra }: AppHeaderProps) {
     <header className="nb-panel-sm sticky top-0 z-20 m-3 mb-0 flex items-center justify-between bg-nb-orange px-8 py-4">
       <div className="flex items-center gap-8">
         <h1 className="nb-display text-2xl">🗓️ lx-assistant</h1>
-        <nav className="flex items-center gap-2 text-lg font-bold">
+        <nav className="flex items-center gap-3 text-lg font-bold">
           <Link href="/" className={active === "calendar" ? NAV_LINK_ACTIVE : NAV_LINK_INACTIVE}>
             Calendar
           </Link>
