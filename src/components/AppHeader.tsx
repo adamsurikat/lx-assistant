@@ -5,7 +5,7 @@ import { useSession, signOut } from "next-auth/react";
 import type { ReactNode } from "react";
 
 interface AppHeaderProps {
-  active: "calendar" | "tools" | "settings";
+  active: "calendar" | "tools" | "links" | "settings";
   extra?: ReactNode;
 }
 
@@ -57,6 +57,9 @@ export function AppHeader({ active, extra }: AppHeaderProps) {
           </Link>
           <Link href="/tools" className={active === "tools" ? NAV_LINK_ACTIVE : NAV_LINK_INACTIVE}>
             Tools
+          </Link>
+          <Link href="/links" className={active === "links" ? NAV_LINK_ACTIVE : NAV_LINK_INACTIVE}>
+            Links
           </Link>
         </nav>
       </div>
