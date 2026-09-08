@@ -328,6 +328,21 @@ export default function HomePage() {
     }
   };
 
+  // Deletes the entry's existing Jira worklog (if any) and immediately
+  // creates a fresh one, back to back — used for a clean "force resync"
+  // instead of the usual incremental update.
+  const handleResyncEntry = async (entryId: string) => {
+    setError(null);
+    markSyncing(entryId, true);
+    const res = await fetch(`/api/time-entries/${entryId}/resync`, { method: "POST" });
+    markSyncing(entryId, false);
+    if (!res.ok) {
+      const data = await res.json().catch(() => ({}));
+      setError(data.error ?? "Failed to resync time entry to Jira.");
+    }
+    await loadEntries();
+  };
+
   const handleSelectEvent = (
     event: CalendarEventItem,
     domEvent: SyntheticEvent<HTMLElement>
@@ -559,6 +574,9 @@ export default function HomePage() {
             modalEntry.id === null
               ? async () => setDraftEntry(null)
               : () => handleDeleteEntry(modalEntry.id as string)
+          }
+          onResync={
+            modalEntry.id === null ? undefined : () => handleResyncEntry(modalEntry.id as string)
           }
           onLookupTicket={handleLookupTicket}
         />
