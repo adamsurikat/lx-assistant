@@ -127,8 +127,8 @@ function ServiceCard({ folder }: { folder: BookmarkFolder }) {
       <h3 className="mb-3 text-sm font-bold text-nb-ink">{grid.title}</h3>
 
       {hasGrid && (
-        <div className="overflow-x-auto">
-          <table className="border-collapse text-sm">
+        <div>
+          <table className="w-full border-collapse text-sm">
             <thead>
               <tr>
                 <th className="w-0" />
@@ -226,7 +226,7 @@ export default function LinksPage() {
             </p>
           )}
           {!error && folders.length > 0 && (
-            <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-3">
+            <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
               {folders.map((folder, i) => (
                 <ServiceCard key={`${folder.title}-${i}`} folder={folder} />
               ))}
