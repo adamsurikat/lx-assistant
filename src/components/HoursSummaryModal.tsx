@@ -1,6 +1,7 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { Fragment, useEffect, useState } from "react";
+import { getISOWeek } from "date-fns/getISOWeek";
 
 interface DailyHoursSummary {
   date: string;
@@ -150,35 +151,45 @@ export function HoursSummaryModal({ onClose }: HoursSummaryModalProps) {
                 </thead>
                 <tbody>
                   {data.days
-                    .filter((day) => day.weekday !== 0)
-                    .map((day) => {
-                      if (day.weekday === 6) {
-                        // Saturday stands in for the whole weekend: render a
-                        // small blank spacer row instead of any data.
-                        return <tr key={day.date} aria-hidden className="h-2" />;
-                      }
-                      const dayDiff = day.workedHours - day.expectedHours;
+                    .filter((day) => day.weekday !== 0 && day.weekday !== 6)
+                    .map((day, index, weekdays) => {
                       const dateObj = new Date(`${day.date}T00:00:00`);
+                      const weekNumber = getISOWeek(dateObj);
+                      const prevWeekNumber =
+                        index > 0 ? getISOWeek(new Date(`${weekdays[index - 1].date}T00:00:00`)) : null;
+                      const dayDiff = day.workedHours - day.expectedHours;
                       return (
-                        <tr key={day.date} className="border-t border-nb-ink/10 text-nb-ink">
-                          <td className="py-1">
-                            {WEEKDAY_LABELS[day.weekday]} {dateObj.getDate()}
-                          </td>
-                          <td className="py-1">
-                            {day.workedHours > 0 ? formatHours(day.workedHours) : "—"}
-                          </td>
-                          <td
-                            className={`py-1 font-semibold ${
-                              day.expectedHours === 0
-                                ? "text-nb-ink/30"
-                                : dayDiff >= 0
-                                  ? "text-green-700"
-                                  : "text-red-700"
-                            }`}
-                          >
-                            {day.expectedHours === 0 ? "—" : formatHours(dayDiff)}
-                          </td>
-                        </tr>
+                        <Fragment key={day.date}>
+                          {weekNumber !== prevWeekNumber && (
+                            <tr>
+                              <td
+                                colSpan={3}
+                                className="bg-nb-paper pt-2 pb-1 text-xs font-semibold uppercase tracking-wide text-nb-ink/50"
+                              >
+                                Week {weekNumber}
+                              </td>
+                            </tr>
+                          )}
+                          <tr className="border-t border-nb-ink/10 text-nb-ink">
+                            <td className="py-1">
+                              {WEEKDAY_LABELS[day.weekday]} {dateObj.getDate()}
+                            </td>
+                            <td className="py-1">
+                              {day.workedHours > 0 ? formatHours(day.workedHours) : "—"}
+                            </td>
+                            <td
+                              className={`py-1 font-semibold ${
+                                day.expectedHours === 0
+                                  ? "text-nb-ink/30"
+                                  : dayDiff >= 0
+                                    ? "text-green-700"
+                                    : "text-red-700"
+                              }`}
+                            >
+                              {day.expectedHours === 0 ? "—" : formatHours(dayDiff)}
+                            </td>
+                          </tr>
+                        </Fragment>
                       );
                     })}
                 </tbody>
