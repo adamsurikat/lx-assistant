@@ -5,7 +5,7 @@ import { useSession, signOut } from "next-auth/react";
 import type { ReactNode } from "react";
 
 interface AppHeaderProps {
-  active: "calendar" | "tools";
+  active: "calendar" | "tools" | "settings";
   extra?: ReactNode;
 }
 
@@ -33,17 +33,22 @@ export function AppHeader({ active, extra }: AppHeaderProps) {
           >
             Tools
           </Link>
+          <Link
+            href="/settings"
+            className={`nb-btn px-3 py-1 text-xs ${
+              active === "settings" ? "nb-btn-green" : "bg-white"
+            }`}
+          >
+            Settings
+          </Link>
         </nav>
       </div>
-      <div className="flex items-center gap-4 text-sm font-bold">
+      <div className="flex items-center gap-3 text-sm font-bold">
         {extra}
         <span>{session?.user?.name}</span>
-        <Link href="/settings" className="underline decoration-2">
-          Settings
-        </Link>
         <button
           onClick={() => signOut({ callbackUrl: "/login" })}
-          className="underline decoration-2"
+          className="nb-btn bg-white px-3 py-1 text-xs"
         >
           Sign out
         </button>
