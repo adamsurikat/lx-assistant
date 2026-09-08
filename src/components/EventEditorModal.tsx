@@ -77,7 +77,7 @@ export function EventEditorModal({
   const [customTicket, setCustomTicket] = useState<TicketSummary | null>(
     entry.ticket && !tickets.some((t) => t.id === entry.ticket!.id) ? entry.ticket : null
   );
-  const [title, setTitle] = useState(entry.title ?? "");
+  const [title, setTitle] = useState(entry.title ?? (entry.ticket ? entry.ticket.key : ""));
   const [comment, setComment] = useState(entry.comment ?? "");
   const [saving, setSaving] = useState(false);
   const [deleting, setDeleting] = useState(false);
@@ -126,6 +126,7 @@ export function EventEditorModal({
     if (ticket) {
       setCustomTicket(ticket);
       setTrackedSelection(NO_TICKET);
+      if (!trimmedTitle) setTitle(ticket.key);
     } else {
       setCustomTicket(null);
       setSearchError(`No Jira ticket found for "${key}"`);
@@ -156,10 +157,15 @@ export function EventEditorModal({
         <select
           value={trackedSelection}
           onChange={(e) => {
-            setTrackedSelection(e.target.value);
+            const value = e.target.value;
+            setTrackedSelection(value);
             setCustomTicket(null);
             setSearchKey("");
             setSearchError(null);
+            if (!trimmedTitle && value !== NO_TICKET) {
+              const ticket = tickets.find((t) => t.id === value);
+              if (ticket) setTitle(ticket.key);
+            }
           }}
           className="nb-input mb-5 w-full px-3 py-2 text-sm"
         >
