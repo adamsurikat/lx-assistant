@@ -59,6 +59,10 @@ export async function GET(request: Request) {
   today.setHours(0, 0, 0, 0);
 
   const days: DailyHoursSummary[] = [];
+  // Parallel array (not returned to the client) tracking which days count
+  // toward the diff — weekdays strictly before today — so hours already
+  // logged today/in the future don't skew the diff toward "ahead".
+  const countsTowardDiff: boolean[] = [];
   const daysInMonth = new Date(year, month + 1, 0).getDate();
   for (let day = 1; day <= daysInMonth; day++) {
     const date = new Date(year, month, day);
@@ -74,6 +78,7 @@ export async function GET(request: Request) {
       workedHours: (workedMinutesByDay.get(key) ?? 0) / 60,
       expectedHours: !isWeekend && !isNotYetComplete ? BASELINE_HOURS_PER_WEEKDAY : 0,
     });
+    countsTowardDiff.push(!isWeekend && !isNotYetComplete);
   }
 
   const totals = days.reduce(
@@ -84,12 +89,19 @@ export async function GET(request: Request) {
     { workedHours: 0, expectedHours: 0 }
   );
 
+  // Computed separately from the "Worked" total above (which reflects
+  // everything logged this month) so today/future hours are excluded here.
+  const diffHours = days.reduce(
+    (sum, d, i) => sum + (countsTowardDiff[i] ? d.workedHours - d.expectedHours : 0),
+    0
+  );
+
   return NextResponse.json({
     month: `${year}-${String(month + 1).padStart(2, "0")}`,
     days,
     totals: {
       ...totals,
-      diffHours: totals.workedHours - totals.expectedHours,
+      diffHours,
     },
   });
 }
