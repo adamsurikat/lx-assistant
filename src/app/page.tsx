@@ -463,9 +463,23 @@ export default function HomePage() {
           <button
             type="button"
             onClick={() => setSidebarOpen((open) => !open)}
-            className={`nb-btn px-3 py-1.5 text-sm ${sidebarOpen ? "nb-btn-green" : ""}`}
+            aria-expanded={sidebarOpen}
+            className={`flex items-center gap-1.5 rounded-lg border-2 px-3 py-1.5 text-sm font-bold transition-colors ${
+              sidebarOpen
+                ? "border-nb-ink/30 bg-nb-green/25 text-nb-ink"
+                : "border-nb-ink/15 text-nb-ink/70 hover:border-nb-ink/30 hover:text-nb-ink"
+            }`}
           >
             🎫 Tickets{tickets.length > 0 ? ` (${tickets.length})` : ""}
+            <svg
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth={2.5}
+              className={`h-4 w-4 transition-transform ${sidebarOpen ? "rotate-90" : ""}`}
+            >
+              <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
+            </svg>
           </button>
           <div className="flex items-center gap-2">
             <button type="button" onClick={handleToday} className="nb-btn px-3 py-1.5 text-sm">
