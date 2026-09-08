@@ -1,0 +1,101 @@
+import { readFile } from "fs/promises";
+import path from "path";
+
+export interface BookmarkLink {
+  type: "link";
+  title: string;
+  url: string;
+}
+
+export interface BookmarkFolder {
+  type: "folder";
+  title: string;
+  children: BookmarkNode[];
+}
+
+export type BookmarkNode = BookmarkLink | BookmarkFolder;
+
+function decodeEntities(text: string): string {
+  return text
+    .replace(/&amp;/g, "&")
+    .replace(/&lt;/g, "<")
+    .replace(/&gt;/g, ">")
+    .replace(/&quot;/g, '"')
+    .replace(/&#39;/g, "'");
+}
+
+// Netscape bookmark files (exported by Firefox/Chrome/etc.) are a loose,
+// non-XML HTML dialect: folders are `<H3>` headings each immediately
+// followed by a `<DL><p>` opening their nested `<DT>` entries, closed by a
+// matching `</DL><p>`. We don't pull in a full HTML parser for this one
+// format — a small stack-based scan over the handful of tags we care about
+// is enough.
+export function parseBookmarksHtml(html: string): BookmarkFolder {
+  const root: BookmarkFolder = { type: "folder", title: "Bookmarks", children: [] };
+  const stack: BookmarkNode[][] = [];
+  let pendingFolder: BookmarkFolder | null = null;
+
+  const tokenPattern =
+    /<DT><H3[^>]*>([\s\S]*?)<\/H3>|<DT><A\b([^>]*)>([\s\S]*?)<\/A>|<DL><p>|<\/DL>/gi;
+  let match: RegExpExecArray | null;
+
+  while ((match = tokenPattern.exec(html))) {
+    const [full, folderTitle, linkAttrs, linkTitle] = match;
+
+    if (folderTitle !== undefined) {
+      const folder: BookmarkFolder = {
+        type: "folder",
+        title: decodeEntities(folderTitle.trim()),
+        children: [],
+      };
+      const target = stack[stack.length - 1] ?? root.children;
+      target.push(folder);
+      pendingFolder = folder;
+      continue;
+    }
+
+    if (linkAttrs !== undefined) {
+      const hrefMatch = /HREF="([^"]*)"/i.exec(linkAttrs);
+      if (hrefMatch) {
+        const link: BookmarkLink = {
+          type: "link",
+          title: decodeEntities((linkTitle ?? "").trim()) || hrefMatch[1],
+          url: decodeEntities(hrefMatch[1]),
+        };
+        const target = stack[stack.length - 1] ?? root.children;
+        target.push(link);
+      }
+      continue;
+    }
+
+    if (full.toUpperCase() === "<DL><P>") {
+      stack.push(pendingFolder ? pendingFolder.children : root.children);
+      pendingFolder = null;
+      continue;
+    }
+
+    if (full.toUpperCase() === "</DL>") {
+      stack.pop();
+      continue;
+    }
+  }
+
+  return root;
+}
+
+/**
+ * Reads and parses `bookmarks.html` from the project root. This file is a
+ * personal Firefox/Chrome bookmark export, deliberately gitignored — it's
+ * expected to exist locally but isn't committed. Returns an empty root
+ * folder (rather than throwing) if the file isn't present, so the Links
+ * page can render a friendly empty state instead of erroring.
+ */
+export async function readBookmarks(): Promise<BookmarkFolder> {
+  const filePath = path.join(process.cwd(), "bookmarks.html");
+  try {
+    const html = await readFile(filePath, "utf-8");
+    return parseBookmarksHtml(html);
+  } catch {
+    return { type: "folder", title: "Bookmarks", children: [] };
+  }
+}
