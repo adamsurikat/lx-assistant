@@ -96,6 +96,7 @@ export function EventEditorModal({
 
   const handleSave = async () => {
     if (!hasTicket && !trimmedTitle) return;
+    if (hasTicket && !trimmedComment) return;
     setSaving(true);
     await onSave({
       ticketId: hasTicket ? selectedTicketId : null,
@@ -208,15 +209,20 @@ export function EventEditorModal({
         {hasTicket && (
           <div className="mb-5">
             <label className="mb-2 block text-sm font-semibold tracking-wide text-nb-ink">
-              Comment
+              Comment <span className="text-nb-pink">*</span>
             </label>
             <textarea
               value={comment}
               onChange={(e) => setComment(e.target.value)}
-              placeholder="Optional note to add as a comment on the Jira worklog…"
+              placeholder="Note to add as a comment on the Jira worklog…"
               rows={3}
               className="nb-input w-full resize-none px-3 py-2 text-sm"
             />
+            {!trimmedComment && (
+              <p className="mt-2 text-xs font-medium text-nb-ink/50">
+                Required — describe what you worked on.
+              </p>
+            )}
           </div>
         )}
 
@@ -253,7 +259,9 @@ export function EventEditorModal({
             <button
               type="button"
               onClick={handleSave}
-              disabled={saving || (!hasTicket && !trimmedTitle) || unchanged}
+              disabled={
+                saving || (!hasTicket && !trimmedTitle) || (hasTicket && !trimmedComment) || unchanged
+              }
               className="nb-btn nb-btn-orange px-4 py-2 text-sm font-semibold"
             >
               {saving ? "Saving…" : "Save"}
