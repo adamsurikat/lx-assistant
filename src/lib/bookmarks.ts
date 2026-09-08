@@ -83,6 +83,20 @@ export function parseBookmarksHtml(html: string): BookmarkFolder {
   return root;
 }
 
+// Firefox/Chrome exports include several top-level folders (a default
+// "Mozilla Firefox" links folder, "Bookmarks bar", "Bookmarks Toolbar",
+// "Other Bookmarks", etc). We only care about whatever the user actually
+// pinned to their toolbar, so find the first folder whose title mentions
+// "toolbar" and use that as the effective root.
+function findToolbarFolder(root: BookmarkFolder): BookmarkFolder {
+  for (const node of root.children) {
+    if (node.type === "folder" && /toolbar/i.test(node.title)) {
+      return node;
+    }
+  }
+  return root;
+}
+
 /**
  * Reads and parses `bookmarks.html` from the project root. This file is a
  * personal Firefox/Chrome bookmark export, deliberately gitignored — it's
@@ -94,7 +108,7 @@ export async function readBookmarks(): Promise<BookmarkFolder> {
   const filePath = path.join(process.cwd(), "bookmarks.html");
   try {
     const html = await readFile(filePath, "utf-8");
-    return parseBookmarksHtml(html);
+    return findToolbarFolder(parseBookmarksHtml(html));
   } catch {
     return { type: "folder", title: "Bookmarks", children: [] };
   }
