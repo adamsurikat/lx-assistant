@@ -97,7 +97,7 @@ export const LINK_FOLDERS: BookmarkFolder[] = [
       { type: "link", title: "gos Sot Local", url: "http://localhost:8899/admin?tenant=sot" },
       { type: "link", title: "gos Sot Prod", url: "https://gos.bylynx.com/admin?tenant=sot" },
       { type: "link", title: "gos Stenaline Local", url: "http://localhost:8899/admin?tenant=stenaline" },
-      { type: "link", title: "gos Stenaline Prod", url: "https://gos.bylynx.com/admin?tenant=stenaline" },
+      { type: "link", title: "gos Stenaline Prod", url: "https://stena.gos.bylynx.com/admin" },
       { type: "link", title: "gos Scandlines Local", url: "http://localhost:8899/admin?tenant=scandlines" },
       { type: "link", title: "gos Scandlines Prod", url: "https://gos.bylynx.com/admin?tenant=scandlines" },
       { type: "link", title: "gos Peelports Local", url: "http://localhost:8899/admin?tenant=peelports" },
