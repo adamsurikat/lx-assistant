@@ -145,45 +145,37 @@ export function HoursSummaryModal({ onClose }: HoursSummaryModalProps) {
                   <tr>
                     <th className="py-1">Date</th>
                     <th className="py-1">Worked</th>
-                    <th className="py-1">Expected</th>
                     <th className="py-1">Diff</th>
                   </tr>
                 </thead>
                 <tbody>
-                  {data.days.map((day) => {
-                    const isWeekend = day.weekday === 0 || day.weekday === 6;
-                    const dayDiff = day.workedHours - day.expectedHours;
-                    const dateObj = new Date(`${day.date}T00:00:00`);
-                    return (
-                      <tr
-                        key={day.date}
-                        className={`border-t border-nb-ink/10 ${
-                          isWeekend ? "text-nb-ink/40" : "text-nb-ink"
-                        }`}
-                      >
-                        <td className="py-1">
-                          {WEEKDAY_LABELS[day.weekday]} {dateObj.getDate()}
-                        </td>
-                        <td className="py-1">
-                          {day.workedHours > 0 ? formatHours(day.workedHours) : "—"}
-                        </td>
-                        <td className="py-1">
-                          {day.expectedHours > 0 ? formatHours(day.expectedHours) : "—"}
-                        </td>
-                        <td
-                          className={`py-1 font-semibold ${
-                            day.expectedHours === 0
-                              ? "text-nb-ink/30"
-                              : dayDiff >= 0
-                                ? "text-green-700"
-                                : "text-red-700"
-                          }`}
-                        >
-                          {day.expectedHours === 0 ? "—" : formatHours(dayDiff)}
-                        </td>
-                      </tr>
-                    );
-                  })}
+                  {data.days
+                    .filter((day) => day.weekday !== 0 && day.weekday !== 6)
+                    .map((day) => {
+                      const dayDiff = day.workedHours - day.expectedHours;
+                      const dateObj = new Date(`${day.date}T00:00:00`);
+                      return (
+                        <tr key={day.date} className="border-t border-nb-ink/10 text-nb-ink">
+                          <td className="py-1">
+                            {WEEKDAY_LABELS[day.weekday]} {dateObj.getDate()}
+                          </td>
+                          <td className="py-1">
+                            {day.workedHours > 0 ? formatHours(day.workedHours) : "—"}
+                          </td>
+                          <td
+                            className={`py-1 font-semibold ${
+                              day.expectedHours === 0
+                                ? "text-nb-ink/30"
+                                : dayDiff >= 0
+                                  ? "text-green-700"
+                                  : "text-red-700"
+                            }`}
+                          >
+                            {day.expectedHours === 0 ? "—" : formatHours(dayDiff)}
+                          </td>
+                        </tr>
+                      );
+                    })}
                 </tbody>
               </table>
             </div>
