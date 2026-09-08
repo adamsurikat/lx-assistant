@@ -66,6 +66,16 @@ function formatWeekLabel(weekStart: Date): string {
   return `${start} – ${end}`;
 }
 
+// ISO-8601 week number: weeks start on Monday, and week 1 is the week
+// containing the year's first Thursday.
+function getISOWeekNumber(date: Date): number {
+  const target = new Date(Date.UTC(date.getFullYear(), date.getMonth(), date.getDate()));
+  const dayNum = target.getUTCDay() || 7; // Sunday(0) -> 7
+  target.setUTCDate(target.getUTCDate() + 4 - dayNum); // shift to this week's Thursday
+  const yearStart = new Date(Date.UTC(target.getUTCFullYear(), 0, 1));
+  return Math.ceil(((target.getTime() - yearStart.getTime()) / 86400000 + 1) / 7);
+}
+
 export default function HomePage() {
   const [tickets, setTickets] = useState<TicketSummary[]>([]);
   const [entries, setEntries] = useState<TimeEntryDTO[]>([]);
@@ -521,7 +531,8 @@ export default function HomePage() {
             </button>
           </div>
           <span className="ml-1 text-sm font-bold text-nb-ink/70">
-            {formatWeekLabel(weekStart)}
+            {formatWeekLabel(weekStart)}{" "}
+            <span className="text-nb-ink/40">· Week {getISOWeekNumber(weekStart)}</span>
           </span>
           <button
             type="button"
@@ -575,9 +586,6 @@ export default function HomePage() {
               ? async () => setDraftEntry(null)
               : () => handleDeleteEntry(modalEntry.id as string)
           }
-          onResync={
-            modalEntry.id === null ? undefined : () => handleResyncEntry(modalEntry.id as string)
-          }
           onLookupTicket={handleLookupTicket}
         />
       )}
@@ -601,6 +609,15 @@ export default function HomePage() {
                   const entryId = popover.entryId as string;
                   setPopover(null);
                   handleDeleteEntry(entryId);
+                }
+              : undefined
+          }
+          onResync={
+            popover.entryId && popover.data.ticketKey
+              ? () => {
+                  const entryId = popover.entryId as string;
+                  setPopover(null);
+                  handleResyncEntry(entryId);
                 }
               : undefined
           }

@@ -22,6 +22,7 @@ interface EventPopoverProps {
   onClose: () => void;
   onEdit?: () => void;
   onDelete?: () => void;
+  onResync?: () => void;
 }
 
 function formatRange(start: Date, end: Date): string {
@@ -41,7 +42,7 @@ function formatRange(start: Date, end: Date): string {
  * summary plus a link out to the source (Jira ticket / Google Calendar
  * event) and, for editable time entries, a button into the full editor.
  */
-export function EventPopover({ data, anchor, onClose, onEdit, onDelete }: EventPopoverProps) {
+export function EventPopover({ data, anchor, onClose, onEdit, onDelete, onResync }: EventPopoverProps) {
   const ref = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -137,6 +138,15 @@ export function EventPopover({ data, anchor, onClose, onEdit, onDelete }: EventP
             className="nb-btn px-3 py-1.5 text-xs font-semibold text-nb-pink"
           >
             Delete
+          </button>
+        )}
+        {!data.readOnly && onResync && (
+          <button
+            type="button"
+            onClick={onResync}
+            className="nb-btn px-3 py-1.5 text-xs font-semibold"
+          >
+            Resync to Jira
           </button>
         )}
       </div>
