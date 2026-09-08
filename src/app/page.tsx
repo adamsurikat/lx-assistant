@@ -417,7 +417,7 @@ export default function HomePage() {
           jiraConnected === false && (
             <Link
               href="/settings"
-              className="nb-btn nb-btn-pink px-3 py-1 text-xs"
+              className="nb-btn nb-btn-pink px-4 py-2 text-sm"
             >
               Connect Jira in Settings
             </Link>
