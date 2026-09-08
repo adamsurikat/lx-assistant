@@ -103,7 +103,7 @@ interface TimeCalendarProps {
   date: Date;
   // Keyed by "YYYY-MM-DD" — worked-vs-8h-baseline diff for days that have
   // already passed, rendered under the day's header label.
-  dayHourDiffs?: Record<string, { label: string; positive: boolean }>;
+  dayHourDiffs?: Record<string, string>;
   onNavigate: (date: Date) => void;
   onEventChange: (id: string, start: Date, end: Date) => void;
   onDropTicket: (ticketId: string, start: Date, end: Date) => void;
@@ -183,15 +183,7 @@ export function TimeCalendar({
             return (
               <div className="py-1">
                 <div>{label}</div>
-                {diff && (
-                  <div
-                    className={`text-[0.7rem] font-semibold ${
-                      diff.positive ? "text-green-700" : "text-red-700"
-                    }`}
-                  >
-                    {diff.label}
-                  </div>
-                )}
+                {diff && <div className="text-[0.7rem] font-semibold text-nb-ink/60">{diff}</div>}
               </div>
             );
           },

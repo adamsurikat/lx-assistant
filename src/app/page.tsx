@@ -415,7 +415,7 @@ export default function HomePage() {
   }
   const today = new Date();
   today.setHours(0, 0, 0, 0);
-  const dayHourDiffs: Record<string, { label: string; positive: boolean }> = {};
+  const dayHourDiffs: Record<string, string> = {};
   for (let i = 0; i < 5; i++) {
     const day = new Date(weekStart);
     day.setDate(day.getDate() + i);
@@ -423,10 +423,7 @@ export default function HomePage() {
     const key = toDateKey(day);
     const workedHours = (workedMinutesByDay.get(key) ?? 0) / 60;
     const diff = workedHours - BASELINE_HOURS_PER_WEEKDAY;
-    dayHourDiffs[key] = {
-      label: diff >= 0 ? `+${formatHours(diff)}` : formatHours(diff),
-      positive: diff >= 0,
-    };
+    dayHourDiffs[key] = diff >= 0 ? `+${formatHours(diff)}` : formatHours(diff);
   }
 
   const googleCalendarEvents: CalendarEventItem[] = googleEvents
