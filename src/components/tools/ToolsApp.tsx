@@ -46,10 +46,8 @@ export function ToolsApp() {
           </button>
         ))}
       </div>
-      <div className="flex-1 overflow-y-auto p-4">
-        <div className="nb-panel mx-auto max-w-3xl bg-white p-6">
-          <SelectedComponent />
-        </div>
+      <div className="flex-1 overflow-y-auto bg-white p-6">
+        <SelectedComponent />
       </div>
     </div>
   );
