@@ -77,11 +77,14 @@ export function EventEditorModal({
   const [customTicket, setCustomTicket] = useState<TicketSummary | null>(
     entry.ticket && !tickets.some((t) => t.id === entry.ticket!.id) ? entry.ticket : null
   );
-  const [title, setTitle] = useState(entry.title ?? (entry.ticket ? entry.ticket.key : ""));
+  // A search result awaiting the user's explicit confirm/decline via the
+  // popover, before it's applied as the entry's ticket.
+  const [pendingTicket, setPendingTicket] = useState<TicketSummary | null>(null);
+  const [title, setTitle] = useState(entry.title ?? "");
   const [comment, setComment] = useState(entry.comment ?? "");
   const [saving, setSaving] = useState(false);
   const [deleting, setDeleting] = useState(false);
-  const [searchKey, setSearchKey] = useState(customTicket ? customTicket.key : "");
+  const [searchKey, setSearchKey] = useState("");
   const [searching, setSearching] = useState(false);
   const [searchError, setSearchError] = useState<string | null>(null);
 
@@ -92,20 +95,22 @@ export function EventEditorModal({
 
   const hasTicket = effectiveTicket !== null;
   const isNew = entry.id === null;
-  const trimmedTitle = title.trim();
+  // Once a ticket is attached, the title is always the ticket's key —
+  // the input becomes read-only to make that obvious.
+  const effectiveTitle = hasTicket ? effectiveTicket!.key : title.trim();
   const trimmedComment = comment.trim();
   const unchanged =
     (effectiveTicket?.id ?? null) === (entry.ticket?.id ?? null) &&
-    trimmedTitle === (entry.title ?? "").trim() &&
+    effectiveTitle === (entry.title ?? "").trim() &&
     trimmedComment === (entry.comment ?? "").trim();
 
   const handleSave = async () => {
-    if (!hasTicket && !trimmedTitle) return;
+    if (!hasTicket && !effectiveTitle) return;
     if (hasTicket && !trimmedComment) return;
     setSaving(true);
     await onSave({
       ticketId: hasTicket ? effectiveTicket!.id : null,
-      title: trimmedTitle,
+      title: effectiveTitle,
       comment: trimmedComment,
     });
     setSaving(false);
@@ -122,15 +127,26 @@ export function EventEditorModal({
     if (!key) return;
     setSearching(true);
     setSearchError(null);
+    setPendingTicket(null);
     const ticket = await onLookupTicket(key);
     if (ticket) {
-      setCustomTicket(ticket);
-      setTrackedSelection(NO_TICKET);
+      setPendingTicket(ticket);
     } else {
-      setCustomTicket(null);
       setSearchError(`No Jira ticket found for "${key}"`);
     }
     setSearching(false);
+  };
+
+  const handleConfirmPending = () => {
+    if (!pendingTicket) return;
+    setCustomTicket(pendingTicket);
+    setTrackedSelection(NO_TICKET);
+    setPendingTicket(null);
+    setSearchKey("");
+  };
+
+  const handleDeclinePending = () => {
+    setPendingTicket(null);
   };
 
   return (
@@ -159,12 +175,9 @@ export function EventEditorModal({
             const value = e.target.value;
             setTrackedSelection(value);
             setCustomTicket(null);
+            setPendingTicket(null);
             setSearchKey("");
             setSearchError(null);
-            if (!trimmedTitle && value !== NO_TICKET) {
-              const ticket = tickets.find((t) => t.id === value);
-              if (ticket) setTitle(ticket.key);
-            }
           }}
           className="nb-input mb-5 w-full px-3 py-2 text-sm"
         >
@@ -176,44 +189,75 @@ export function EventEditorModal({
           ))}
         </select>
 
-        <div className="mb-2 flex items-center gap-2">
-          <input
-            type="text"
-            value={searchKey}
-            onChange={(e) => setSearchKey(e.target.value)}
-            onKeyDown={(e) => {
-              if (e.key === "Enter") {
-                e.preventDefault();
-                handleSearch();
-              }
-            }}
-            placeholder="Or type a ticket number, e.g. PROJ-123"
-            className="nb-input w-full px-3 py-2 text-sm"
-          />
-          <button
-            type="button"
-            onClick={handleSearch}
-            disabled={searching || !searchKey.trim()}
-            className="nb-btn shrink-0 px-3 py-2 text-sm font-semibold"
-          >
-            {searching ? "Searching…" : "Search"}
-          </button>
-        </div>
-        {customTicket && (
-          <p className="mb-4 flex items-center justify-between gap-2 text-xs font-semibold text-nb-ink/70">
-            <span>
-              {customTicket.key} · {customTicket.summary}
-            </span>
+        <div className="relative mb-5">
+          <div className="flex items-center gap-2">
+            <input
+              type="text"
+              value={searchKey}
+              onChange={(e) => {
+                setSearchKey(e.target.value);
+                setPendingTicket(null);
+                setSearchError(null);
+              }}
+              onKeyDown={(e) => {
+                if (e.key === "Enter") {
+                  e.preventDefault();
+                  handleSearch();
+                }
+              }}
+              placeholder="Or type a ticket number, e.g. PROJ-123"
+              className="nb-input w-full px-3 py-2 text-sm"
+            />
             <button
               type="button"
-              onClick={() => setTitle(customTicket.key)}
-              className="nb-btn shrink-0 px-2 py-1 text-xs font-semibold"
+              onClick={handleSearch}
+              disabled={searching || !searchKey.trim()}
+              className="nb-btn shrink-0 px-3 py-2 text-sm font-semibold"
             >
-              OK, use as title
+              {searching ? "Searching…" : "Search"}
             </button>
-          </p>
+          </div>
+          {searchError && <p className="mt-2 text-xs font-bold text-nb-pink">{searchError}</p>}
+
+          {pendingTicket && (
+            <div className="nb-panel absolute left-0 right-0 top-full z-10 mt-2 border-2 border-nb-ink/10 bg-white p-4">
+              <p className="mb-1 text-xs font-semibold uppercase tracking-wide text-nb-ink/50">
+                Is this the right ticket?
+              </p>
+              <p className="mb-3 text-sm font-semibold text-nb-ink">
+                {pendingTicket.key} · {pendingTicket.summary}
+              </p>
+              <div className="flex justify-end gap-2">
+                <button
+                  type="button"
+                  onClick={handleDeclinePending}
+                  className="nb-btn px-3 py-1.5 text-xs font-semibold"
+                >
+                  No, not this one
+                </button>
+                <button
+                  type="button"
+                  onClick={handleConfirmPending}
+                  className="nb-btn nb-btn-green px-3 py-1.5 text-xs font-semibold"
+                >
+                  Yes, use it
+                </button>
+              </div>
+            </div>
+          )}
+        </div>
+
+        {hasTicket && (
+          <div className="mb-5 flex items-center gap-2 rounded-full border border-nb-orange/30 bg-nb-orange/10 px-3 py-2 text-xs font-bold text-nb-ink">
+            <span
+              className="h-2.5 w-2.5 shrink-0 rounded-full"
+              style={{ backgroundColor: effectiveTicket!.color ?? "#9ca3af" }}
+            />
+            <span>
+              Jira ticket · {effectiveTicket!.key} · {effectiveTicket!.summary}
+            </span>
+          </div>
         )}
-        {searchError && <p className="mb-4 text-xs font-bold text-nb-pink">{searchError}</p>}
 
         <div className="mb-5">
           <label className="mb-2 block text-sm font-semibold tracking-wide text-nb-ink">
@@ -221,12 +265,17 @@ export function EventEditorModal({
           </label>
           <input
             type="text"
-            value={title}
+            value={effectiveTitle}
             onChange={(e) => setTitle(e.target.value)}
+            disabled={hasTicket}
             placeholder="e.g. Team meeting, PTO, focus time…"
-            className="nb-input w-full px-3 py-2 text-sm"
+            className="nb-input w-full px-3 py-2 text-sm disabled:cursor-not-allowed disabled:opacity-60"
           />
-          {!hasTicket && (
+          {hasTicket ? (
+            <p className="mt-2 text-xs font-medium text-nb-ink/50">
+              Set automatically from the linked ticket.
+            </p>
+          ) : (
             <p className="mt-2 text-xs font-medium text-nb-ink/50">
               Entries without a ticket aren&apos;t synced to Jira.
             </p>
@@ -289,7 +338,7 @@ export function EventEditorModal({
               type="button"
               onClick={handleSave}
               disabled={
-                saving || (!hasTicket && !trimmedTitle) || (hasTicket && !trimmedComment) || unchanged
+                saving || (!hasTicket && !effectiveTitle) || (hasTicket && !trimmedComment) || unchanged
               }
               className="nb-btn nb-btn-orange px-4 py-2 text-sm font-semibold"
             >
