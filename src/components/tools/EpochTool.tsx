@@ -3,6 +3,8 @@
 import { Temporal } from "temporal-polyfill";
 import { TextField } from "./fields/TextField";
 import { SelectField } from "./fields/SelectField";
+import { DateField } from "./fields/DateField";
+import { TimeField } from "./fields/TimeField";
 import { useLocalStorageState } from "./useLocalStorageState";
 
 const PRECISIONS = ["second", "millisecond", "microsecond", "nanosecond"] as const;
@@ -204,30 +206,13 @@ export function EpochTool() {
       <div>
         <label className="mb-1 block text-sm font-semibold text-nb-ink">Date-time picker</label>
         <div className="flex flex-wrap items-center gap-2">
-          <input
-            type="date"
-            lang="en-GB"
-            className="nb-input px-3 py-1.5 text-sm"
-            value={`${year}-${month}-${day}`}
-            onChange={(e) => {
-              const [nextYear, nextMonth, nextDay] = e.target.value.split("-");
-              if (nextYear && nextMonth && nextDay) {
-                updatePicker({ year: nextYear, month: nextMonth, day: nextDay });
-              }
-            }}
+          <DateField
+            year={year}
+            month={month}
+            day={day}
+            onChange={(next) => updatePicker(next)}
           />
-          <input
-            type="time"
-            step={1}
-            lang="en-GB"
-            className="nb-input px-3 py-1.5 text-sm"
-            value={time}
-            onChange={(e) => {
-              if (!e.target.value) return;
-              const nextTime = e.target.value.length === 5 ? `${e.target.value}:00` : e.target.value;
-              updatePicker({ time: nextTime });
-            }}
-          />
+          <TimeField value={time} onChange={(time) => updatePicker({ time })} />
         </div>
       </div>
 
