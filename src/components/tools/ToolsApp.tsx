@@ -34,20 +34,31 @@ export function ToolsApp() {
 
   return (
     <div className="flex flex-1 flex-col overflow-hidden">
-      <div className="flex flex-wrap items-center gap-2 border-b border-nb-ink/10 bg-white px-4 py-3">
-        {TOOLS.map((tool) => (
-          <button
-            key={tool.key}
-            type="button"
-            onClick={() => setSelectedKey(tool.key)}
-            className={`nb-btn px-3 py-1.5 text-sm ${selectedKey === tool.key ? "nb-btn-green" : ""}`}
-          >
-            {tool.name}
-          </button>
-        ))}
+      <div role="tablist" className="flex flex-wrap gap-4 border-b border-nb-ink/10 bg-white px-4">
+        {TOOLS.map((tool) => {
+          const isActive = selectedKey === tool.key;
+          return (
+            <button
+              key={tool.key}
+              type="button"
+              role="tab"
+              onClick={() => setSelectedKey(tool.key)}
+              aria-selected={isActive}
+              className={`-mb-px border-b-4 px-1 py-3 text-sm font-bold transition-colors ${
+                isActive
+                  ? "border-nb-orange text-nb-ink"
+                  : "border-transparent text-nb-ink/50 hover:text-nb-ink"
+              }`}
+            >
+              {tool.name}
+            </button>
+          );
+        })}
       </div>
       <div className="flex-1 overflow-y-auto bg-white p-6">
-        <SelectedComponent />
+        <div className="mx-auto max-w-2xl">
+          <SelectedComponent />
+        </div>
       </div>
     </div>
   );
