@@ -1,5 +1,7 @@
 "use client";
 
+import type { MouseEvent } from "react";
+
 export interface TicketSummary {
   id: string;
   key: string;
@@ -14,6 +16,7 @@ interface TicketSidebarProps {
   syncing: boolean;
   onSync: () => void;
   onDragStartTicket: (ticketId: string) => void;
+  onSelectTicket: (ticket: TicketSummary, domEvent: MouseEvent<HTMLElement>) => void;
 }
 
 /**
@@ -31,6 +34,7 @@ export function TicketSidebar({
   syncing,
   onSync,
   onDragStartTicket,
+  onSelectTicket,
 }: TicketSidebarProps) {
   return (
     <div className="flex w-72 shrink-0 flex-col border-r border-nb-ink/10 bg-white">
@@ -63,9 +67,10 @@ export function TicketSidebar({
                 e.dataTransfer.setData("application/x-ticket-id", ticket.id);
                 e.dataTransfer.effectAllowed = "copy";
               }}
+              onClick={(e) => onSelectTicket(ticket, e)}
               className="nb-panel-sm cursor-grab p-3 transition active:cursor-grabbing"
               style={{ borderLeft: `6px solid ${ticket.color ?? "#FF5F1F"}` }}
-              title="Drag onto the calendar to log time"
+              title="Drag onto the calendar to log time, click for details"
             >
               <p className="text-sm font-bold text-nb-ink">{ticket.key}</p>
               <p className="truncate text-xs font-medium text-nb-ink/70">{ticket.summary}</p>
