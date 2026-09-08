@@ -75,7 +75,7 @@ export function AppHeader({ active, extra }: AppHeaderProps) {
           onClick={() => signOut({ callbackUrl: "/login" })}
           aria-label="Sign out"
           title="Sign out"
-          className={`${ICON_BUTTON_CLASS} text-nb-ink/60 hover:bg-nb-orange/10 hover:text-nb-ink`}
+          className={`${ICON_BUTTON_CLASS} cursor-pointer text-nb-ink/60 hover:bg-nb-orange/10 hover:text-nb-ink`}
         >
           <LogoutIcon />
         </button>
