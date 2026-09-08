@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import { AppHeader } from "@/components/AppHeader";
-import type { BookmarkFolder, BookmarkNode } from "@/lib/bookmarks";
+import { LINK_FOLDERS, type BookmarkFolder } from "@/lib/linksData";
 import { buildServiceGrid, type GridCell } from "@/lib/bookmarkGrid";
 
 function GridCellButton({ env, cell }: { env: string; cell: GridCell }) {
@@ -189,23 +189,7 @@ function ServiceCard({ folder }: { folder: BookmarkFolder }) {
 }
 
 export default function LinksPage() {
-  const [root, setRoot] = useState<BookmarkFolder | null>(null);
-  const [error, setError] = useState<string | null>(null);
-
-  useEffect(() => {
-    fetch("/api/bookmarks")
-      .then((res) => res.json())
-      .then((data) => setRoot(data.root))
-      .catch(() => setError("Failed to load bookmarks."));
-  }, []);
-
-  // Folders become service grids; any bookmark that isn't inside a folder
-  // (unusual for a toolbar export, but possible) is rendered as a plain link
-  // below the grids instead of being dropped.
-  const folders = (root?.children ?? []).filter(
-    (n: BookmarkNode): n is BookmarkFolder => n.type === "folder"
-  );
-  const looseLinks = (root?.children ?? []).filter((n: BookmarkNode) => n.type === "link");
+  const folders: BookmarkFolder[] = LINK_FOLDERS;
 
   return (
     <div className="flex h-screen flex-col">
@@ -215,42 +199,15 @@ export default function LinksPage() {
           <h2 className="text-sm font-semibold tracking-wide text-nb-ink">Links</h2>
         </div>
         <div className="flex-1 overflow-y-auto p-4">
-          {error && <p className="text-sm font-medium text-nb-pink">{error}</p>}
-          {!error && !root && (
-            <p className="text-sm font-medium text-nb-ink/50">Loading…</p>
+          {folders.length === 0 && (
+            <p className="text-sm font-medium text-nb-ink/50">No links configured.</p>
           )}
-          {!error && root && folders.length === 0 && looseLinks.length === 0 && (
-            <p className="text-sm font-medium text-nb-ink/50">
-              No bookmarks found. Export your browser bookmarks to{" "}
-              <code className="nb-badge">bookmarks.html</code> in the project root.
-            </p>
-          )}
-          {!error && folders.length > 0 && (
+          {folders.length > 0 && (
             <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
               {folders.map((folder, i) => (
                 <ServiceCard key={`${folder.title}-${i}`} folder={folder} />
               ))}
             </div>
-          )}
-          {!error && looseLinks.length > 0 && (
-            <ul className="mt-4 space-y-1">
-              {looseLinks.map((node, i) => {
-                const link = node as Extract<BookmarkNode, { type: "link" }>;
-                return (
-                  <li key={`${link.url}-${i}`}>
-                    <a
-                      href={link.url}
-                      target="_blank"
-                      rel="noreferrer"
-                      title={link.url}
-                      className="block truncate rounded px-1 py-0.5 text-sm font-medium text-nb-ink/80 hover:bg-nb-orange/10 hover:text-nb-ink"
-                    >
-                      🔗 {link.title}
-                    </a>
-                  </li>
-                );
-              })}
-            </ul>
           )}
         </div>
       </div>

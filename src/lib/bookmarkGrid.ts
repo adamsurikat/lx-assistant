@@ -1,4 +1,4 @@
-import type { BookmarkFolder, BookmarkLink, BookmarkNode } from "@/lib/bookmarks";
+import type { BookmarkFolder, BookmarkLink, BookmarkNode } from "@/lib/linksData";
 
 export interface GridCell {
   // The link for this tenant/environment combo when no backend override is
