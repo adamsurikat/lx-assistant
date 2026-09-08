@@ -22,7 +22,7 @@ interface HoursSummaryModalProps {
 const WEEKDAY_LABELS = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
 
 /** Formats a fractional hour count as e.g. "1h 30m" or "45m". */
-function formatHours(hours: number): string {
+export function formatHours(hours: number): string {
   const totalMinutes = Math.round(hours * 60);
   const sign = totalMinutes < 0 ? "-" : "";
   const abs = Math.abs(totalMinutes);

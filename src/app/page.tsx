@@ -7,7 +7,7 @@ import { TicketSidebar, type TicketSummary } from "@/components/TicketSidebar";
 import { TimeCalendar, type CalendarEventItem } from "@/components/TimeCalendar";
 import { EventEditorModal, type EditableEntry, formatDuration } from "@/components/EventEditorModal";
 import { EventPopover, type EventPopoverData } from "@/components/EventPopover";
-import { HoursSummaryModal } from "@/components/HoursSummaryModal";
+import { HoursSummaryModal, formatHours } from "@/components/HoursSummaryModal";
 
 interface TimeEntryDTO {
   id: string;
@@ -27,6 +27,15 @@ interface GoogleCalendarEventDTO {
   end: string;
   allDay: boolean;
   htmlLink?: string;
+}
+
+const BASELINE_HOURS_PER_WEEKDAY = 8;
+
+function toDateKey(date: Date): string {
+  const y = date.getFullYear();
+  const m = String(date.getMonth() + 1).padStart(2, "0");
+  const d = String(date.getDate()).padStart(2, "0");
+  return `${y}-${m}-${d}`;
 }
 
 function startOfWeekMonday(d: Date): Date {
@@ -395,6 +404,31 @@ export default function HomePage() {
     });
   }
 
+  // Per-day worked-vs-8h-baseline diff, shown on the calendar's day headers
+  // for weekdays that have already passed (today counts; future doesn't —
+  // mirrors the same rule used by the monthly hours summary).
+  const workedMinutesByDay = new Map<string, number>();
+  for (const entry of entries) {
+    const key = toDateKey(new Date(entry.start));
+    const minutes = (new Date(entry.end).getTime() - new Date(entry.start).getTime()) / 60000;
+    workedMinutesByDay.set(key, (workedMinutesByDay.get(key) ?? 0) + minutes);
+  }
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  const dayHourDiffs: Record<string, { label: string; positive: boolean }> = {};
+  for (let i = 0; i < 5; i++) {
+    const day = new Date(weekStart);
+    day.setDate(day.getDate() + i);
+    if (day.getTime() > today.getTime()) continue; // future day, no expectation yet
+    const key = toDateKey(day);
+    const workedHours = (workedMinutesByDay.get(key) ?? 0) / 60;
+    const diff = workedHours - BASELINE_HOURS_PER_WEEKDAY;
+    dayHourDiffs[key] = {
+      label: diff >= 0 ? `+${formatHours(diff)}` : formatHours(diff),
+      positive: diff >= 0,
+    };
+  }
+
   const googleCalendarEvents: CalendarEventItem[] = googleEvents
     .filter((event) => !event.allDay)
     .map((event) => ({
@@ -476,6 +510,7 @@ export default function HomePage() {
             events={calendarEvents}
             googleEvents={googleCalendarEvents}
             date={currentDate}
+            dayHourDiffs={dayHourDiffs}
             onNavigate={setCurrentDate}
             onEventChange={handleEventChange}
             onDropTicket={handleDropTicket}

@@ -1,7 +1,7 @@
 "use client";
 
 import type { SyntheticEvent } from "react";
-import { Calendar, dateFnsLocalizer } from "react-big-calendar";
+import { Calendar, dateFnsLocalizer, type HeaderProps } from "react-big-calendar";
 import withDragAndDrop, {
   type EventInteractionArgs,
 } from "react-big-calendar/lib/addons/dragAndDrop";
@@ -90,10 +90,20 @@ const RESOURCES = [
   { id: "google", title: "Google Calendar" },
 ];
 
+function toDateKey(date: Date): string {
+  const y = date.getFullYear();
+  const m = String(date.getMonth() + 1).padStart(2, "0");
+  const d = String(date.getDate()).padStart(2, "0");
+  return `${y}-${m}-${d}`;
+}
+
 interface TimeCalendarProps {
   events: CalendarEventItem[];
   googleEvents: CalendarEventItem[];
   date: Date;
+  // Keyed by "YYYY-MM-DD" — worked-vs-8h-baseline diff for days that have
+  // already passed, rendered under the day's header label.
+  dayHourDiffs?: Record<string, { label: string; positive: boolean }>;
   onNavigate: (date: Date) => void;
   onEventChange: (id: string, start: Date, end: Date) => void;
   onDropTicket: (ticketId: string, start: Date, end: Date) => void;
@@ -106,6 +116,7 @@ export function TimeCalendar({
   events,
   googleEvents,
   date,
+  dayHourDiffs,
   onNavigate,
   onEventChange,
   onDropTicket,
@@ -167,6 +178,23 @@ export function TimeCalendar({
         }}
         dragFromOutsideItem={makeDragPreviewItem}
         components={{
+          header: ({ date: headerDate, label }: HeaderProps) => {
+            const diff = dayHourDiffs?.[toDateKey(headerDate)];
+            return (
+              <div className="py-1">
+                <div>{label}</div>
+                {diff && (
+                  <div
+                    className={`text-[0.7rem] font-semibold ${
+                      diff.positive ? "text-green-700" : "text-red-700"
+                    }`}
+                  >
+                    {diff.label}
+                  </div>
+                )}
+              </div>
+            );
+          },
           event: ({ event }: { event: CalendarEventItem }) => (
             <div className="flex items-start gap-1">
               {event.syncing && (
