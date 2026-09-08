@@ -77,7 +77,7 @@ export function EventEditorModal({
   const [customTicket, setCustomTicket] = useState<TicketSummary | null>(
     entry.ticket && !tickets.some((t) => t.id === entry.ticket!.id) ? entry.ticket : null
   );
-  const [title, setTitle] = useState(entry.ticket ? "" : entry.title ?? "");
+  const [title, setTitle] = useState(entry.title ?? "");
   const [comment, setComment] = useState(entry.comment ?? "");
   const [saving, setSaving] = useState(false);
   const [deleting, setDeleting] = useState(false);
@@ -96,7 +96,7 @@ export function EventEditorModal({
   const trimmedComment = comment.trim();
   const unchanged =
     (effectiveTicket?.id ?? null) === (entry.ticket?.id ?? null) &&
-    (hasTicket || trimmedTitle === (entry.title ?? "").trim()) &&
+    trimmedTitle === (entry.title ?? "").trim() &&
     trimmedComment === (entry.comment ?? "").trim();
 
   const handleSave = async () => {
@@ -105,7 +105,7 @@ export function EventEditorModal({
     setSaving(true);
     await onSave({
       ticketId: hasTicket ? effectiveTicket!.id : null,
-      title: hasTicket ? null : trimmedTitle,
+      title: trimmedTitle,
       comment: trimmedComment,
     });
     setSaving(false);
@@ -201,43 +201,45 @@ export function EventEditorModal({
         )}
         {searchError && <p className="mb-4 text-xs font-bold text-nb-pink">{searchError}</p>}
 
-        {!hasTicket && (
-          <div className="mb-5">
-            <label className="mb-2 block text-sm font-semibold tracking-wide text-nb-ink">
-              Title
-            </label>
-            <input
-              type="text"
-              value={title}
-              onChange={(e) => setTitle(e.target.value)}
-              placeholder="e.g. Team meeting, PTO, focus time…"
-              className="nb-input w-full px-3 py-2 text-sm"
-            />
+        <div className="mb-5">
+          <label className="mb-2 block text-sm font-semibold tracking-wide text-nb-ink">
+            Title{!hasTicket && <span className="text-nb-pink"> *</span>}
+          </label>
+          <input
+            type="text"
+            value={title}
+            onChange={(e) => setTitle(e.target.value)}
+            placeholder="e.g. Team meeting, PTO, focus time…"
+            className="nb-input w-full px-3 py-2 text-sm"
+          />
+          {!hasTicket && (
             <p className="mt-2 text-xs font-medium text-nb-ink/50">
               Entries without a ticket aren&apos;t synced to Jira.
             </p>
-          </div>
-        )}
+          )}
+        </div>
 
-        {hasTicket && (
-          <div className="mb-5">
-            <label className="mb-2 block text-sm font-semibold tracking-wide text-nb-ink">
-              Comment <span className="text-nb-pink">*</span>
-            </label>
-            <textarea
-              value={comment}
-              onChange={(e) => setComment(e.target.value)}
-              placeholder="Note to add as a comment on the Jira worklog…"
-              rows={3}
-              className="nb-input w-full resize-none px-3 py-2 text-sm"
-            />
-            {!trimmedComment && (
-              <p className="mt-2 text-xs font-medium text-nb-ink/50">
-                Required — describe what you worked on.
-              </p>
-            )}
-          </div>
-        )}
+        <div className="mb-5">
+          <label className="mb-2 block text-sm font-semibold tracking-wide text-nb-ink">
+            Description{hasTicket && <span className="text-nb-pink"> *</span>}
+          </label>
+          <textarea
+            value={comment}
+            onChange={(e) => setComment(e.target.value)}
+            placeholder={
+              hasTicket
+                ? "Note to add as a comment on the Jira worklog…"
+                : "Optional extra details…"
+            }
+            rows={3}
+            className="nb-input w-full resize-none px-3 py-2 text-sm"
+          />
+          {hasTicket && !trimmedComment && (
+            <p className="mt-2 text-xs font-medium text-nb-ink/50">
+              Required — describe what you worked on.
+            </p>
+          )}
+        </div>
 
         {entry.ticket && entry.syncedToJira && (
           <p className="mb-3 text-xs font-semibold text-nb-green">✓ Synced to Jira</p>
