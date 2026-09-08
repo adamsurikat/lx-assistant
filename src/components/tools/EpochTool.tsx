@@ -204,14 +204,30 @@ export function EpochTool() {
       <div>
         <label className="mb-1 block text-sm font-semibold text-nb-ink">Date-time picker</label>
         <div className="flex flex-wrap items-center gap-2">
-          <span className="text-sm font-medium text-nb-ink/60">Year</span>
-          <TextField maxLength={4} value={year} onChange={(year) => updatePicker({ year })} />
-          <span className="text-sm font-medium text-nb-ink/60">Month</span>
-          <TextField maxLength={2} value={month} onChange={(month) => updatePicker({ month })} />
-          <span className="text-sm font-medium text-nb-ink/60">Day</span>
-          <TextField maxLength={2} value={day} onChange={(day) => updatePicker({ day })} />
-          <span className="text-sm font-medium text-nb-ink/60">Time</span>
-          <TextField maxLength={8} value={time} onChange={(time) => updatePicker({ time })} />
+          <input
+            type="date"
+            lang="en-GB"
+            className="nb-input px-3 py-1.5 text-sm"
+            value={`${year}-${month}-${day}`}
+            onChange={(e) => {
+              const [nextYear, nextMonth, nextDay] = e.target.value.split("-");
+              if (nextYear && nextMonth && nextDay) {
+                updatePicker({ year: nextYear, month: nextMonth, day: nextDay });
+              }
+            }}
+          />
+          <input
+            type="time"
+            step={1}
+            lang="en-GB"
+            className="nb-input px-3 py-1.5 text-sm"
+            value={time}
+            onChange={(e) => {
+              if (!e.target.value) return;
+              const nextTime = e.target.value.length === 5 ? `${e.target.value}:00` : e.target.value;
+              updatePicker({ time: nextTime });
+            }}
+          />
         </div>
       </div>
 
