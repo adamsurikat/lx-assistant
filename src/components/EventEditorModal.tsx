@@ -177,7 +177,7 @@ export function EventEditorModal({
           ))}
         </select>
 
-        <div className="relative mb-5">
+        <div className="mb-5">
           <div className="flex items-center gap-2">
             <input
               type="text"
@@ -193,7 +193,9 @@ export function EventEditorModal({
                 }
               }}
               placeholder="Or type a ticket number, e.g. PROJ-123"
-              className="nb-input w-full px-3 py-2 text-sm"
+              className={`nb-input w-full px-3 py-2 text-sm ${
+                searchError ? "border-2 border-nb-pink" : ""
+              }`}
             />
             <button
               type="button"
@@ -204,21 +206,6 @@ export function EventEditorModal({
               {searching ? "Searching…" : "Search"}
             </button>
           </div>
-
-          {searchError && (
-            <div className="nb-panel absolute left-0 right-0 top-full z-10 mt-2 border-2 border-nb-ink/10 bg-white p-4">
-              <p className="mb-3 text-sm font-semibold text-nb-pink">{searchError}</p>
-              <div className="flex justify-end">
-                <button
-                  type="button"
-                  onClick={() => setSearchError(null)}
-                  className="nb-btn px-3 py-1.5 text-xs font-semibold"
-                >
-                  OK
-                </button>
-              </div>
-            </div>
-          )}
         </div>
 
         {hasTicket && (
