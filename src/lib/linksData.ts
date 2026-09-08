@@ -29,6 +29,13 @@ export const LINK_FOLDERS: BookmarkFolder[] = [
       { type: "link", title: "lx-booking POF Local", url: "http://localhost:3001/?tenant=pof" },
       { type: "link", title: "lx-booking POF FAT", url: "https://pof.fp.lx.fatikat.com/login" },
       { type: "link", title: "lx-booking POF Staging", url: "https://pof.fp.lx.stagikat.com/login" },
+      { type: "link", title: "lx-booking POF Prod", url: "https://pof.fp.tolynx.com/login" },
+      { type: "link", title: "lx-booking GNCL Local", url: "http://localhost:3001/?tenant=gncl" },
+      { type: "link", title: "lx-booking GNCL FAT", url: "https://gncl.fp.lx.fatikat.com/login" },
+      { type: "link", title: "lx-booking GNCL Staging", url: "https://gncl.fp.lx.stagikat.com/login" },
+      { type: "link", title: "lx-booking GNCL Prod", url: "https://gncl.fp.tolynx.com/login" },
+      { type: "link", title: "lx-booking MeerkatFerries Local", url: "http://localhost:3001/?tenant=meerkatferries" },
+      { type: "link", title: "lx-booking MeerkatFerries FAT", url: "https://meerkatferries.fp.lx.fatikat.com/login" },
     ],
   },
   {
