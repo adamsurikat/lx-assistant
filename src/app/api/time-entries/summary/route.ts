@@ -16,7 +16,9 @@ export interface DailyHoursSummary {
  * can show whether the user is ahead or behind an 8h/weekday baseline.
  * Weekends are never expected to have logged hours, and today/future days
  * don't count toward the expectation either (you can't be behind on hours
- * you haven't finished having the chance to work yet).
+ * you haven't finished having the chance to work yet). The "Worked" total
+ * (and diff) are likewise restricted to days that are already over, so
+ * logging time today/ahead of time doesn't inflate this month's numbers.
  */
 export async function GET(request: Request) {
   const session = await auth();
@@ -59,9 +61,11 @@ export async function GET(request: Request) {
   today.setHours(0, 0, 0, 0);
 
   const days: DailyHoursSummary[] = [];
-  // Parallel array (not returned to the client) tracking which days count
-  // toward the diff — weekdays strictly before today — so hours already
-  // logged today/in the future don't skew the diff toward "ahead".
+  // Parallel arrays (not returned to the client) used only for the totals
+  // below, so "Worked"/"Expected"/"Diff" only reflect days that are
+  // actually over — hours logged today or scheduled in the future
+  // shouldn't count toward "how am I doing this month so far".
+  const isPast: boolean[] = [];
   const countsTowardDiff: boolean[] = [];
   const daysInMonth = new Date(year, month + 1, 0).getDate();
   for (let day = 1; day <= daysInMonth; day++) {
@@ -78,19 +82,20 @@ export async function GET(request: Request) {
       workedHours: (workedMinutesByDay.get(key) ?? 0) / 60,
       expectedHours: !isWeekend && !isNotYetComplete ? BASELINE_HOURS_PER_WEEKDAY : 0,
     });
+    isPast.push(!isNotYetComplete);
     countsTowardDiff.push(!isWeekend && !isNotYetComplete);
   }
 
   const totals = days.reduce(
-    (acc, d) => ({
-      workedHours: acc.workedHours + d.workedHours,
+    (acc, d, i) => ({
+      workedHours: acc.workedHours + (isPast[i] ? d.workedHours : 0),
       expectedHours: acc.expectedHours + d.expectedHours,
     }),
     { workedHours: 0, expectedHours: 0 }
   );
 
-  // Computed separately from the "Worked" total above (which reflects
-  // everything logged this month) so today/future hours are excluded here.
+  // Computed separately from the "Worked" total above so future rounding
+  // never diverges, even though both are now restricted to past days.
   const diffHours = days.reduce(
     (sum, d, i) => sum + (countsTowardDiff[i] ? d.workedHours - d.expectedHours : 0),
     0

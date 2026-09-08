@@ -53,14 +53,18 @@ const DAY_FORMAT: Intl.DateTimeFormatOptions = { day: "2-digit" };
 // Mirrors react-big-calendar's own work_week range label (e.g. "September 07
 // – 11"), computed here directly since the toolbar is now rendered outside
 // the Calendar component (see the header above TicketSidebar/TimeCalendar).
+// Locale is pinned to "en-US" (rather than the runtime default) so the
+// server-rendered HTML always matches the client, regardless of the
+// browser's locale — otherwise this mismatches and triggers a hydration
+// error (e.g. server renders "September 07", browser renders "07 September").
 function formatWeekLabel(weekStart: Date): string {
   const weekEnd = new Date(weekStart);
   weekEnd.setDate(weekEnd.getDate() + 4); // Mon..Fri
-  const start = weekStart.toLocaleDateString(undefined, MONTH_DAY_FORMAT);
+  const start = weekStart.toLocaleDateString("en-US", MONTH_DAY_FORMAT);
   const end =
     weekStart.getMonth() === weekEnd.getMonth()
-      ? weekEnd.toLocaleDateString(undefined, DAY_FORMAT)
-      : weekEnd.toLocaleDateString(undefined, MONTH_DAY_FORMAT);
+      ? weekEnd.toLocaleDateString("en-US", DAY_FORMAT)
+      : weekEnd.toLocaleDateString("en-US", MONTH_DAY_FORMAT);
   return `${start} – ${end}`;
 }
 
