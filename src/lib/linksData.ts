@@ -92,8 +92,6 @@ export const LINK_FOLDERS: BookmarkFolder[] = [
     type: "folder",
     title: "gos",
     children: [
-      { type: "link", title: "gos Local", url: "http://localhost:8899/admin" },
-      { type: "link", title: "gos Prod", url: "https://gos.bylynx.com/admin" },
       { type: "link", title: "gos Pof Local", url: "http://localhost:8899/admin?tenant=pof" },
       { type: "link", title: "gos Pof Prod", url: "https://gos.bylynx.com/admin?tenant=pof" },
       { type: "link", title: "gos Sot Local", url: "http://localhost:8899/admin?tenant=sot" },
