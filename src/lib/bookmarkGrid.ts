@@ -1,10 +1,20 @@
 import type { BookmarkFolder, BookmarkLink, BookmarkNode } from "@/lib/bookmarks";
 
+export interface GridCell {
+  // The link for this tenant/environment combo when no backend override is
+  // implied by the title (e.g. "Stena Local" for tenant Stena, env Local).
+  primary: BookmarkLink;
+  // Alternate "<env> to <backendEnv>" links for the same tenant/frontend
+  // environment (e.g. "Stena Local to FAT" -> backend "FAT"), offered as a
+  // choice instead of always opening `primary`.
+  backendVariants: { backend: string; link: BookmarkLink }[];
+}
+
 export interface ServiceGrid {
   title: string;
   environments: string[];
   tenants: string[];
-  cells: Record<string, Record<string, BookmarkLink>>;
+  cells: Record<string, Record<string, GridCell>>;
   other: BookmarkLink[];
 }
 
@@ -53,18 +63,22 @@ function findCommonPrefix(links: BookmarkLink[]): string | null {
  * Turns a folder of links (e.g. all the environment URLs for one service)
  * into a tenant x environment grid, by parsing each link's title once the
  * shared service-name prefix is stripped off. Titles that don't fit the
- * "<prefix> [tenant] <environment> [region]" shape (multi-environment
- * transition links, unrelated one-off links, ...) fall back to a flat
- * `other` list instead of being forced into a cell.
+ * "<prefix> [tenant] <environment> [region]" shape fall back to a flat
+ * `other` list, EXCEPT "<tenant> <env> to <backendEnv>" links, which are
+ * attached as backend-choice variants on the matching <tenant>/<env> cell
+ * (e.g. a locally-running frontend that can point at different backend
+ * environments) instead of being dropped.
  */
 export function buildServiceGrid(folder: BookmarkFolder): ServiceGrid {
   const links = folder.children.filter((n: BookmarkNode): n is BookmarkLink => n.type === "link");
   const prefix = findCommonPrefix(links);
 
-  const cells: Record<string, Record<string, BookmarkLink>> = {};
+  const cells: Record<string, Record<string, GridCell>> = {};
   const environments = new Set<string>();
   const tenants = new Set<string>();
   const other: BookmarkLink[] = [];
+  const pendingVariants: { tenant: string; env: string; backend: string; link: BookmarkLink }[] =
+    [];
 
   for (const link of links) {
     const words = link.title.trim().split(/\s+/);
@@ -76,9 +90,24 @@ export function buildServiceGrid(folder: BookmarkFolder): ServiceGrid {
       continue;
     }
 
-    if (words.length === 0 || words.some((w) => w.toLowerCase() === "to")) {
-      // No words left, or a "Local to FAT"-style transition link that
-      // doesn't map to a single environment cell.
+    const toIndex = words.findIndex((w) => w.toLowerCase() === "to");
+    if (toIndex > 0 && toIndex < words.length - 1) {
+      const frontEnv = ENV_ALIASES[words[toIndex - 1]?.toLowerCase()];
+      const backEnv = ENV_ALIASES[words[toIndex + 1]?.toLowerCase()];
+      if (frontEnv && backEnv) {
+        const tenantWords = words.slice(0, toIndex - 1);
+        const tenant = tenantWords.join(" ") || DEFAULT_TENANT;
+        pendingVariants.push({ tenant, env: frontEnv, backend: backEnv, link });
+        continue;
+      }
+      // Doesn't match "<tenant> <env> to <backendEnv>" — not a variant we
+      // can attach anywhere, fall through to the generic "other" bucket.
+      other.push(link);
+      continue;
+    }
+    if (toIndex !== -1) {
+      // A stray "to" without both a preceding and following environment —
+      // can't parse it as a backend variant.
       other.push(link);
       continue;
     }
@@ -96,7 +125,20 @@ export function buildServiceGrid(folder: BookmarkFolder): ServiceGrid {
     environments.add(env);
     tenants.add(tenant);
     cells[tenant] ??= {};
-    cells[tenant][env] = link;
+    cells[tenant][env] = { primary: link, backendVariants: [] };
+  }
+
+  // Attach backend variants to their matching primary cell now that every
+  // primary link has been placed; anything left unmatched (e.g. a "Local to
+  // FAT" link with no plain "Local" entry for that tenant) falls back to
+  // the flat "other" list rather than being silently dropped.
+  for (const variant of pendingVariants) {
+    const cell = cells[variant.tenant]?.[variant.env];
+    if (cell) {
+      cell.backendVariants.push({ backend: variant.backend, link: variant.link });
+    } else {
+      other.push(variant.link);
+    }
   }
 
   const sortedEnvironments = ENV_ORDER.filter((e) => environments.has(e));

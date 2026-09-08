@@ -1,9 +1,122 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { AppHeader } from "@/components/AppHeader";
 import type { BookmarkFolder, BookmarkNode } from "@/lib/bookmarks";
-import { buildServiceGrid } from "@/lib/bookmarkGrid";
+import { buildServiceGrid, type GridCell } from "@/lib/bookmarkGrid";
+
+function GridCellButton({ env, cell }: { env: string; cell: GridCell }) {
+  const [anchor, setAnchor] = useState<{ left: number; top: number } | null>(null);
+  const buttonRef = useRef<HTMLButtonElement>(null);
+  const popoverRef = useRef<HTMLDivElement>(null);
+  const open = anchor !== null;
+
+  useEffect(() => {
+    if (!open) return;
+    const handleClick = (e: MouseEvent) => {
+      const target = e.target as Node;
+      if (
+        buttonRef.current &&
+        !buttonRef.current.contains(target) &&
+        popoverRef.current &&
+        !popoverRef.current.contains(target)
+      ) {
+        setAnchor(null);
+      }
+    };
+    const handleKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") setAnchor(null);
+    };
+    document.addEventListener("mousedown", handleClick);
+    document.addEventListener("keydown", handleKey);
+    return () => {
+      document.removeEventListener("mousedown", handleClick);
+      document.removeEventListener("keydown", handleKey);
+    };
+  }, [open]);
+
+  if (cell.backendVariants.length === 0) {
+    return (
+      <a
+        href={cell.primary.url}
+        target="_blank"
+        rel="noreferrer"
+        title={cell.primary.url}
+        className="nb-btn nb-btn-orange block px-3 py-1.5 text-xs font-semibold"
+      >
+        {env}
+      </a>
+    );
+  }
+
+  // Multiple backends are available for this frontend/tenant/env combo
+  // (e.g. a local frontend that can point at FAT/Staging/Prod) — open a
+  // popover to choose instead of always following `primary`. Positioned
+  // `fixed` (anchored to the button's own rect) rather than `absolute` so it
+  // isn't clipped by the card's horizontally-scrollable table wrapper.
+  return (
+    <>
+      <button
+        ref={buttonRef}
+        type="button"
+        onClick={() => {
+          if (open) {
+            setAnchor(null);
+            return;
+          }
+          const rect = buttonRef.current?.getBoundingClientRect();
+          if (rect) setAnchor({ left: rect.left + rect.width / 2, top: rect.bottom + 4 });
+        }}
+        className="nb-btn nb-btn-orange flex items-center gap-1 px-3 py-1.5 text-xs font-semibold"
+      >
+        {env}
+        <svg
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth={3}
+          className={`h-3 w-3 transition-transform ${open ? "rotate-180" : ""}`}
+        >
+          <path strokeLinecap="round" strokeLinejoin="round" d="M6 9l6 6 6-6" />
+        </svg>
+      </button>
+      {anchor && (
+        <div
+          ref={popoverRef}
+          className="nb-panel-sm fixed z-50 w-44 -translate-x-1/2 bg-white p-1.5 text-left"
+          style={{ left: anchor.left, top: anchor.top }}
+        >
+          <p className="mb-1 px-1.5 text-[10px] font-semibold uppercase tracking-wide text-nb-ink/40">
+            Choose backend
+          </p>
+          <a
+            href={cell.primary.url}
+            target="_blank"
+            rel="noreferrer"
+            title={cell.primary.url}
+            onClick={() => setAnchor(null)}
+            className="block truncate rounded px-2 py-1 text-xs font-semibold text-nb-ink hover:bg-nb-orange/10"
+          >
+            {env} (default)
+          </a>
+          {cell.backendVariants.map((variant) => (
+            <a
+              key={variant.backend}
+              href={variant.link.url}
+              target="_blank"
+              rel="noreferrer"
+              title={variant.link.url}
+              onClick={() => setAnchor(null)}
+              className="block truncate rounded px-2 py-1 text-xs font-medium text-nb-ink/80 hover:bg-nb-orange/10 hover:text-nb-ink"
+            >
+              → {variant.backend}
+            </a>
+          ))}
+        </div>
+      )}
+    </>
+  );
+}
 
 function ServiceCard({ folder }: { folder: BookmarkFolder }) {
   const grid = buildServiceGrid(folder);
@@ -36,19 +149,11 @@ function ServiceCard({ folder }: { folder: BookmarkFolder }) {
                     {tenant}
                   </th>
                   {grid.environments.map((env) => {
-                    const link = grid.cells[tenant]?.[env];
+                    const cell = grid.cells[tenant]?.[env];
                     return (
                       <td key={env} className="p-1 text-center">
-                        {link ? (
-                          <a
-                            href={link.url}
-                            target="_blank"
-                            rel="noreferrer"
-                            title={link.url}
-                            className="nb-btn nb-btn-orange block px-3 py-1.5 text-xs font-semibold"
-                          >
-                            {env}
-                          </a>
+                        {cell ? (
+                          <GridCellButton env={env} cell={cell} />
                         ) : (
                           <span className="block px-3 py-1.5 text-xs text-nb-ink/20">—</span>
                         )}
