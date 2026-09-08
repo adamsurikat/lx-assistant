@@ -14,9 +14,9 @@ export interface DailyHoursSummary {
 /**
  * Returns per-day worked-vs-expected hours for a given month, so the client
  * can show whether the user is ahead or behind an 8h/weekday baseline.
- * Weekends are never expected to have logged hours, and days later than
- * "today" don't count toward the expectation either (you can't be behind on
- * hours you haven't had a chance to work yet).
+ * Weekends are never expected to have logged hours, and today/future days
+ * don't count toward the expectation either (you can't be behind on hours
+ * you haven't finished having the chance to work yet).
  */
 export async function GET(request: Request) {
   const session = await auth();
@@ -64,13 +64,15 @@ export async function GET(request: Request) {
     const date = new Date(year, month, day);
     const weekday = date.getDay();
     const isWeekend = weekday === 0 || weekday === 6;
-    const isFuture = date.getTime() > today.getTime();
+    // Today isn't done yet, so it doesn't count toward the expectation
+    // used for the difference — same reasoning as future days.
+    const isNotYetComplete = date.getTime() >= today.getTime();
     const key = toDateKey(date);
     days.push({
       date: key,
       weekday,
       workedHours: (workedMinutesByDay.get(key) ?? 0) / 60,
-      expectedHours: !isWeekend && !isFuture ? BASELINE_HOURS_PER_WEEKDAY : 0,
+      expectedHours: !isWeekend && !isNotYetComplete ? BASELINE_HOURS_PER_WEEKDAY : 0,
     });
   }
 
