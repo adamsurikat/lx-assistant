@@ -210,6 +210,23 @@ h1, h2, h3, .nb-display {
 .rbc-time-header-content.rbc-resource-grouping > .rbc-row:nth-child(3) {
   display: none !important;
 }
+/* With rows 2 and 3 hidden above, the date row (row 1) is the only
+   remaining child of .rbc-time-header-content, but it doesn't grow to
+   fill that column: the column itself is stretched to match the
+   tallest day (e.g. one whose header shows an extra "hours logged"
+   line), yet row 1 keeps its own short auto height. That leaves a gap
+   between the header text and the hourly grid which isn't part of
+   .rbc-header, so the "today" tint (applied to .rbc-header) doesn't
+   cover it — showing as a stray white strip under today's date label
+   whenever another day's header is taller. Growing row 1 to fill the
+   column, and the header cell to fill row 1, extends the tint (or
+   plain white background, for other days) all the way down instead. */
+.rbc-time-header-content.rbc-resource-grouping > .rbc-row.rbc-time-header-cell {
+  flex: 1 1 auto;
+}
+.rbc-time-header-content.rbc-resource-grouping > .rbc-row.rbc-time-header-cell > .rbc-header {
+  height: 100%;
+}
 .rbc-label {
   font-size: 0.7rem;
   color: rgba(17, 17, 17, 0.55);
