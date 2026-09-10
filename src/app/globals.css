@@ -274,3 +274,79 @@ h1, h2, h3, .nb-display {
 .rbc-addons-dnd-dragged-event {
   opacity: 0 !important;
 }
+
+/* Map port/depot labels: a plain text label under the marker instead of
+   a speech-bubble popup — no background, border, shadow or tail. */
+.map-label-popup .leaflet-popup-content-wrapper {
+  background: transparent;
+  box-shadow: none;
+  border: none;
+  border-radius: 0;
+  padding: 0;
+}
+.map-label-popup .leaflet-popup-content {
+  margin: 0;
+  font-weight: 600;
+  font-size: 12px;
+  color: var(--nb-ink);
+  text-shadow: 0 1px 2px rgba(255, 255, 255, 0.9), 0 -1px 2px rgba(255, 255, 255, 0.9);
+  white-space: nowrap;
+}
+.map-label-popup .leaflet-popup-tip-container {
+  display: none;
+}
+
+/* Same treatment for the permanent Tooltip used to show a plain label
+   under each port/depot marker at all times (not just on click) —
+   Leaflet's default tooltip chrome (white background, border, shadow,
+   arrow) is stripped so only the text remains. */
+.leaflet-tooltip.map-label-popup {
+  background: transparent;
+  box-shadow: none;
+  border: none;
+  border-radius: 0;
+  padding: 0;
+  margin: 0;
+  font-weight: 600;
+  font-size: 12px;
+  color: var(--nb-ink);
+  text-shadow: 0 1px 2px rgba(255, 255, 255, 0.9), 0 -1px 2px rgba(255, 255, 255, 0.9);
+  white-space: nowrap;
+  pointer-events: none;
+}
+.leaflet-tooltip.map-label-popup::before {
+  display: none;
+}
+
+/* Port marker: CSS-only hover effect (no JS state needed since Leaflet's
+   div-icon markers are real DOM nodes) — scales up slightly and adds a
+   colored glow ring on top of its normal shadow. */
+.port-marker-badge {
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.45);
+  transition: transform 0.12s ease, box-shadow 0.12s ease;
+  transform-origin: center;
+}
+.port-marker-badge:hover,
+.port-marker-badge--active {
+  transform: scale(1.3);
+  box-shadow: 0 0 0 5px color-mix(in srgb, var(--badge-color, #2563eb) 35%, transparent), 0 2px 6px rgba(0, 0, 0, 0.5);
+}
+
+/* Map search: markers matching the current search text pulse with a
+   growing/fading ring in their own color, while everything else fades out
+   (opacity handled inline via marker.setOpacity in LeafletMap.tsx) so
+   matches stand out clearly against the rest of the map. */
+.search-match-badge {
+  animation: search-match-pulse 1.1s ease-out infinite;
+}
+@keyframes search-match-pulse {
+  0% {
+    box-shadow: 0 0 0 0 color-mix(in srgb, var(--badge-color, #2563eb) 65%, transparent), 0 2px 6px rgba(0, 0, 0, 0.5);
+  }
+  70% {
+    box-shadow: 0 0 0 10px color-mix(in srgb, var(--badge-color, #2563eb) 0%, transparent), 0 2px 6px rgba(0, 0, 0, 0.5);
+  }
+  100% {
+    box-shadow: 0 0 0 0 color-mix(in srgb, var(--badge-color, #2563eb) 0%, transparent), 0 2px 6px rgba(0, 0, 0, 0.5);
+  }
+}
