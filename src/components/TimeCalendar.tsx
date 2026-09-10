@@ -12,6 +12,7 @@ import { getDay } from "date-fns/getDay";
 import { enUS } from "date-fns/locale/en-US";
 import "react-big-calendar/lib/css/react-big-calendar.css";
 import "react-big-calendar/lib/addons/dragAndDrop/styles.css";
+import { useIsMobile } from "@/lib/useIsMobile";
 import { createNoOverlapFixed } from "@/lib/noOverlapFixed";
 
 const locales = { "en-US": enUS };
@@ -128,6 +129,10 @@ export function TimeCalendar({
   draggedTicketId,
 }: TimeCalendarProps) {
   const allEvents = [...events, ...googleEvents];
+  // On mobile, only today's single day is shown (navigated day-by-day by
+  // the parent page); desktop keeps the existing Mon–Fri work week view.
+  const isMobile = useIsMobile();
+  const view = isMobile ? "day" : "work_week";
 
   return (
     <div className="h-full min-w-0 flex-1 p-3">
@@ -137,8 +142,9 @@ export function TimeCalendar({
         resources={RESOURCES}
         toolbar={false}
         resourceGroupingLayout
-        defaultView="work_week"
-        views={["work_week"]}
+        view={view}
+        onView={() => {}}
+        views={[view]}
         date={date}
         onNavigate={onNavigate}
         step={15}

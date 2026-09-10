@@ -37,7 +37,7 @@ export function TicketSidebar({
   onSelectTicket,
 }: TicketSidebarProps) {
   return (
-    <div className="flex w-72 shrink-0 flex-col border-r border-nb-ink/10 bg-white">
+    <div className="absolute inset-y-0 left-0 z-30 flex w-72 max-w-[85vw] shrink-0 flex-col border-r border-nb-ink/10 bg-white md:static md:z-auto md:max-w-none">
       <div className="flex items-center justify-between border-b border-nb-ink/10 p-3">
         <h2 className="text-sm font-semibold tracking-wide text-nb-ink">
           My open tickets
