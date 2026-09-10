@@ -555,21 +555,29 @@ export default function LeafletMap({
   // Applies the fade/pulse styling directly to marker DOM elements (same
   // ref+querySelector approach as setPortActive above) rather than
   // recreating icons per marker, since highlight state changes far more
-  // often than marker identity.
+  // often than marker identity. A search match keeps non-matches faintly
+  // visible (0.25 opacity) since the user may be scanning for one among
+  // many; a tenant hover instead hides everything else outright (0
+  // opacity) so only that tenant's markers remain, with a glow highlight
+  // (the same class used for the port's own :hover state) instead of the
+  // search's pulse animation.
   useEffect(() => {
+    const nonMatchOpacity = query ? 0.25 : 0;
     for (const [id, marker] of portMarkerRefs.current) {
       const isMatch = activePortIds?.has(id) ?? true;
-      marker.setOpacity(activePortIds ? (isMatch ? 1 : 0.25) : 1);
-      // Only the search box pulses matches (a hovered-tenant highlight just
-      // fades everything else, no pulse), so gate this on `query` too.
-      marker.getElement()?.querySelector(".port-marker-badge")?.classList.toggle("search-match-badge", query !== "" && isMatch);
+      marker.setOpacity(activePortIds ? (isMatch ? 1 : nonMatchOpacity) : 1);
+      const badge = marker.getElement()?.querySelector(".port-marker-badge");
+      badge?.classList.toggle("search-match-badge", query !== "" && isMatch);
+      badge?.classList.toggle("port-marker-badge--active", hoveredTenant !== null && isMatch);
     }
     for (const [id, marker] of depotMarkerRefs.current) {
       const isMatch = activeDepotIds?.has(id) ?? true;
-      marker.setOpacity(activeDepotIds ? (isMatch ? 1 : 0.25) : 1);
-      marker.getElement()?.querySelector(".port-marker-badge")?.classList.toggle("search-match-badge", query !== "" && isMatch);
+      marker.setOpacity(activeDepotIds ? (isMatch ? 1 : nonMatchOpacity) : 1);
+      const badge = marker.getElement()?.querySelector(".port-marker-badge");
+      badge?.classList.toggle("search-match-badge", query !== "" && isMatch);
+      badge?.classList.toggle("port-marker-badge--active", hoveredTenant !== null && isMatch);
     }
-  }, [activePortIds, activeDepotIds, query, ports, depots]);
+  }, [activePortIds, activeDepotIds, query, hoveredTenant, ports, depots]);
 
   // Legend always lists every known tenant (not just ones currently used
   // on the map) so it doubles as a reference key, plus a generic
