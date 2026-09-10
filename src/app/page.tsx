@@ -8,6 +8,7 @@ import { TimeCalendar, type CalendarEventItem } from "@/components/TimeCalendar"
 import { EventEditorModal, type EditableEntry, formatDuration } from "@/components/EventEditorModal";
 import { EventPopover, type EventPopoverData } from "@/components/EventPopover";
 import { HoursSummaryModal, formatHours } from "@/components/HoursSummaryModal";
+import { useIsMobile } from "@/lib/useIsMobile";
 
 interface TimeEntryDTO {
   id: string;
@@ -66,6 +67,19 @@ function formatWeekLabel(weekStart: Date): string {
   return `${start} – ${end}`;
 }
 
+const DAY_LABEL_FORMAT: Intl.DateTimeFormatOptions = {
+  weekday: "long",
+  month: "long",
+  day: "2-digit",
+};
+
+// Mobile shows a single day rather than a week range — label it plainly
+// (e.g. "Wednesday, September 09"). Locale pinned for the same
+// server/client hydration reason as formatWeekLabel above.
+function formatDayLabel(date: Date): string {
+  return date.toLocaleDateString("en-US", DAY_LABEL_FORMAT);
+}
+
 // ISO-8601 week number: weeks start on Monday, and week 1 is the week
 // containing the year's first Thursday.
 function getISOWeekNumber(date: Date): number {
@@ -111,19 +125,24 @@ export default function HomePage() {
   } | null>(null);
   const [currentDate, setCurrentDate] = useState(() => new Date());
 
-  // Week navigation for the toolbar rendered above the sidebar/calendar row
+  // On mobile the calendar only ever shows a single day (see TimeCalendar),
+  // so Back/Next step by one day there instead of by a full week.
+  const isMobile = useIsMobile();
+  const navigationStepDays = isMobile ? 1 : 7;
+
+  // Navigation for the toolbar rendered above the sidebar/calendar row
   // (previously RBC's own toolbar handled this internally).
   const handleToday = () => setCurrentDate(new Date());
   const handleBack = () =>
     setCurrentDate((prev) => {
       const d = new Date(prev);
-      d.setDate(d.getDate() - 7);
+      d.setDate(d.getDate() - navigationStepDays);
       return d;
     });
   const handleNextWeek = () =>
     setCurrentDate((prev) => {
       const d = new Date(prev);
-      d.setDate(d.getDate() + 7);
+      d.setDate(d.getDate() + navigationStepDays);
       return d;
     });
 
@@ -497,7 +516,7 @@ export default function HomePage() {
       )}
 
       <div className="nb-panel-sm m-3 flex flex-1 flex-col overflow-hidden bg-nb-paper">
-        <div className="flex items-center gap-3 border-b border-nb-ink/10 bg-white px-4 py-3">
+        <div className="flex flex-wrap items-center gap-3 border-b border-nb-ink/10 bg-white px-4 py-3">
           <button
             type="button"
             onClick={() => setSidebarOpen((open) => !open)}
@@ -531,8 +550,14 @@ export default function HomePage() {
             </button>
           </div>
           <span className="ml-1 text-sm font-bold text-nb-ink/70">
-            {formatWeekLabel(weekStart)}{" "}
-            <span className="text-nb-ink/40">· Week {getISOWeekNumber(weekStart)}</span>
+            {isMobile ? (
+              formatDayLabel(currentDate)
+            ) : (
+              <>
+                {formatWeekLabel(weekStart)}{" "}
+                <span className="text-nb-ink/40">· Week {getISOWeekNumber(weekStart)}</span>
+              </>
+            )}
           </span>
           <button
             type="button"
@@ -542,16 +567,25 @@ export default function HomePage() {
             📊 Summary
           </button>
         </div>
-        <div className="flex flex-1 overflow-hidden">
+        <div className="relative flex flex-1 overflow-hidden">
           {sidebarOpen && (
-            <TicketSidebar
-              tickets={tickets}
-              loading={loadingTickets}
-              syncing={syncing}
-              onSync={handleSync}
-              onDragStartTicket={setDraggedTicketId}
-              onSelectTicket={handleSelectTicket}
-            />
+            <>
+              {/* Backdrop: only needed on mobile, where the sidebar becomes
+                  an overlay drawer instead of sitting inline next to the
+                  calendar (there's no room for both on a narrow screen). */}
+              <div
+                className="absolute inset-0 z-20 bg-black/40 md:hidden"
+                onClick={() => setSidebarOpen(false)}
+              />
+              <TicketSidebar
+                tickets={tickets}
+                loading={loadingTickets}
+                syncing={syncing}
+                onSync={handleSync}
+                onDragStartTicket={setDraggedTicketId}
+                onSelectTicket={handleSelectTicket}
+              />
+            </>
           )}
           <TimeCalendar
             events={calendarEvents}
