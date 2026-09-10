@@ -1,0 +1,3955 @@
+{
+  "type": "FeatureCollection",
+  "features": [
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -5.879058837890626,
+          54.63758496935431
+        ]
+      },
+      "properties": {
+        "kind": "port",
+        "name": "Belfast",
+        "code": "BELF",
+        "tenant": "stenaline",
+        "country": "United Kingdom",
+        "description": "Northern Ireland's main port, key link on Irish Sea ferry routes."
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -2.9,
+          54.0333
+        ]
+      },
+      "properties": {
+        "kind": "port",
+        "name": "Heysham",
+        "code": "HEYS",
+        "tenant": "stenaline",
+        "country": "United Kingdom",
+        "description": "North-west England port serving Irish Sea ferry routes to Belfast and Douglas."
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -6.2087,
+          52.9945
+        ]
+      },
+      "properties": {
+        "kind": "port",
+        "name": "Ashford",
+        "code": "ASH",
+        "tenant": "stenaline",
+        "country": "Ireland",
+        "description": ""
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -5.890817642211915,
+          54.62884137081233
+        ]
+      },
+      "properties": {
+        "kind": "port",
+        "name": "Belfast",
+        "code": "BELF1",
+        "tenant": "stenaline",
+        "country": "United Kingdom",
+        "description": ""
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -5.0116,
+          54.9926
+        ]
+      },
+      "properties": {
+        "kind": "port",
+        "name": "Cairnryan (LRP)",
+        "code": "CAIR",
+        "tenant": "stenaline",
+        "country": "United Kingdom",
+        "description": ""
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -1.6221,
+          49.6337
+        ]
+      },
+      "properties": {
+        "kind": "port",
+        "name": "Cherbourg",
+        "code": "CHER",
+        "tenant": "stenaline",
+        "country": "France",
+        "description": ""
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -6.2179,
+          53.3478
+        ]
+      },
+      "properties": {
+        "kind": "port",
+        "name": "Dublin Port",
+        "code": "DUBL",
+        "tenant": "stenaline",
+        "country": "Ireland",
+        "description": ""
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -6.216,
+          53.348
+        ]
+      },
+      "properties": {
+        "kind": "port",
+        "name": "Dublin Port 5",
+        "code": "DUBL5",
+        "tenant": "stenaline",
+        "country": "Ireland",
+        "description": ""
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -6.1319,
+          53.2941
+        ]
+      },
+      "properties": {
+        "kind": "port",
+        "name": "Dun Laoghaire",
+        "code": "DUNL",
+        "tenant": "stenaline",
+        "country": "Ireland",
+        "description": ""
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          8.446,
+          55.465
+        ]
+      },
+      "properties": {
+        "kind": "port",
+        "name": "Esbjerg (DFDS)",
+        "code": "ESBJ",
+        "tenant": "stenaline",
+        "country": "Denmark",
+        "description": ""
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          4.14,
+          51.95
+        ]
+      },
+      "properties": {
+        "kind": "port",
+        "name": "Europoort",
+        "code": "EURO",
+        "tenant": "stenaline",
+        "country": "Netherlands",
+        "description": ""
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -4.98,
+          52
+        ]
+      },
+      "properties": {
+        "kind": "port",
+        "name": "Fishguard",
+        "code": "FISH",
+        "tenant": "stenaline",
+        "country": "United Kingdom",
+        "description": ""
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          10.534,
+          57.4407
+        ]
+      },
+      "properties": {
+        "kind": "port",
+        "name": "Frederikshavn",
+        "code": "FRED",
+        "tenant": "stenaline",
+        "country": "Denmark",
+        "description": ""
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          18.5305,
+          54.5189
+        ]
+      },
+      "properties": {
+        "kind": "port",
+        "name": "Gdynia",
+        "code": "GDYN",
+        "tenant": "stenaline",
+        "country": "Poland",
+        "description": ""
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          18.6466,
+          54.352
+        ]
+      },
+      "properties": {
+        "kind": "port",
+        "name": "Gdansk",
+        "code": "GDSK",
+        "tenant": "stenaline",
+        "country": "Poland",
+        "description": ""
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          11.9746,
+          57.7089
+        ]
+      },
+      "properties": {
+        "kind": "port",
+        "name": "Göteborg",
+        "code": "GOT",
+        "tenant": "stenaline",
+        "country": "Sweden",
+        "description": ""
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          11.95,
+          57.72
+        ]
+      },
+      "properties": {
+        "kind": "port",
+        "name": "Göteborg Kville",
+        "code": "GOTKVI",
+        "tenant": "stenaline",
+        "country": "Sweden",
+        "description": ""
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          11.925,
+          57.698
+        ]
+      },
+      "properties": {
+        "kind": "port",
+        "name": "Göteborg Majn.",
+        "code": "GOTMAJ",
+        "tenant": "stenaline",
+        "country": "Sweden",
+        "description": ""
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          11.93,
+          57.695
+        ]
+      },
+      "properties": {
+        "kind": "port",
+        "name": "Göteborg Masth.",
+        "code": "GOTMHK",
+        "tenant": "stenaline",
+        "country": "Sweden",
+        "description": ""
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          10.883,
+          56.413
+        ]
+      },
+      "properties": {
+        "kind": "port",
+        "name": "Grenaa",
+        "code": "GREN",
+        "tenant": "stenaline",
+        "country": "Denmark",
+        "description": ""
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          12.858,
+          56.674
+        ]
+      },
+      "properties": {
+        "kind": "port",
+        "name": "Halmstad",
+        "code": "HALM",
+        "tenant": "stenaline",
+        "country": "Sweden",
+        "description": ""
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          1.29,
+          51.945
+        ]
+      },
+      "properties": {
+        "kind": "port",
+        "name": "Harwich",
+        "code": "HARW",
+        "tenant": "stenaline",
+        "country": "United Kingdom",
+        "description": ""
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          1.291,
+          51.946
+        ]
+      },
+      "properties": {
+        "kind": "port",
+        "name": "Harwich (DFDS)",
+        "code": "HARWDFDS",
+        "tenant": "stenaline",
+        "country": "United Kingdom",
+        "description": ""
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          12.694,
+          56.045
+        ]
+      },
+      "properties": {
+        "kind": "port",
+        "name": "Helsingborg",
+        "code": "HELS",
+        "tenant": "stenaline",
+        "country": "Sweden",
+        "description": ""
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          4.133,
+          51.978
+        ]
+      },
+      "properties": {
+        "kind": "port",
+        "name": "Hoek van Holl.",
+        "code": "HOEK",
+        "tenant": "stenaline",
+        "country": "Netherlands",
+        "description": ""
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -4.633,
+          53.309
+        ]
+      },
+      "properties": {
+        "kind": "port",
+        "name": "Holyhead",
+        "code": "HOLY",
+        "tenant": "stenaline",
+        "country": "United Kingdom",
+        "description": ""
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -0.22,
+          53.63
+        ]
+      },
+      "properties": {
+        "kind": "port",
+        "name": "Immingham DFDS",
+        "code": "IMMI",
+        "tenant": "stenaline",
+        "country": "United Kingdom",
+        "description": ""
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          15.586,
+          56.161
+        ]
+      },
+      "properties": {
+        "kind": "port",
+        "name": "Karlskrona",
+        "code": "KARL",
+        "tenant": "stenaline",
+        "country": "Sweden",
+        "description": ""
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          10.1394,
+          54.3233
+        ]
+      },
+      "properties": {
+        "kind": "port",
+        "name": "Kiel",
+        "code": "KIEL",
+        "tenant": "stenaline",
+        "country": "Germany",
+        "description": ""
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -0.24,
+          53.647
+        ]
+      },
+      "properties": {
+        "kind": "port",
+        "name": "Killingholme",
+        "code": "KILL",
+        "tenant": "stenaline",
+        "country": "United Kingdom",
+        "description": ""
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          21.01,
+          56.51
+        ]
+      },
+      "properties": {
+        "kind": "port",
+        "name": "Liepaja",
+        "code": "LIEP",
+        "tenant": "stenaline",
+        "country": "Latvia",
+        "description": ""
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -3.014,
+          53.393
+        ]
+      },
+      "properties": {
+        "kind": "port",
+        "name": "Liverpool (Bkd)",
+        "code": "LIVE",
+        "tenant": "stenaline",
+        "country": "United Kingdom",
+        "description": ""
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          17.947,
+          58.904
+        ]
+      },
+      "properties": {
+        "kind": "port",
+        "name": "Nynäshamn",
+        "code": "NYNA",
+        "tenant": "stenaline",
+        "country": "Sweden",
+        "description": ""
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          10.7522,
+          59.9139
+        ]
+      },
+      "properties": {
+        "kind": "port",
+        "name": "Oslo",
+        "code": "OSLO",
+        "tenant": "stenaline",
+        "country": "Norway",
+        "description": ""
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -6.337,
+          52.253
+        ]
+      },
+      "properties": {
+        "kind": "port",
+        "name": "Rosslare",
+        "code": "ROSS",
+        "tenant": "stenaline",
+        "country": "Ireland",
+        "description": ""
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          12.133,
+          54.0865
+        ]
+      },
+      "properties": {
+        "kind": "port",
+        "name": "Rostock",
+        "code": "ROST",
+        "tenant": "stenaline",
+        "country": "Germany",
+        "description": ""
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          13.642,
+          54.51
+        ]
+      },
+      "properties": {
+        "kind": "port",
+        "name": "Sassnitz",
+        "code": "SASS",
+        "tenant": "stenaline",
+        "country": "Germany",
+        "description": ""
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          10.871,
+          53.956
+        ]
+      },
+      "properties": {
+        "kind": "port",
+        "name": "Travemunde",
+        "code": "TRAS",
+        "tenant": "stenaline",
+        "country": "Germany",
+        "description": ""
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          13.157,
+          55.375
+        ]
+      },
+      "properties": {
+        "kind": "port",
+        "name": "Trelleborg",
+        "code": "TREL",
+        "tenant": "stenaline",
+        "country": "Sweden",
+        "description": ""
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          12.25,
+          57.106
+        ]
+      },
+      "properties": {
+        "kind": "port",
+        "name": "Varberg",
+        "code": "VARB",
+        "tenant": "stenaline",
+        "country": "Sweden",
+        "description": ""
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          21.564,
+          57.394
+        ]
+      },
+      "properties": {
+        "kind": "port",
+        "name": "Ventspils",
+        "code": "VENT",
+        "tenant": "stenaline",
+        "country": "Latvia",
+        "description": ""
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -0.21,
+          53.6158
+        ]
+      },
+      "properties": {
+        "kind": "port",
+        "name": "Immingham",
+        "code": "IMMING",
+        "tenant": "stenaline",
+        "country": "United Kingdom",
+        "description": ""
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -6.337,
+          52.253
+        ]
+      },
+      "properties": {
+        "kind": "port",
+        "name": "Rosslare",
+        "code": "ROS",
+        "tenant": "pof",
+        "country": "Ireland",
+        "description": ""
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          1.8546,
+          50.9686
+        ]
+      },
+      "properties": {
+        "kind": "port",
+        "name": "Calais",
+        "code": "CQF",
+        "tenant": "pof",
+        "country": "France",
+        "description": ""
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -5.0116,
+          54.9926
+        ]
+      },
+      "properties": {
+        "kind": "port",
+        "name": "Cairnryan",
+        "code": "CYN",
+        "tenant": "pof",
+        "country": "United Kingdom",
+        "description": ""
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          0.358,
+          51.467
+        ]
+      },
+      "properties": {
+        "kind": "port",
+        "name": "Tilbury",
+        "code": "TIL",
+        "tenant": "pof",
+        "country": "United Kingdom",
+        "description": ""
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          1.3134,
+          51.1279
+        ]
+      },
+      "properties": {
+        "kind": "port",
+        "name": "Dover",
+        "code": "DVR",
+        "tenant": "pof",
+        "country": "United Kingdom",
+        "description": ""
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -6.2179,
+          53.3478
+        ]
+      },
+      "properties": {
+        "kind": "port",
+        "name": "Dublin",
+        "code": "DUB",
+        "tenant": "pof",
+        "country": "Ireland",
+        "description": ""
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -1.169,
+          54.586
+        ]
+      },
+      "properties": {
+        "kind": "port",
+        "name": "Teesport",
+        "code": "TEE",
+        "tenant": "pof",
+        "country": "United Kingdom",
+        "description": ""
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -5.791,
+          54.858
+        ]
+      },
+      "properties": {
+        "kind": "port",
+        "name": "Larne",
+        "code": "LAR",
+        "tenant": "pof",
+        "country": "United Kingdom",
+        "description": ""
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -0.3325,
+          53.744
+        ]
+      },
+      "properties": {
+        "kind": "port",
+        "name": "Hull",
+        "code": "HUL",
+        "tenant": "pof",
+        "country": "United Kingdom",
+        "description": ""
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          3.205,
+          51.33
+        ]
+      },
+      "properties": {
+        "kind": "port",
+        "name": "Zeebrugge",
+        "code": "ZEE",
+        "tenant": "pof",
+        "country": "Belgium",
+        "description": ""
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          4.137,
+          51.95
+        ]
+      },
+      "properties": {
+        "kind": "port",
+        "name": "Europoort",
+        "code": "EURO",
+        "tenant": "pof",
+        "country": "Netherlands",
+        "description": ""
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          12.0964,
+          54.173
+        ]
+      },
+      "properties": {
+        "kind": "port",
+        "name": "Rostock",
+        "code": "RSK",
+        "tenant": "scandlines",
+        "country": "Germany",
+        "description": ""
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          11.2199,
+          54.5009
+        ]
+      },
+      "properties": {
+        "kind": "port",
+        "name": "Puttgarden",
+        "code": "PUT",
+        "tenant": "scandlines",
+        "country": "Germany",
+        "description": ""
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          12.6945,
+          56.0465
+        ]
+      },
+      "properties": {
+        "kind": "port",
+        "name": "Helsingborg",
+        "code": "HEL",
+        "tenant": "scandlines",
+        "country": "Sweden",
+        "description": ""
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          11.3419,
+          54.6558
+        ]
+      },
+      "properties": {
+        "kind": "port",
+        "name": "Rødby",
+        "code": "ROF",
+        "tenant": "scandlines",
+        "country": "Denmark",
+        "description": ""
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          12.6136,
+          56.0361
+        ]
+      },
+      "properties": {
+        "kind": "port",
+        "name": "Helsingør",
+        "code": "HLS",
+        "tenant": "scandlines",
+        "country": "Denmark",
+        "description": ""
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          11.9273,
+          54.5747
+        ]
+      },
+      "properties": {
+        "kind": "port",
+        "name": "Gedser",
+        "code": "GED",
+        "tenant": "scandlines",
+        "country": "Denmark",
+        "description": ""
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -2.9,
+          54.0333
+        ]
+      },
+      "properties": {
+        "kind": "port",
+        "name": "Heysham",
+        "code": "HEYS",
+        "tenant": "peelports",
+        "country": "United Kingdom",
+        "description": ""
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -6.2544,
+          54.1069
+        ]
+      },
+      "properties": {
+        "kind": "port",
+        "name": "Warrenpoint",
+        "code": "WAPT",
+        "tenant": "peelports",
+        "country": "United Kingdom",
+        "description": ""
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -5.879058837890626,
+          54.63758496935431
+        ]
+      },
+      "properties": {
+        "kind": "port",
+        "name": "Belfast",
+        "code": "BELF",
+        "tenant": "peelports",
+        "country": "United Kingdom",
+        "description": ""
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -6.2179,
+          53.3478
+        ]
+      },
+      "properties": {
+        "kind": "port",
+        "name": "Dublin",
+        "code": "DUBL",
+        "tenant": "peelports",
+        "country": "Ireland",
+        "description": ""
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -4.4676,
+          54.1497
+        ]
+      },
+      "properties": {
+        "kind": "port",
+        "name": "Douglas",
+        "code": "DGAS",
+        "tenant": "peelports",
+        "country": "Isle of Man",
+        "description": ""
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          144.3600940704346,
+          -38.10663534878039
+        ]
+      },
+      "properties": {
+        "kind": "port",
+        "name": "Geelong",
+        "code": "GEX",
+        "tenant": "sot",
+        "country": "",
+        "description": ""
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          146.365624666214,
+          -41.17943725899304
+        ]
+      },
+      "properties": {
+        "kind": "port",
+        "name": "Devonport",
+        "code": "DEV",
+        "tenant": "sot",
+        "country": "",
+        "description": ""
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          10.7395,
+          59.9091
+        ]
+      },
+      "properties": {
+        "kind": "port",
+        "name": "Oslo",
+        "code": "OSL",
+        "tenant": "gncl",
+        "country": "Norway",
+        "description": ""
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          12.5929,
+          55.6867
+        ]
+      },
+      "properties": {
+        "kind": "port",
+        "name": "Copenhagen",
+        "code": "CPH",
+        "tenant": "gncl",
+        "country": "Denmark",
+        "description": ""
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          16.4483,
+          57.2647
+        ]
+      },
+      "properties": {
+        "kind": "port",
+        "name": "Oskarshamn",
+        "code": "SEOSK",
+        "tenant": "dg",
+        "country": "Sweden",
+        "description": ""
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          18.2948,
+          57.6348
+        ]
+      },
+      "properties": {
+        "kind": "port",
+        "name": "Visby",
+        "code": "SEVBY",
+        "tenant": "dg",
+        "country": "Sweden",
+        "description": ""
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          17.952,
+          58.902
+        ]
+      },
+      "properties": {
+        "kind": "port",
+        "name": "Nynäshamn",
+        "code": "SENYN",
+        "tenant": "dg",
+        "country": "Sweden",
+        "description": ""
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          4.726611,
+          45.9864749
+        ]
+      },
+      "properties": {
+        "kind": "depot",
+        "name": "Villefranche sur saone",
+        "code": "FRVSS",
+        "tenant": "kn",
+        "country": "France",
+        "description": ""
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          7.44596,
+          51.52467
+        ]
+      },
+      "properties": {
+        "kind": "depot",
+        "name": "Dortmund",
+        "code": "DEDTM",
+        "tenant": "kn",
+        "country": "Germany",
+        "description": ""
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          16.0568345,
+          48.3314101
+        ]
+      },
+      "properties": {
+        "kind": "depot",
+        "name": "St. Stefan",
+        "code": "ATSTS",
+        "tenant": "kn",
+        "country": "Austria",
+        "description": ""
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          16.926645,
+          51.041731
+        ]
+      },
+      "properties": {
+        "kind": "depot",
+        "name": "Kąty Wrocławskie",
+        "code": "PLWRO",
+        "tenant": "kn",
+        "country": "Poland",
+        "description": ""
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          25.0436744,
+          60.2929883
+        ]
+      },
+      "properties": {
+        "kind": "depot",
+        "name": "Vantaa",
+        "code": "FIHEL",
+        "tenant": "kn",
+        "country": "Finland",
+        "description": ""
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          2.5923743,
+          44.365393
+        ]
+      },
+      "properties": {
+        "kind": "depot",
+        "name": "Onet Le Chateau",
+        "code": "FRRDZ",
+        "tenant": "kn",
+        "country": "France",
+        "description": ""
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          0.4280238,
+          46.6985186
+        ]
+      },
+      "properties": {
+        "kind": "depot",
+        "name": "Dissay",
+        "code": "FRPIS",
+        "tenant": "kn",
+        "country": "France",
+        "description": ""
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          4.7251965,
+          49.73689235
+        ]
+      },
+      "properties": {
+        "kind": "depot",
+        "name": "Charleville Mezieres",
+        "code": "FRCVM",
+        "tenant": "kn",
+        "country": "France",
+        "description": ""
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          19.1342944,
+          50.2780834
+        ]
+      },
+      "properties": {
+        "kind": "depot",
+        "name": "Sosnowiec",
+        "code": "PLKTW",
+        "tenant": "kn",
+        "country": "Poland",
+        "description": ""
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          12.5955773,
+          48.8839157
+        ]
+      },
+      "properties": {
+        "kind": "depot",
+        "name": "Straubing",
+        "code": "DESTB",
+        "tenant": "kn",
+        "country": "Germany",
+        "description": ""
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          8.63802,
+          52.02271
+        ]
+      },
+      "properties": {
+        "kind": "depot",
+        "name": "Bielefeld",
+        "code": "DEBFE",
+        "tenant": "kn",
+        "country": "Germany",
+        "description": ""
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          8.2129059,
+          50.7752801
+        ]
+      },
+      "properties": {
+        "kind": "depot",
+        "name": "Haiger",
+        "code": "DEHAR",
+        "tenant": "kn",
+        "country": "Germany",
+        "description": ""
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          7.473296,
+          51.3582945
+        ]
+      },
+      "properties": {
+        "kind": "depot",
+        "name": "Hagen",
+        "code": "DEHAG",
+        "tenant": "kn",
+        "country": "Germany",
+        "description": ""
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          8.2736253,
+          49.9995205
+        ]
+      },
+      "properties": {
+        "kind": "depot",
+        "name": "Mainz",
+        "code": "DEMAI",
+        "tenant": "kn",
+        "country": "Germany",
+        "description": ""
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          16.65973,
+          49.18162
+        ]
+      },
+      "properties": {
+        "kind": "depot",
+        "name": "Hostivice - Palouky",
+        "code": "CZPRG",
+        "tenant": "kn",
+        "country": "Czech Republic",
+        "description": ""
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          18.81597,
+          47.49279
+        ]
+      },
+      "properties": {
+        "kind": "depot",
+        "name": "Páty",
+        "code": "HUBUD",
+        "tenant": "kn",
+        "country": "Hungary",
+        "description": ""
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          16.45415,
+          48.3421
+        ]
+      },
+      "properties": {
+        "kind": "depot",
+        "name": "Hagenbrunn",
+        "code": "ATVIE",
+        "tenant": "kn",
+        "country": "Austria",
+        "description": ""
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          2.4631476,
+          48.9385489
+        ]
+      },
+      "properties": {
+        "kind": "depot",
+        "name": "Le Blanc Mesnil",
+        "code": "FRASB",
+        "tenant": "kn",
+        "country": "France",
+        "description": ""
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          10.0013165,
+          53.5501721
+        ]
+      },
+      "properties": {
+        "kind": "depot",
+        "name": "Hamburg",
+        "code": "DEHAM",
+        "tenant": "kn",
+        "country": "Germany",
+        "description": ""
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          8.80618,
+          53.07929
+        ]
+      },
+      "properties": {
+        "kind": "depot",
+        "name": "Bremen",
+        "code": "DEBRE",
+        "tenant": "kn",
+        "country": "Germany",
+        "description": ""
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          6.6148669,
+          51.8382715
+        ]
+      },
+      "properties": {
+        "kind": "depot",
+        "name": "Bocholt",
+        "code": "DEBHT",
+        "tenant": "kn",
+        "country": "Germany",
+        "description": ""
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          12.2204644,
+          51.3026177
+        ]
+      },
+      "properties": {
+        "kind": "depot",
+        "name": "Markranstädt",
+        "code": "DELEJ",
+        "tenant": "kn",
+        "country": "Germany",
+        "description": ""
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          8.2146017,
+          53.1389753
+        ]
+      },
+      "properties": {
+        "kind": "depot",
+        "name": "Oldenburg",
+        "code": "DEOLO",
+        "tenant": "kn",
+        "country": "Germany",
+        "description": ""
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          11.6221618,
+          48.2975862
+        ]
+      },
+      "properties": {
+        "kind": "depot",
+        "name": "Eching",
+        "code": "DEMUC",
+        "tenant": "kn",
+        "country": "Germany",
+        "description": ""
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          8.9026429,
+          48.6419368
+        ]
+      },
+      "properties": {
+        "kind": "depot",
+        "name": "Gärtringen",
+        "code": "DESTR",
+        "tenant": "kn",
+        "country": "Germany",
+        "description": ""
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          11.077298,
+          49.453872
+        ]
+      },
+      "properties": {
+        "kind": "depot",
+        "name": "Nuernberg",
+        "code": "DENUE",
+        "tenant": "kn",
+        "country": "Germany",
+        "description": ""
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          17.3606362162683,
+          48.24137014961131
+        ]
+      },
+      "properties": {
+        "kind": "depot",
+        "name": "Senec",
+        "code": "SKBTS",
+        "tenant": "kn",
+        "country": "Slovakia",
+        "description": ""
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          23.40369944592663,
+          42.67996147527086
+        ]
+      },
+      "properties": {
+        "kind": "depot",
+        "name": "Sofia",
+        "code": "BGSOF",
+        "tenant": "kn",
+        "country": "Bulgaria",
+        "description": ""
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          9.21002,
+          45.31197
+        ]
+      },
+      "properties": {
+        "kind": "depot",
+        "name": "Siziano",
+        "code": "ITMIL",
+        "tenant": "kn",
+        "country": "Italy",
+        "description": ""
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          2.399125,
+          47.0811658
+        ]
+      },
+      "properties": {
+        "kind": "depot",
+        "name": "Bourges",
+        "code": "FRBOU",
+        "tenant": "kn",
+        "country": "France",
+        "description": ""
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          0.101304,
+          48.018843
+        ]
+      },
+      "properties": {
+        "kind": "depot",
+        "name": "Trange",
+        "code": "FRLME",
+        "tenant": "kn",
+        "country": "France",
+        "description": ""
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          0.9921208,
+          48.880997
+        ]
+      },
+      "properties": {
+        "kind": "depot",
+        "name": "Les Essarts",
+        "code": "FRCNO",
+        "tenant": "kn",
+        "country": "France",
+        "description": ""
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          5.9743072407,
+          47.27989904
+        ]
+      },
+      "properties": {
+        "kind": "depot",
+        "name": "Ecole Valentin",
+        "code": "FRBSN",
+        "tenant": "kn",
+        "country": "France",
+        "description": ""
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          2.6623623,
+          48.9936994
+        ]
+      },
+      "properties": {
+        "kind": "depot",
+        "name": "Compans",
+        "code": "FROPS",
+        "tenant": "kn",
+        "country": "France",
+        "description": ""
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -1.4149834,
+          43.4694806
+        ]
+      },
+      "properties": {
+        "kind": "depot",
+        "name": "Mouguerre",
+        "code": "FRBAY",
+        "tenant": "kn",
+        "country": "France",
+        "description": ""
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          4.2594811,
+          45.5250887
+        ]
+      },
+      "properties": {
+        "kind": "depot",
+        "name": "Andrezieux Boutheon",
+        "code": "FREBU",
+        "tenant": "kn",
+        "country": "France",
+        "description": ""
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          4.8881462,
+          47.0299592
+        ]
+      },
+      "properties": {
+        "kind": "depot",
+        "name": "Vignoles",
+        "code": "FRBEA",
+        "tenant": "kn",
+        "country": "France",
+        "description": ""
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -2.538592,
+          48.4622954
+        ]
+      },
+      "properties": {
+        "kind": "depot",
+        "name": "Lamballe",
+        "code": "FRSBK",
+        "tenant": "kn",
+        "country": "France",
+        "description": ""
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          2.7574981,
+          43.2008841
+        ]
+      },
+      "properties": {
+        "kind": "depot",
+        "name": "Lezignan Corbieres",
+        "code": "FRNAR",
+        "tenant": "kn",
+        "country": "France",
+        "description": ""
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          3.20192,
+          46.10938
+        ]
+      },
+      "properties": {
+        "kind": "depot",
+        "name": "Gannat",
+        "code": "FRGAN",
+        "tenant": "kn",
+        "country": "France",
+        "description": ""
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          4.0534118,
+          49.2234466
+        ]
+      },
+      "properties": {
+        "kind": "depot",
+        "name": "Cormontreuil",
+        "code": "FRRHE",
+        "tenant": "kn",
+        "country": "France",
+        "description": ""
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          4.9206153,
+          45.7784255
+        ]
+      },
+      "properties": {
+        "kind": "depot",
+        "name": "Vaulx en Velin",
+        "code": "FRVEV",
+        "tenant": "kn",
+        "country": "France",
+        "description": ""
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          22.0161677,
+          50.013319
+        ]
+      },
+      "properties": {
+        "kind": "depot",
+        "name": "Rzeszów",
+        "code": "PLRZE",
+        "tenant": "kn",
+        "country": "Poland",
+        "description": ""
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -1.6479078,
+          47.039205
+        ]
+      },
+      "properties": {
+        "kind": "depot",
+        "name": "St Aignan Grand Lieu",
+        "code": "FRNTE",
+        "tenant": "kn",
+        "country": "France",
+        "description": ""
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -1.4603703,
+          48.121469
+        ]
+      },
+      "properties": {
+        "kind": "depot",
+        "name": "Servon sur Vilaine",
+        "code": "FRRNS",
+        "tenant": "kn",
+        "country": "France",
+        "description": ""
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          12.789069,
+          50.844953
+        ]
+      },
+      "properties": {
+        "kind": "depot",
+        "name": "Limbach-Oberfrohna",
+        "code": "DECHE",
+        "tenant": "kn",
+        "country": "Germany",
+        "description": ""
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          0.7013149,
+          47.4721495
+        ]
+      },
+      "properties": {
+        "kind": "depot",
+        "name": "Chanceaux sur Choisille",
+        "code": "FRTUF",
+        "tenant": "kn",
+        "country": "France",
+        "description": ""
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          0.9634334,
+          49.0533673
+        ]
+      },
+      "properties": {
+        "kind": "depot",
+        "name": "Ormes",
+        "code": "FRORR",
+        "tenant": "kn",
+        "country": "France",
+        "description": ""
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          2.3256213,
+          48.6116007
+        ]
+      },
+      "properties": {
+        "kind": "depot",
+        "name": "Le Plessis Pate",
+        "code": "FRLFP",
+        "tenant": "kn",
+        "country": "France",
+        "description": ""
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -0.2094011,
+          43.2674411
+        ]
+      },
+      "properties": {
+        "kind": "depot",
+        "name": "Nousty",
+        "code": "FRPAU",
+        "tenant": "kn",
+        "country": "France",
+        "description": ""
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          4.1743949,
+          43.7221345
+        ]
+      },
+      "properties": {
+        "kind": "depot",
+        "name": "Gallargues le Montueux",
+        "code": "FRMPL",
+        "tenant": "kn",
+        "country": "France",
+        "description": ""
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          2.8953121,
+          42.6985304
+        ]
+      },
+      "properties": {
+        "kind": "depot",
+        "name": "Perpignan",
+        "code": "FRPGF",
+        "tenant": "kn",
+        "country": "France",
+        "description": ""
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          7.18785,
+          43.7846
+        ]
+      },
+      "properties": {
+        "kind": "depot",
+        "name": "Carros",
+        "code": "FRNCE",
+        "tenant": "kn",
+        "country": "France",
+        "description": ""
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          6.0616452,
+          43.4064401
+        ]
+      },
+      "properties": {
+        "kind": "depot",
+        "name": "Brignoles",
+        "code": "FRBRN",
+        "tenant": "kn",
+        "country": "France",
+        "description": ""
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          5.041183,
+          43.637405
+        ]
+      },
+      "properties": {
+        "kind": "depot",
+        "name": "Salon de Provence",
+        "code": "FRSDP",
+        "tenant": "kn",
+        "country": "France",
+        "description": ""
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          2.9068246,
+          50.44741
+        ]
+      },
+      "properties": {
+        "kind": "depot",
+        "name": "Harnes",
+        "code": "FRLEN",
+        "tenant": "kn",
+        "country": "France",
+        "description": ""
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          7.6431803,
+          48.5595788
+        ]
+      },
+      "properties": {
+        "kind": "depot",
+        "name": "Holtzheim",
+        "code": "FRSXB",
+        "tenant": "kn",
+        "country": "France",
+        "description": ""
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          7.200911437264315,
+          47.79542714869132
+        ]
+      },
+      "properties": {
+        "kind": "depot",
+        "name": "Cernay",
+        "code": "FRMLH",
+        "tenant": "kn",
+        "country": "France",
+        "description": ""
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          3.10997,
+          50.5888
+        ]
+      },
+      "properties": {
+        "kind": "depot",
+        "name": "Lesquin",
+        "code": "FRLSQ",
+        "tenant": "kn",
+        "country": "France",
+        "description": ""
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          0.6683646,
+          44.1861695
+        ]
+      },
+      "properties": {
+        "kind": "depot",
+        "name": "Bon Encontre",
+        "code": "FRAGF",
+        "tenant": "kn",
+        "country": "France",
+        "description": ""
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          9.7282886223,
+          50.8487978097
+        ]
+      },
+      "properties": {
+        "kind": "depot",
+        "name": "Hauneck",
+        "code": "DEBHE",
+        "tenant": "kn",
+        "country": "Germany",
+        "description": ""
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -0.9461429,
+          48.9885444
+        ]
+      },
+      "properties": {
+        "kind": "depot",
+        "name": "Guilberville",
+        "code": "FRSLO",
+        "tenant": "kn",
+        "country": "France",
+        "description": ""
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          2.4530731,
+          48.7771486
+        ]
+      },
+      "properties": {
+        "kind": "depot",
+        "name": "Creteil",
+        "code": "FRCTE",
+        "tenant": "kn",
+        "country": "France",
+        "description": ""
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -0.2688288,
+          49.1777862
+        ]
+      },
+      "properties": {
+        "kind": "depot",
+        "name": "Demouville",
+        "code": "FRCFR",
+        "tenant": "kn",
+        "country": "France",
+        "description": ""
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          6.2057955,
+          48.6256119
+        ]
+      },
+      "properties": {
+        "kind": "depot",
+        "name": "Fleville Devant Nancy",
+        "code": "FRENC",
+        "tenant": "kn",
+        "country": "France",
+        "description": ""
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          1.411126,
+          43.7277106
+        ]
+      },
+      "properties": {
+        "kind": "depot",
+        "name": "Bruguieres",
+        "code": "FRTLS",
+        "tenant": "kn",
+        "country": "France",
+        "description": ""
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          4.8920811,
+          44.9332277
+        ]
+      },
+      "properties": {
+        "kind": "depot",
+        "name": "Valence",
+        "code": "FRVAA",
+        "tenant": "kn",
+        "country": "France",
+        "description": ""
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          6.2197994,
+          49.2256191
+        ]
+      },
+      "properties": {
+        "kind": "depot",
+        "name": "Ennery",
+        "code": "FRMZM",
+        "tenant": "kn",
+        "country": "France",
+        "description": ""
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          1.4442433,
+          43.6044638
+        ]
+      },
+      "properties": {
+        "kind": "depot",
+        "name": "Toulouse",
+        "code": "FRTOU",
+        "tenant": "kn",
+        "country": "France",
+        "description": ""
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          1.8126696,
+          48.9573716
+        ]
+      },
+      "properties": {
+        "kind": "depot",
+        "name": "Epone",
+        "code": "FREPO",
+        "tenant": "kn",
+        "country": "France",
+        "description": ""
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -0.5082713,
+          44.7137024
+        ]
+      },
+      "properties": {
+        "kind": "depot",
+        "name": "St Medard d Eyrans",
+        "code": "FRBOD",
+        "tenant": "kn",
+        "country": "France",
+        "description": ""
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          4.8059012,
+          43.9492493
+        ]
+      },
+      "properties": {
+        "kind": "depot",
+        "name": "Avignon",
+        "code": "FRAVN",
+        "tenant": "kn",
+        "country": "France",
+        "description": ""
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          3.523723,
+          47.8781778
+        ]
+      },
+      "properties": {
+        "kind": "depot",
+        "name": "Appoigny",
+        "code": "FRAUF",
+        "tenant": "kn",
+        "country": "France",
+        "description": ""
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          5.3090324,
+          43.4098822
+        ]
+      },
+      "properties": {
+        "kind": "depot",
+        "name": "Les Pennes Mirabeau",
+        "code": "FRLPM",
+        "tenant": "kn",
+        "country": "France",
+        "description": ""
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          13.01336,
+          47.84708
+        ]
+      },
+      "properties": {
+        "kind": "depot",
+        "name": "Bergheim",
+        "code": "ATSZG",
+        "tenant": "kn",
+        "country": "Austria",
+        "description": ""
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -0.5082713,
+          44.7137024
+        ]
+      },
+      "properties": {
+        "kind": "depot",
+        "name": "St Medard d Eyrans",
+        "code": "FRDYR",
+        "tenant": "kn",
+        "country": "France",
+        "description": ""
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          1.0079846,
+          49.5056122
+        ]
+      },
+      "properties": {
+        "kind": "depot",
+        "name": "St Jean du Cardonnay",
+        "code": "FRURO",
+        "tenant": "kn",
+        "country": "France",
+        "description": ""
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -0.5630966,
+          45.9611662
+        ]
+      },
+      "properties": {
+        "kind": "depot",
+        "name": "La Vergne",
+        "code": "FRJAG",
+        "tenant": "kn",
+        "country": "France",
+        "description": ""
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          5.6361825,
+          45.2928424
+        ]
+      },
+      "properties": {
+        "kind": "depot",
+        "name": "Voreppe",
+        "code": "FRGNB",
+        "tenant": "kn",
+        "country": "France",
+        "description": ""
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          2.23294,
+          49.51288
+        ]
+      },
+      "properties": {
+        "kind": "depot",
+        "name": "AMIENS - Boves",
+        "code": "FRAMI",
+        "tenant": "kn",
+        "country": "France",
+        "description": ""
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          4.54685,
+          44.7177
+        ]
+      },
+      "properties": {
+        "kind": "depot",
+        "name": "St Priest",
+        "code": "FRZRP",
+        "tenant": "kn",
+        "country": "France",
+        "description": ""
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          2.2623757,
+          50.6498952
+        ]
+      },
+      "properties": {
+        "kind": "depot",
+        "name": "Clarques",
+        "code": "FRSTO",
+        "tenant": "kn",
+        "country": "France",
+        "description": ""
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          0.6561616,
+          45.1833605
+        ]
+      },
+      "properties": {
+        "kind": "depot",
+        "name": "Marsac sur l Isle",
+        "code": "FRPGX",
+        "tenant": "kn",
+        "country": "France",
+        "description": ""
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          6.1288847,
+          45.8992348
+        ]
+      },
+      "properties": {
+        "kind": "depot",
+        "name": "Annecy",
+        "code": "FRNCY",
+        "tenant": "kn",
+        "country": "France",
+        "description": ""
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          2.4433101,
+          44.9285441
+        ]
+      },
+      "properties": {
+        "kind": "depot",
+        "name": "Aurillac",
+        "code": "FRAUR",
+        "tenant": "kn",
+        "country": "France",
+        "description": ""
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -4.0281159,
+          48.1816811
+        ]
+      },
+      "properties": {
+        "kind": "depot",
+        "name": "Lothey",
+        "code": "FRBES",
+        "tenant": "kn",
+        "country": "France",
+        "description": ""
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          1.4306748,
+          46.2149768
+        ]
+      },
+      "properties": {
+        "kind": "depot",
+        "name": "St Maurice la Souterraine",
+        "code": "FRLIG",
+        "tenant": "kn",
+        "country": "France",
+        "description": ""
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          0.6622353,
+          47.3511161
+        ]
+      },
+      "properties": {
+        "kind": "depot",
+        "name": "Joue les Tours",
+        "code": "FRJTS",
+        "tenant": "kn",
+        "country": "France",
+        "description": ""
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          16.65973,
+          49.18162
+        ]
+      },
+      "properties": {
+        "kind": "depot",
+        "name": "Brno",
+        "code": "CZBRQ",
+        "tenant": "kn",
+        "country": "Czech Republic",
+        "description": ""
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          16.7071342,
+          53.7023421
+        ]
+      },
+      "properties": {
+        "kind": "depot",
+        "name": "Szczecinek",
+        "code": "PLOSZ",
+        "tenant": "kn",
+        "country": "Poland",
+        "description": ""
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          15.5490421,
+          51.9275737
+        ]
+      },
+      "properties": {
+        "kind": "depot",
+        "name": "Zielona Góra",
+        "code": "PLIEG",
+        "tenant": "kn",
+        "country": "Poland",
+        "description": ""
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          14.5928676,
+          53.4298114
+        ]
+      },
+      "properties": {
+        "kind": "depot",
+        "name": "Szczecin",
+        "code": "PLSZZ",
+        "tenant": "kn",
+        "country": "Poland",
+        "description": ""
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          4.9345198,
+          45.6274322
+        ]
+      },
+      "properties": {
+        "kind": "depot",
+        "name": "Chaponnay",
+        "code": "FRCPQ",
+        "tenant": "kn",
+        "country": "France",
+        "description": ""
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -3.360625,
+          40.4021516
+        ]
+      },
+      "properties": {
+        "kind": "depot",
+        "name": "Torres de la Alameda",
+        "code": "ESTLA",
+        "tenant": "kn",
+        "country": "Spain",
+        "description": ""
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          2.551381587982178,
+          48.63163937346653
+        ]
+      },
+      "properties": {
+        "kind": "depot",
+        "name": "Lieusaint",
+        "code": "FRLES",
+        "tenant": "kn",
+        "country": "France",
+        "description": ""
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          15.4629582,
+          46.9314119
+        ]
+      },
+      "properties": {
+        "kind": "depot",
+        "name": "Wundschuh",
+        "code": "ATWDU",
+        "tenant": "kn",
+        "country": "Austria",
+        "description": ""
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -4.0916875,
+          48.1968026
+        ]
+      },
+      "properties": {
+        "kind": "depot",
+        "name": "Chateaulin",
+        "code": "FRCTL",
+        "tenant": "kn",
+        "country": "France",
+        "description": ""
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          6.2197994,
+          49.2256191
+        ]
+      },
+      "properties": {
+        "kind": "depot",
+        "name": "Ennery",
+        "code": "FRENN",
+        "tenant": "kn",
+        "country": "France",
+        "description": ""
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          13.3775249,
+          49.7477415
+        ]
+      },
+      "properties": {
+        "kind": "depot",
+        "name": "Plzeň",
+        "code": "CZPLZ",
+        "tenant": "kn",
+        "country": "Czech Republic",
+        "description": ""
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          14.474285,
+          48.9747357
+        ]
+      },
+      "properties": {
+        "kind": "depot",
+        "name": "České Budějovice",
+        "code": "CZCKB",
+        "tenant": "kn",
+        "country": "Czech Republic",
+        "description": ""
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          0.4306434731381321,
+          47.52014872542271
+        ]
+      },
+      "properties": {
+        "kind": "depot",
+        "name": "Rives-du-loir-en-anjou",
+        "code": "FRVQE",
+        "tenant": "kn",
+        "country": "France",
+        "description": ""
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          17.6765332,
+          45.3310723
+        ]
+      },
+      "properties": {
+        "kind": "depot",
+        "name": "Pozhega",
+        "code": "HRPZG",
+        "tenant": "kn",
+        "country": "Croatia",
+        "description": ""
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          15.2353257,
+          44.1168594
+        ]
+      },
+      "properties": {
+        "kind": "depot",
+        "name": "Zadar",
+        "code": "HRZAD",
+        "tenant": "kn",
+        "country": "Croatia",
+        "description": ""
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          16.2497163,
+          43.5164142
+        ]
+      },
+      "properties": {
+        "kind": "depot",
+        "name": "Trogir",
+        "code": "HRTRO",
+        "tenant": "kn",
+        "country": "Croatia",
+        "description": ""
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          17.3969901,
+          48.2199473
+        ]
+      },
+      "properties": {
+        "kind": "depot",
+        "name": "Senec",
+        "code": "SKCEL",
+        "tenant": "kn",
+        "country": "Slovakia",
+        "description": ""
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          28.1028986,
+          -26.0578612
+        ]
+      },
+      "properties": {
+        "kind": "depot",
+        "name": "City",
+        "code": "ZAKEB",
+        "tenant": "kn",
+        "country": "South Africa",
+        "description": ""
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          25.5769271,
+          -33.8766232
+        ]
+      },
+      "properties": {
+        "kind": "depot",
+        "name": "Town",
+        "code": "ZAEKB",
+        "tenant": "kn",
+        "country": "South Africa",
+        "description": ""
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          7.75256,
+          45.11673
+        ]
+      },
+      "properties": {
+        "kind": "depot",
+        "name": "San Mauro Torinese",
+        "code": "ITTRN",
+        "tenant": "kn",
+        "country": "Italy",
+        "description": ""
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          14.896712,
+          49.8717573
+        ]
+      },
+      "properties": {
+        "kind": "depot",
+        "name": "Sazava",
+        "code": "CZDIP",
+        "tenant": "kn",
+        "country": "Czech Republic",
+        "description": ""
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          12.5012363,
+          41.6711699
+        ]
+      },
+      "properties": {
+        "kind": "depot",
+        "name": "Pomezia (Roma)",
+        "code": "ITROM",
+        "tenant": "kn",
+        "country": "Italy",
+        "description": ""
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          4.8881462,
+          47.0299592
+        ]
+      },
+      "properties": {
+        "kind": "depot",
+        "name": "Vignoles",
+        "code": "FRXVG",
+        "tenant": "kn",
+        "country": "France",
+        "description": ""
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -0.9101268,
+          41.6915847
+        ]
+      },
+      "properties": {
+        "kind": "depot",
+        "name": "Zaragoza",
+        "code": "ESZAZ",
+        "tenant": "kn",
+        "country": "Spain",
+        "description": ""
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          9.2011222,
+          45.3174678
+        ]
+      },
+      "properties": {
+        "kind": "depot",
+        "name": "Siziano",
+        "code": "ITSZI",
+        "tenant": "kn",
+        "country": "Italy",
+        "description": ""
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          23.7965614,
+          44.3190159
+        ]
+      },
+      "properties": {
+        "kind": "depot",
+        "name": "Craiova",
+        "code": "ROCRA",
+        "tenant": "kn",
+        "country": "Romania",
+        "description": ""
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -0.3037796,
+          43.1269544
+        ]
+      },
+      "properties": {
+        "kind": "depot",
+        "name": "Bruges",
+        "code": "FRBRU",
+        "tenant": "kn",
+        "country": "France",
+        "description": ""
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          9.755825,
+          45.7533898
+        ]
+      },
+      "properties": {
+        "kind": "depot",
+        "name": "Nembro",
+        "code": "ITNEM",
+        "tenant": "kn",
+        "country": "Italy",
+        "description": ""
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          14.4944898,
+          35.882892
+        ]
+      },
+      "properties": {
+        "kind": "depot",
+        "name": "Marsa",
+        "code": "MTATT",
+        "tenant": "kn",
+        "country": "Malta",
+        "description": ""
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          14.4212535,
+          50.0874654
+        ]
+      },
+      "properties": {
+        "kind": "depot",
+        "name": "Prague",
+        "code": "CZXUY",
+        "tenant": "kn",
+        "country": "Czech Republic",
+        "description": ""
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          13.6387681,
+          43.0922489
+        ]
+      },
+      "properties": {
+        "kind": "depot",
+        "name": "Fermo",
+        "code": "ITFER",
+        "tenant": "kn",
+        "country": "Italy",
+        "description": ""
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          17.1132748,
+          42.9607256
+        ]
+      },
+      "properties": {
+        "kind": "depot",
+        "name": "Banja Luka",
+        "code": "BABNX",
+        "tenant": "kn",
+        "country": "Croatia",
+        "description": ""
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          16.4269197,
+          43.5471311
+        ]
+      },
+      "properties": {
+        "kind": "depot",
+        "name": "Kastel Sucurac",
+        "code": "HRKAS",
+        "tenant": "kn",
+        "country": "Croatia",
+        "description": ""
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          15.9772795,
+          45.8130967
+        ]
+      },
+      "properties": {
+        "kind": "depot",
+        "name": "Zagreb",
+        "code": "HRKKC",
+        "tenant": "kn",
+        "country": "Croatia",
+        "description": ""
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          26.870239,
+          47.4666632
+        ]
+      },
+      "properties": {
+        "kind": "depot",
+        "name": "Deleni",
+        "code": "ROBOS",
+        "tenant": "kn",
+        "country": "Romania",
+        "description": ""
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          9.365693,
+          45.3411434
+        ]
+      },
+      "properties": {
+        "kind": "depot",
+        "name": "Sordio",
+        "code": "ITSDE",
+        "tenant": "kn",
+        "country": "Italy",
+        "description": ""
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          12.9089186,
+          43.7423153
+        ]
+      },
+      "properties": {
+        "kind": "depot",
+        "name": "Colli Al Metauro",
+        "code": "ITZOJ",
+        "tenant": "kn",
+        "country": "Italy",
+        "description": ""
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          23.5719843,
+          47.6565584
+        ]
+      },
+      "properties": {
+        "kind": "depot",
+        "name": "Baia Mare",
+        "code": "ROBAY",
+        "tenant": "kn",
+        "country": "Romania",
+        "description": ""
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          12.4829321,
+          41.8933203
+        ]
+      },
+      "properties": {
+        "kind": "depot",
+        "name": "Roma",
+        "code": "ITCIA",
+        "tenant": "kn",
+        "country": "Italy",
+        "description": ""
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          2.0319476,
+          41.4936194
+        ]
+      },
+      "properties": {
+        "kind": "depot",
+        "name": "Rubi",
+        "code": "ESRIU",
+        "tenant": "kn",
+        "country": "Spain",
+        "description": ""
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          21.2616031,
+          48.9166204
+        ]
+      },
+      "properties": {
+        "kind": "depot",
+        "name": "Petrovany",
+        "code": "SKDRC",
+        "tenant": "kn",
+        "country": "Slovakia",
+        "description": ""
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          7.7712531,
+          45.1372206
+        ]
+      },
+      "properties": {
+        "kind": "depot",
+        "name": "Settimo Torinese",
+        "code": "ITGSO",
+        "tenant": "kn",
+        "country": "Italy",
+        "description": ""
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          14.619839,
+          40.810811
+        ]
+      },
+      "properties": {
+        "kind": "depot",
+        "name": "Sarno",
+        "code": "ITSRO",
+        "tenant": "kn",
+        "country": "Italy",
+        "description": ""
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          14.2487679,
+          40.8358846
+        ]
+      },
+      "properties": {
+        "kind": "depot",
+        "name": "Napoli",
+        "code": "ITNAP",
+        "tenant": "kn",
+        "country": "Italy",
+        "description": ""
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          14.2901223,
+          40.9045572
+        ]
+      },
+      "properties": {
+        "kind": "depot",
+        "name": "Casoria",
+        "code": "ITCXR",
+        "tenant": "kn",
+        "country": "Italy",
+        "description": ""
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          14.7057054,
+          41.2476307
+        ]
+      },
+      "properties": {
+        "kind": "depot",
+        "name": "Benevento",
+        "code": "ITBEN",
+        "tenant": "kn",
+        "country": "Italy",
+        "description": ""
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          18.7393139,
+          49.2234674
+        ]
+      },
+      "properties": {
+        "kind": "depot",
+        "name": "Zilina",
+        "code": "SKSEC",
+        "tenant": "kn",
+        "country": "Slovakia",
+        "description": ""
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          19.1457338,
+          48.735429
+        ]
+      },
+      "properties": {
+        "kind": "depot",
+        "name": "Banska Bystrica",
+        "code": "SKBBY",
+        "tenant": "kn",
+        "country": "Slovakia",
+        "description": ""
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          27.4168972,
+          47.1962391
+        ]
+      },
+      "properties": {
+        "kind": "depot",
+        "name": "Letcani",
+        "code": "ROIAS",
+        "tenant": "kn",
+        "country": "Romania",
+        "description": ""
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          14.2680178,
+          40.9160204
+        ]
+      },
+      "properties": {
+        "kind": "depot",
+        "name": "Arzano",
+        "code": "ITARZ",
+        "tenant": "kn",
+        "country": "Italy",
+        "description": ""
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          14.5255384,
+          36.827897
+        ]
+      },
+      "properties": {
+        "kind": "depot",
+        "name": "Santa Croce Camerina",
+        "code": "ITSC3",
+        "tenant": "kn",
+        "country": "Italy",
+        "description": ""
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          14.525435,
+          40.940513
+        ]
+      },
+      "properties": {
+        "kind": "depot",
+        "name": "Cimitile",
+        "code": "ITNCM",
+        "tenant": "kn",
+        "country": "Italy",
+        "description": ""
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          16.4399659,
+          43.5116383
+        ]
+      },
+      "properties": {
+        "kind": "depot",
+        "name": "Split",
+        "code": "HRSPU",
+        "tenant": "kn",
+        "country": "Croatia",
+        "description": ""
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          9.2458327,
+          49.0553992
+        ]
+      },
+      "properties": {
+        "kind": "depot",
+        "name": "Ilsfeld",
+        "code": "DEFIG",
+        "tenant": "kn",
+        "country": "Germany",
+        "description": ""
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          11.3845814,
+          45.3098838
+        ]
+      },
+      "properties": {
+        "kind": "depot",
+        "name": "Cologna Veneta",
+        "code": "ITSAL",
+        "tenant": "kn",
+        "country": "Italy",
+        "description": ""
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          15.854578,
+          39.819501
+        ]
+      },
+      "properties": {
+        "kind": "depot",
+        "name": "Santa Domenica Talao",
+        "code": "ITZXD",
+        "tenant": "kn",
+        "country": "Italy",
+        "description": ""
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          9.1682143,
+          45.5719082
+        ]
+      },
+      "properties": {
+        "kind": "depot",
+        "name": "Paderno Dugnano",
+        "code": "ITPDD",
+        "tenant": "kn",
+        "country": "Italy",
+        "description": ""
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            -5.879058837890626,
+            54.63758496935431
+          ],
+          [
+            -2.9,
+            54.0333
+          ]
+        ]
+      },
+      "properties": {
+        "kind": "route",
+        "name": "Belfast ↔ Heysham",
+        "description": "Irish Sea ferry lane linking Belfast and Heysham, drawn as a cubic bezier curve that bows north through the North Channel past Girvan before curving south to Heysham.",
+        "startPort": "BELF",
+        "endPort": "HEYS",
+        "control1": [
+          -5.465698242187501,
+          55.10822970202758
+        ],
+        "control2": [
+          -3.262939453125,
+          53.82983885331911
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            1.3134,
+            51.1279
+          ],
+          [
+            1.8546,
+            50.9686
+          ]
+        ]
+      },
+      "properties": {
+        "kind": "route",
+        "name": "New route",
+        "description": "",
+        "startPort": "DVR",
+        "endPort": "CQF",
+        "control1": [
+          1.398696899414063,
+          51.06772221074262
+        ],
+        "control2": [
+          1.728286743164063,
+          51.0400986768664
+        ]
+      }
+    }
+  ]
+}
