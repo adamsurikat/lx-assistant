@@ -12,6 +12,7 @@ import { getDay } from "date-fns/getDay";
 import { enUS } from "date-fns/locale/en-US";
 import "react-big-calendar/lib/css/react-big-calendar.css";
 import "react-big-calendar/lib/addons/dragAndDrop/styles.css";
+import { createNoOverlapFixed } from "@/lib/noOverlapFixed";
 
 const locales = { "en-US": enUS };
 
@@ -83,6 +84,8 @@ export interface CalendarEventItem {
   resourceId: "time" | "google";
 }
 
+const noOverlapFixed = createNoOverlapFixed<CalendarEventItem>();
+
 // Splits each day into two side-by-side sub-columns: one for logged/loggable
 // time entries, one read-only column showing Google Calendar meetings.
 const RESOURCES = [
@@ -150,10 +153,17 @@ export function TimeCalendar({
         // same column starting within half an hour-group (here, 30 minutes,
         // derived from step*timeslots) of each other as "overlapping", even
         // when they don't actually overlap in time — splitting them
-        // side-by-side and leaving a chunk of unused column width. "no-overlap"
-        // instead checks real start/end time ranges, so sequential events
-        // (e.g. back-to-back Google Calendar meetings) render full-width.
-        dayLayoutAlgorithm="no-overlap"
+        // side-by-side and leaving a chunk of unused column width. The
+        // built-in "no-overlap" instead checks real start/end time ranges so
+        // sequential events (e.g. back-to-back Google Calendar meetings)
+        // render full-width — but it has a known bug when combined with
+        // `resourceGroupingLayout` (our two Time-reporting/Google-Calendar
+        // sub-columns): its final "stretch to full width" pass can size an
+        // event as if it's the right-most column in its overlap group when
+        // it isn't, letting it visually bleed into the neighbouring
+        // resource's column. `noOverlapFixed` is a local patched copy of
+        // that same algorithm — see src/lib/noOverlapFixed.ts for details.
+        dayLayoutAlgorithm={noOverlapFixed}
         draggableAccessor={(event: CalendarEventItem) => !event.readOnly && !event.pending}
         resizableAccessor={(event: CalendarEventItem) => !event.readOnly && !event.pending}
         onEventDrop={({ event, start, end }: EventInteractionArgs<CalendarEventItem>) =>
