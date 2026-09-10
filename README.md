@@ -82,8 +82,8 @@ starts with an empty map. To seed it with real data instead:
 2. On the new deployment, import it with the bootstrap script (safe to
    re-run — matches existing rows by code/name and skips duplicates):
    ```bash
-   npx tsx prisma/importMapGeoJSON.ts            # imports prisma/mapData.geojson
-   npx tsx prisma/importMapGeoJSON.ts path/to.geojson  # or a specific file
+   npm run map:import                      # imports prisma/mapData.geojson
+   npm run map:import -- path/to.geojson   # or a specific file
    ```
    Alternatively, `POST` the file's contents as JSON to `/api/map/import`
    (while signed in) to import over the API instead of the CLI.
@@ -96,6 +96,49 @@ port's `code` (or `name`, if it has no code) and whose `control1`/
 `control2` are the two bezier control points that bow the curve — so it's
 also editable/authorable by hand or from another data source, not just
 round-tripped through the export endpoint.
+
+## Running with Docker
+
+The app also ships a `Dockerfile` + `docker-compose.yml` for a self-contained
+deployment — the SQLite database lives on a named Docker volume so it
+persists across image rebuilds, and pending Prisma migrations are applied
+automatically every time the container starts (see `docker-entrypoint.sh`).
+
+1. Fill in `.env.local` as in step 1 of Setup above (same env vars — the
+   compose file loads it via `env_file`). Use `http://localhost:3456/...` for
+   the Google/Jira OAuth redirect URIs if running locally, or your real
+   domain if deploying behind a reverse proxy.
+
+2. Build and start the container:
+   ```bash
+   docker compose up --build -d
+   ```
+   The app is then available at http://localhost:3456. Logs (including the
+   migration output) are available with `docker compose logs -f`.
+
+3. (Optional) bootstrap the map with this repo's real port/depot/route data,
+   the same way as the "Bootstrapping map data" section above, just run
+   inside the container:
+   ```bash
+   docker compose exec app npm run map:import
+   ```
+
+4. To stop/restart without losing data, use `docker compose stop` /
+   `docker compose start` (or `down`, which also keeps the named volume —
+   only `docker compose down -v` deletes the database).
+
+Notes specific to the Docker setup:
+- `DATABASE_URL` is overridden in `docker-compose.yml` to point at
+  `/data/app.db` on the `app_data` named volume, instead of the repo's
+  `./dev.db` used for local (non-Docker) dev.
+- `AUTH_TRUST_HOST=true` is set because NextAuth v5 otherwise refuses to
+  trust the container's request Host header by default (it can't know its
+  own public URL ahead of time) — fine as long as the container only sits
+  behind a reverse proxy you control, or on a trusted network.
+- The image installs and runs everything as `npm run start` (a normal
+  `next start`, not Next's "standalone" output) so the Prisma CLI is
+  available at container startup to run migrations and, if you want, the
+  `map:import` bootstrap script from step 3.
 
 ## Notes
 

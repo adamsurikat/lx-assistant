@@ -1,0 +1,28 @@
+services:
+  app:
+    build: .
+    ports:
+      - "3456:3456"
+    environment:
+      # SQLite file lives on the named volume below (mounted at /data) so
+      # it survives image rebuilds/`docker compose down` — overrides the
+      # repo's .env, which points at ./dev.db for local (non-Docker) dev.
+      DATABASE_URL: "file:/data/app.db"
+      # NextAuth v5 refuses to trust the request's Host header by default
+      # (to stop host-header spoofing) unless explicitly told to — needed
+      # here since the container itself has no way to know its own public
+      # URL/domain ahead of time. Safe as long as this container only ever
+      # sits behind a reverse proxy you control (or is only exposed on a
+      # trusted LAN), same as any other self-hosted NextAuth deployment.
+      AUTH_TRUST_HOST: "true"
+    env_file:
+      # Copy .env.local.example to .env.local and fill in real secrets
+      # first (see README "Setup") — this file is intentionally not baked
+      # into the image (see .dockerignore), only loaded at container start.
+      - .env.local
+    volumes:
+      - app_data:/data
+    restart: unless-stopped
+
+volumes:
+  app_data:
