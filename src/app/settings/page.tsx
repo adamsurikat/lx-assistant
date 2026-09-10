@@ -1,33 +1,70 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { Suspense, useEffect, useState } from "react";
+import { useSearchParams } from "next/navigation";
 import { useSession } from "next-auth/react";
 import { AppHeader } from "@/components/AppHeader";
 
 const DEFAULT_JIRA_SITE_URL = "https://surikat.atlassian.net";
 
-export default function SettingsPage() {
+const ERROR_MESSAGES: Record<string, string> = {
+  unauthorized: "You need to be signed in to connect Jira.",
+  invalid_state: "The connection attempt expired or was invalid. Please try again.",
+  no_sites: "No accessible Jira sites were found for your Atlassian account.",
+  connection_failed: "Failed to connect to Jira. Please try again.",
+  access_denied: "Jira connection was cancelled.",
+  oauth_not_configured: "OAuth connection isn't configured on this server.",
+};
+
+interface JiraStatus {
+  connected: boolean;
+  method: "oauth" | "token" | null;
+  jiraSiteUrl: string | null;
+  jiraEmail: string | null;
+  oauthAvailable: boolean;
+}
+
+function JiraConnectionPanel() {
+  const searchParams = useSearchParams();
   const { data: session } = useSession();
+  const [status, setStatus] = useState<JiraStatus | null>(null);
+  // Which method the UI is currently showing (independent of what's
+  // actually connected) — a simple toggle between the two optional methods.
+  const [useOAuth, setUseOAuth] = useState(false);
+
   const [jiraEmail, setJiraEmail] = useState("");
   const [siteUrl, setSiteUrl] = useState(DEFAULT_JIRA_SITE_URL);
   const [apiToken, setApiToken] = useState("");
-  const [connected, setConnected] = useState(false);
   const [saving, setSaving] = useState(false);
-  const [message, setMessage] = useState<string | null>(null);
+  const [disconnecting, setDisconnecting] = useState(false);
+  const [message, setMessage] = useState<string | null>(() => {
+    const jiraError = searchParams.get("jira_error");
+    if (jiraError) {
+      return ERROR_MESSAGES[jiraError] ?? "Failed to connect to Jira.";
+    }
+    if (searchParams.get("jira_connected")) {
+      return "Jira connected.";
+    }
+    return null;
+  });
 
-  useEffect(() => {
+  const loadStatus = () => {
     fetch("/api/jira/token")
       .then((res) => res.json())
-      .then((data) => {
-        setConnected(Boolean(data.connected));
-        // Prefill with saved values if present, otherwise default the site URL
-        // and use the signed-in Google account's email as the Jira email.
+      .then((data: JiraStatus) => {
+        setStatus(data);
+        setUseOAuth(data.method === "oauth");
         setJiraEmail(data.jiraEmail ?? session?.user?.email ?? "");
         setSiteUrl(data.jiraSiteUrl ?? DEFAULT_JIRA_SITE_URL);
       });
-  }, [session?.user?.email]);
+  };
 
-  const handleSave = async (e: React.FormEvent) => {
+  useEffect(() => {
+    loadStatus();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  const handleSaveToken = async (e: React.FormEvent) => {
     e.preventDefault();
     setSaving(true);
     setMessage(null);
@@ -37,9 +74,9 @@ export default function SettingsPage() {
       body: JSON.stringify({ jiraEmail, siteUrl, apiToken }),
     });
     if (res.ok) {
-      setConnected(true);
       setApiToken("");
       setMessage("Jira connection saved.");
+      loadStatus();
     } else {
       const data = await res.json().catch(() => ({}));
       setMessage(data.error ?? "Failed to save Jira connection.");
@@ -48,110 +85,191 @@ export default function SettingsPage() {
   };
 
   const handleDisconnect = async () => {
-    setSaving(true);
+    setDisconnecting(true);
     await fetch("/api/jira/token", { method: "DELETE" });
-    setConnected(false);
     setApiToken("");
-    setSaving(false);
+    setMessage("Jira disconnected.");
+    loadStatus();
+    setDisconnecting(false);
   };
 
+  const connected = status?.connected ?? false;
+  const connectedViaOAuth = status?.method === "oauth";
+  const connectedViaToken = status?.method === "token";
+
+  return (
+    <div className="space-y-4">
+      {status?.oauthAvailable && (
+        <label className="flex items-center gap-2 text-sm font-semibold text-nb-ink">
+          <input
+            type="checkbox"
+            checked={useOAuth}
+            onChange={(e) => setUseOAuth(e.target.checked)}
+          />
+          Use Atlassian OAuth instead of an API token
+        </label>
+      )}
+
+      {useOAuth ? (
+        <div className="nb-panel space-y-4 p-6">
+          <p className="text-sm font-medium text-nb-ink/70">
+            Sign in with your Atlassian account to let this app read your
+            assigned tickets and sync worklogs on your behalf. You can revoke
+            access at any time from your{" "}
+            <a
+              href="https://id.atlassian.com/manage-profile/security"
+              target="_blank"
+              rel="noreferrer"
+              className="underline decoration-nb-pink decoration-2"
+            >
+              Atlassian account settings
+            </a>
+            .
+          </p>
+
+          {connectedViaOAuth ? (
+            <div className="flex items-center gap-3">
+              <span className="text-sm font-semibold text-nb-green">
+                ✓ Connected{status?.jiraSiteUrl ? ` to ${status.jiraSiteUrl}` : ""}
+              </span>
+              <button
+                type="button"
+                onClick={handleDisconnect}
+                disabled={disconnecting}
+                className="nb-btn px-4 py-2 text-sm font-semibold text-nb-pink"
+              >
+                {disconnecting ? "Disconnecting…" : "Disconnect"}
+              </button>
+            </div>
+          ) : (
+            <a
+              href="/api/jira/connect"
+              className="nb-btn nb-btn-orange inline-block px-4 py-2 text-sm font-semibold"
+            >
+              Connect Jira
+            </a>
+          )}
+        </div>
+      ) : (
+        <>
+          <p className="text-sm font-medium text-nb-ink/70">
+            Create an API token at{" "}
+            <a
+              href="https://id.atlassian.com/manage-profile/security/api-tokens"
+              target="_blank"
+              rel="noreferrer"
+              className="underline decoration-nb-pink decoration-2"
+            >
+              id.atlassian.com
+            </a>{" "}
+            and paste it below. It is encrypted before being stored.
+          </p>
+
+          <form onSubmit={handleSaveToken} className="nb-panel space-y-4 p-6">
+            <div>
+              <label className="mb-1 block text-sm font-semibold tracking-wide text-nb-ink">
+                Jira site URL
+              </label>
+              <input
+                type="url"
+                required
+                placeholder="https://yourcompany.atlassian.net"
+                value={siteUrl}
+                onChange={(e) => setSiteUrl(e.target.value)}
+                className="nb-input w-full px-3 py-2 text-sm"
+              />
+            </div>
+            <div>
+              <label className="mb-1 block text-sm font-semibold tracking-wide text-nb-ink">
+                Atlassian account email
+              </label>
+              <input
+                type="email"
+                required
+                value={jiraEmail}
+                onChange={(e) => setJiraEmail(e.target.value)}
+                className="nb-input w-full px-3 py-2 text-sm"
+              />
+            </div>
+            <div>
+              <label className="mb-1 flex items-center justify-between text-sm font-semibold tracking-wide text-nb-ink">
+                <span>
+                  API token{" "}
+                  {connectedViaToken && (
+                    <span className="font-normal normal-case text-nb-ink/50">
+                      (leave blank to keep current)
+                    </span>
+                  )}
+                </span>
+                <a
+                  href="https://id.atlassian.com/manage-profile/security/api-tokens"
+                  target="_blank"
+                  rel="noreferrer"
+                  className="text-xs font-normal normal-case text-nb-pink underline"
+                >
+                  Get an API token
+                </a>
+              </label>
+              <input
+                type="password"
+                required={!connectedViaToken}
+                value={apiToken}
+                onChange={(e) => setApiToken(e.target.value)}
+                className="nb-input w-full px-3 py-2 text-sm"
+              />
+            </div>
+
+            <div className="flex items-center gap-3">
+              <button
+                type="submit"
+                disabled={saving}
+                className="nb-btn nb-btn-orange px-4 py-2 text-sm font-semibold"
+              >
+                {saving ? "Saving…" : "Save"}
+              </button>
+              {connectedViaToken && (
+                <button
+                  type="button"
+                  onClick={handleDisconnect}
+                  disabled={disconnecting}
+                  className="nb-btn px-4 py-2 text-sm font-semibold text-nb-pink"
+                >
+                  {disconnecting ? "Disconnecting…" : "Disconnect"}
+                </button>
+              )}
+              {connectedViaToken && (
+                <span className="text-sm font-semibold text-nb-green">✓ Connected</span>
+              )}
+            </div>
+          </form>
+        </>
+      )}
+
+      {!useOAuth && connectedViaOAuth && (
+        <p className="text-sm font-medium text-nb-ink/70">
+          Currently connected via OAuth. Saving an API token above will
+          disconnect the OAuth connection.
+        </p>
+      )}
+
+      {message && <p className="text-sm font-bold text-nb-ink">{message}</p>}
+      {connected === false && status === null && (
+        <p className="text-sm">Checking connection…</p>
+      )}
+    </div>
+  );
+}
+
+export default function SettingsPage() {
   return (
     <div className="flex h-screen flex-col">
       <AppHeader active="settings" />
       <main className="mx-auto w-full max-w-lg overflow-y-auto p-8">
         <h1 className="nb-display mb-1 text-2xl">Connect Jira</h1>
-        <p className="mb-6 text-sm font-medium text-nb-ink/70">
-          Create an API token at{" "}
-          <a
-            href="https://id.atlassian.com/manage-profile/security/api-tokens"
-            target="_blank"
-            rel="noreferrer"
-            className="underline decoration-nb-pink decoration-2"
-          >
-            id.atlassian.com
-          </a>{" "}
-          and paste it below. It is encrypted before being stored.
-        </p>
 
-        <form onSubmit={handleSave} className="nb-panel space-y-4 p-6">
-          <div>
-            <label className="mb-1 block text-sm font-semibold tracking-wide text-nb-ink">
-              Jira site URL
-            </label>
-            <input
-              type="url"
-              required
-              placeholder="https://yourcompany.atlassian.net"
-              value={siteUrl}
-              onChange={(e) => setSiteUrl(e.target.value)}
-              className="nb-input w-full px-3 py-2 text-sm"
-            />
-          </div>
-          <div>
-            <label className="mb-1 block text-sm font-semibold tracking-wide text-nb-ink">
-              Atlassian account email
-            </label>
-            <input
-              type="email"
-              required
-              value={jiraEmail}
-              onChange={(e) => setJiraEmail(e.target.value)}
-              className="nb-input w-full px-3 py-2 text-sm"
-            />
-          </div>
-          <div>
-            <label className="mb-1 flex items-center justify-between text-sm font-semibold tracking-wide text-nb-ink">
-              <span>
-                API token{" "}
-                {connected && (
-                  <span className="font-normal normal-case text-nb-ink/50">
-                    (leave blank to keep current)
-                  </span>
-                )}
-              </span>
-              <a
-                href="https://id.atlassian.com/manage-profile/security/api-tokens"
-                target="_blank"
-                rel="noreferrer"
-                className="text-xs font-normal normal-case text-nb-pink underline"
-              >
-                Get an API token
-              </a>
-            </label>
-            <input
-              type="password"
-              required={!connected}
-              value={apiToken}
-              onChange={(e) => setApiToken(e.target.value)}
-              className="nb-input w-full px-3 py-2 text-sm"
-            />
-          </div>
-
-          {message && <p className="text-sm font-bold text-nb-ink">{message}</p>}
-
-          <div className="flex items-center gap-3">
-            <button
-              type="submit"
-              disabled={saving}
-              className="nb-btn nb-btn-orange px-4 py-2 text-sm font-semibold"
-            >
-              {saving ? "Saving…" : "Save"}
-            </button>
-            {connected && (
-              <button
-                type="button"
-                onClick={handleDisconnect}
-                disabled={saving}
-                className="nb-btn px-4 py-2 text-sm font-semibold text-nb-pink"
-              >
-                Disconnect
-              </button>
-            )}
-            {connected && (
-              <span className="text-sm font-semibold text-nb-green">✓ Connected</span>
-            )}
-          </div>
-        </form>
+        <Suspense fallback={<p className="text-sm">Loading…</p>}>
+          <JiraConnectionPanel />
+        </Suspense>
       </main>
     </div>
   );

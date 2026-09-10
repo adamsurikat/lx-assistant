@@ -3,21 +3,39 @@ import { auth } from "@/auth";
 import { prisma } from "@/lib/prisma";
 import { encryptSecret } from "@/lib/crypto";
 
+function oauthAvailable(): boolean {
+  return Boolean(
+    process.env.JIRA_OAUTH_CLIENT_ID && process.env.JIRA_OAUTH_CLIENT_SECRET
+  );
+}
+
 export async function GET() {
   const session = await auth();
   if (!session?.user?.id) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
-  const user = await prisma.user.findUnique({
-    where: { id: session.user.id },
-    select: { jiraEmail: true, jiraSiteUrl: true, jiraApiTokenCipher: true },
-  });
+  const [connection, user] = await Promise.all([
+    prisma.jiraConnection.findUnique({
+      where: { userId: session.user.id },
+      select: { siteUrl: true },
+    }),
+    prisma.user.findUnique({
+      where: { id: session.user.id },
+      select: { jiraEmail: true, jiraSiteUrl: true, jiraApiTokenCipher: true },
+    }),
+  ]);
+
+  const tokenConnected = Boolean(user?.jiraApiTokenCipher);
 
   return NextResponse.json({
+    connected: Boolean(connection) || tokenConnected,
+    method: connection ? "oauth" : tokenConnected ? "token" : null,
+    jiraSiteUrl: connection?.siteUrl ?? user?.jiraSiteUrl ?? null,
     jiraEmail: user?.jiraEmail ?? null,
-    jiraSiteUrl: user?.jiraSiteUrl ?? null,
-    connected: Boolean(user?.jiraApiTokenCipher),
+    // Whether the optional OAuth connection method is configured on this
+    // server (client renders the toggle only when true).
+    oauthAvailable: oauthAvailable(),
   });
 }
 
@@ -67,6 +85,10 @@ export async function POST(request: Request) {
     },
   });
 
+  // Saving a manual API token supersedes any OAuth connection (a user only
+  // has one active Jira connection method at a time).
+  await prisma.jiraConnection.deleteMany({ where: { userId: session.user.id } });
+
   return NextResponse.json({ ok: true });
 }
 
@@ -76,10 +98,13 @@ export async function DELETE() {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
-  await prisma.user.update({
-    where: { id: session.user.id },
-    data: { jiraEmail: null, jiraSiteUrl: null, jiraApiTokenCipher: null },
-  });
+  await Promise.all([
+    prisma.user.update({
+      where: { id: session.user.id },
+      data: { jiraEmail: null, jiraSiteUrl: null, jiraApiTokenCipher: null },
+    }),
+    prisma.jiraConnection.deleteMany({ where: { userId: session.user.id } }),
+  ]);
 
   return NextResponse.json({ ok: true });
 }
