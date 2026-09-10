@@ -119,3 +119,71 @@ model TimeEntry {
 
   @@index([userId, start])
 }
+
+// A port marker annotated on the Map page. Shared across all users (not
+// per-user) since it represents a real-world fixed location, but editable
+// (name/description/position) and draggable from the map UI.
+model MapPort {
+  id          String   @id @default(cuid())
+  name        String
+  code        String   @default("")
+  country     String
+  description String   @default("")
+  // Tenant/operator tag for this port, e.g. "Stena Line" to mark it as run
+  // by that ferry operator. Empty string means unset/not applicable.
+  tenant      String   @default("")
+  lat         Float
+  lng         Float
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  // Routes that start/end at this port. Dragging the port moves any
+  // connected route's endpoint with it, and deleting the port removes
+  // routes anchored to it (a route can't dangle unconnected from a port).
+  routesAsStart MapRoute[] @relation("RouteStart")
+  routesAsEnd   MapRoute[] @relation("RouteEnd")
+}
+
+// A truck depot marker annotated on the Map page. Same shape/semantics as
+// MapPort, kept as a separate model so the two marker kinds can be styled
+// and queried independently.
+model MapDepot {
+  id          String   @id @default(cuid())
+  name        String
+  // Short site/branch code, e.g. "DEDTM" — mirrors MapPort.code. Empty
+  // string means unset/not applicable.
+  code        String   @default("")
+  country     String
+  description String   @default("")
+  // Tenant/operator tag for this depot, e.g. "KN" (Kuehne+Nagel). Empty
+  // string means unset/not applicable. Mirrors MapPort.tenant.
+  tenant      String   @default("")
+  lat         Float
+  lng         Float
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+// A sea route drawn on the Map page as a cubic bezier curve. Its endpoints
+// are always an actual port (`startPort`/`endPort`) rather than a free
+// [lat, lng] — this keeps every route visibly connected to a real
+// location, and means moving a port automatically drags any routes
+// attached to it along with it. `control1`/`control2` are the two bezier
+// control points that shape the curve in between (e.g. bowing it around
+// land) and remain freely draggable.
+model MapRoute {
+  id          String   @id @default(cuid())
+  name        String
+  description String   @default("")
+  startPortId String
+  endPortId   String
+  control1Lat Float
+  control1Lng Float
+  control2Lat Float
+  control2Lng Float
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  startPort MapPort @relation("RouteStart", fields: [startPortId], references: [id], onDelete: Cascade)
+  endPort   MapPort @relation("RouteEnd", fields: [endPortId], references: [id], onDelete: Cascade)
+}
