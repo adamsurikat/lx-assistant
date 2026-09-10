@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import type { TicketSummary } from "@/components/TicketSidebar";
 
 export interface EditableEntry {
@@ -47,10 +47,6 @@ export function formatDuration(startISO: string, endISO: string): string {
   return `${hours}h ${mins}m`;
 }
 
-// Sentinel value for the "no ticket" dropdown option, distinct from the
-// empty string used by the disabled placeholder option.
-const NO_TICKET = "__no_ticket__";
-
 /**
  * Modal shown when a calendar time entry is clicked. Lets the user assign
  * (or change) the Jira ticket for the entry, give it a custom title instead
@@ -64,44 +60,145 @@ export function EventEditorModal({
   onDelete,
   onLookupTicket,
 }: EventEditorModalProps) {
-  // Whether the entry's current ticket (if any) is one of the tracked
-  // sidebar tickets, so the dropdown can preselect it; otherwise it must
-  // have been set via a one-off custom-ticket search (see `customTicket`).
-  const initialTrackedMatch =
-    entry.ticket && tickets.some((t) => t.id === entry.ticket!.id) ? entry.ticket.id : NO_TICKET;
-
-  const [trackedSelection, setTrackedSelection] = useState(initialTrackedMatch);
-  // A ticket found via the search box, kept only for this modal instance —
-  // it's never added to the tracked ticket list/dropdown, just used
-  // directly as the entry's ticket and shown as a summary below the box.
-  const [customTicket, setCustomTicket] = useState<TicketSummary | null>(
-    entry.ticket && !tickets.some((t) => t.id === entry.ticket!.id) ? entry.ticket : null
-  );
+  const [ticket, setTicket] = useState<TicketSummary | null>(entry.ticket);
   const [title, setTitle] = useState(entry.title ?? "");
   const [comment, setComment] = useState(entry.comment ?? "");
   const [saving, setSaving] = useState(false);
   const [deleting, setDeleting] = useState(false);
-  const [searchKey, setSearchKey] = useState("");
+
+  // Ticket combobox: a single search box that shows a dropdown of the
+  // tracked/active tickets on focus (auto-suggest style, arrow-key
+  // navigable), and swaps to filtered + remotely-searched results once the
+  // user starts typing.
+  const [query, setQuery] = useState("");
+  const [comboOpen, setComboOpen] = useState(false);
+  const [highlighted, setHighlighted] = useState(0);
+  const [remoteMatch, setRemoteMatch] = useState<TicketSummary | null>(null);
   const [searching, setSearching] = useState(false);
-  // Only set when a search comes back empty — shown as a red border on
-  // the search input. A successful match is applied immediately.
   const [searchError, setSearchError] = useState<string | null>(null);
+  const comboRef = useRef<HTMLDivElement>(null);
+  const inputRef = useRef<HTMLInputElement>(null);
+
   // Lets the user drag the modal panel around the screen by its header.
   const [dragOffset, setDragOffset] = useState({ x: 0, y: 0 });
 
-  // The custom search result (if any) takes precedence over the tracked
-  // dropdown selection — the two are mutually exclusive.
-  const effectiveTicket =
-    customTicket ?? (trackedSelection !== NO_TICKET ? tickets.find((t) => t.id === trackedSelection) ?? null : null);
+  const trimmedQuery = query.trim();
+  const isSearchingText = trimmedQuery.length > 0;
 
-  const hasTicket = effectiveTicket !== null;
+  // While the user is typing, the "suggested" (full) list is replaced by
+  // tracked tickets that match the query text.
+  const localMatches = isSearchingText
+    ? tickets.filter(
+        (t) =>
+          t.key.toLowerCase().includes(trimmedQuery.toLowerCase()) ||
+          t.summary.toLowerCase().includes(trimmedQuery.toLowerCase())
+      )
+    : tickets;
+
+  // Any remote match (an untracked ticket found by exact key) that isn't
+  // already present in the local matches gets appended to the list.
+  const remoteExtra =
+    isSearchingText && remoteMatch && !localMatches.some((t) => t.id === remoteMatch.id)
+      ? [remoteMatch]
+      : [];
+
+  const comboOptions = [...localMatches, ...remoteExtra];
+
+  // Debounced remote lookup-by-key for tickets not in the tracked list,
+  // e.g. ad hoc tickets not currently assigned to the user. The stale
+  // error/remoteMatch for the *previous* query are cleared synchronously in
+  // handleQueryChange below, not here, so this effect only ever sets state
+  // asynchronously (inside the timeout callback).
+  useEffect(() => {
+    if (!isSearchingText) return;
+    const handle = setTimeout(async () => {
+      setSearching(true);
+      const found = await onLookupTicket(trimmedQuery);
+      setSearching(false);
+      if (found) {
+        setRemoteMatch(found);
+        setSearchError(null);
+      } else {
+        setRemoteMatch(null);
+        setSearchError(localMatches.length === 0 ? `No Jira ticket found for "${trimmedQuery}"` : null);
+      }
+    }, 350);
+    return () => clearTimeout(handle);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [trimmedQuery]);
+
+  useEffect(() => {
+    if (!comboOpen) return;
+    const handleClick = (e: MouseEvent) => {
+      if (comboRef.current && !comboRef.current.contains(e.target as Node)) {
+        setComboOpen(false);
+      }
+    };
+    document.addEventListener("mousedown", handleClick);
+    return () => document.removeEventListener("mousedown", handleClick);
+  }, [comboOpen]);
+
+  const handleQueryChange = (value: string) => {
+    setQuery(value);
+    setHighlighted(0);
+    setRemoteMatch(null);
+    setSearchError(null);
+  };
+
+  const openCombo = () => {
+    setQuery("");
+    setHighlighted(0);
+    setComboOpen(true);
+  };
+
+  const selectTicket = (t: TicketSummary | null) => {
+    setTicket(t);
+    setQuery("");
+    setRemoteMatch(null);
+    setSearchError(null);
+    setComboOpen(false);
+    inputRef.current?.blur();
+  };
+
+  const handleComboKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (!comboOpen) {
+      if (e.key === "ArrowDown" || e.key === "Enter") {
+        e.preventDefault();
+        setComboOpen(true);
+      }
+      return;
+    }
+    // Index 0 is always the "No ticket" option, followed by comboOptions.
+    const maxIndex = comboOptions.length; // inclusive upper bound
+    if (e.key === "ArrowDown") {
+      e.preventDefault();
+      setHighlighted((i) => Math.min(i + 1, maxIndex));
+    } else if (e.key === "ArrowUp") {
+      e.preventDefault();
+      setHighlighted((i) => Math.max(i - 1, 0));
+    } else if (e.key === "Enter") {
+      e.preventDefault();
+      if (highlighted === 0) {
+        selectTicket(null);
+      } else {
+        const picked = comboOptions[highlighted - 1];
+        if (picked) selectTicket(picked);
+      }
+    } else if (e.key === "Escape") {
+      setComboOpen(false);
+      setQuery("");
+      inputRef.current?.blur();
+    }
+  };
+
+  const hasTicket = ticket !== null;
   const isNew = entry.id === null;
   // Once a ticket is attached, the title is always the ticket's key —
   // the input becomes read-only to make that obvious.
-  const effectiveTitle = hasTicket ? effectiveTicket!.key : title.trim();
+  const effectiveTitle = hasTicket ? ticket!.key : title.trim();
   const trimmedComment = comment.trim();
   const unchanged =
-    (effectiveTicket?.id ?? null) === (entry.ticket?.id ?? null) &&
+    (ticket?.id ?? null) === (entry.ticket?.id ?? null) &&
     effectiveTitle === (entry.title ?? "").trim() &&
     trimmedComment === (entry.comment ?? "").trim();
 
@@ -110,7 +207,7 @@ export function EventEditorModal({
     if (hasTicket && !trimmedComment) return;
     setSaving(true);
     await onSave({
-      ticketId: hasTicket ? effectiveTicket!.id : null,
+      ticketId: hasTicket ? ticket!.id : null,
       title: effectiveTitle,
       comment: trimmedComment,
     });
@@ -146,22 +243,6 @@ export function EventEditorModal({
     window.addEventListener("mouseup", onUp);
   };
 
-  const handleSearch = async () => {
-    const key = searchKey.trim();
-    if (!key) return;
-    setSearching(true);
-    setSearchError(null);
-    const ticket = await onLookupTicket(key);
-    if (ticket) {
-      setCustomTicket(ticket);
-      setTrackedSelection(NO_TICKET);
-      setSearchKey("");
-    } else {
-      setSearchError(`No Jira ticket found for "${key}"`);
-    }
-    setSearching(false);
-  };
-
   return (
     <div
       className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4"
@@ -189,63 +270,81 @@ export function EventEditorModal({
         <label className="mb-2 block text-sm font-semibold tracking-wide text-nb-ink">
           Ticket
         </label>
-        <select
-          value={trackedSelection}
-          onChange={(e) => {
-            const value = e.target.value;
-            setTrackedSelection(value);
-            setCustomTicket(null);
-            setSearchKey("");
-            setSearchError(null);
-          }}
-          className="nb-input mb-5 w-full px-3 py-2 text-sm"
-        >
-          <option value={NO_TICKET}>No ticket</option>
-          {tickets.map((ticket) => (
-            <option key={ticket.id} value={ticket.id}>
-              {ticket.key} · {ticket.summary}
-            </option>
-          ))}
-        </select>
-
-        <div className="mb-5">
-          <div className="flex items-center gap-2">
-            <input
-              type="text"
-              value={searchKey}
-              onChange={(e) => {
-                setSearchKey(e.target.value);
-                setSearchError(null);
-              }}
-              onKeyDown={(e) => {
-                if (e.key === "Enter") {
-                  e.preventDefault();
-                  handleSearch();
-                }
-              }}
-              placeholder="Or type a ticket number, e.g. PROJ-123"
-              className="nb-input w-full px-3 py-2 text-sm"
-              style={searchError ? { borderColor: "var(--nb-pink)", borderWidth: 2 } : undefined}
-            />
-            <button
-              type="button"
-              onClick={handleSearch}
-              disabled={searching || !searchKey.trim()}
-              className="nb-btn shrink-0 px-3 py-2 text-sm font-semibold"
+        <div ref={comboRef} className="relative mb-5">
+          <input
+            ref={inputRef}
+            type="text"
+            role="combobox"
+            aria-expanded={comboOpen}
+            aria-controls="ticket-combobox-listbox"
+            aria-autocomplete="list"
+            value={comboOpen ? query : ticket ? `${ticket.key} · ${ticket.summary}` : ""}
+            onFocus={openCombo}
+            onChange={(e) => handleQueryChange(e.target.value)}
+            onKeyDown={handleComboKeyDown}
+            placeholder="Search tickets or type a ticket number, e.g. PROJ-123"
+            className="nb-input w-full px-3 py-2 text-sm"
+            style={searchError ? { borderColor: "var(--nb-pink)", borderWidth: 2 } : undefined}
+          />
+          {comboOpen && (
+            <div
+              id="ticket-combobox-listbox"
+              role="listbox"
+              className="nb-panel-sm absolute z-50 mt-1 max-h-60 w-full overflow-y-auto bg-white p-1 text-left"
             >
-              {searching ? "Searching…" : "Search"}
-            </button>
-          </div>
+              <button
+                type="button"
+                role="option"
+                aria-selected={highlighted === 0}
+                onMouseDown={(e) => e.preventDefault()}
+                onClick={() => selectTicket(null)}
+                className={`block w-full rounded-md px-2 py-1.5 text-left text-sm font-medium ${
+                  highlighted === 0 ? "bg-nb-orange/10 text-nb-ink" : "text-nb-ink/70 hover:bg-nb-orange/10"
+                }`}
+              >
+                No ticket
+              </button>
+              {comboOptions.map((t, i) => (
+                <button
+                  key={t.id}
+                  type="button"
+                  role="option"
+                  aria-selected={highlighted === i + 1}
+                  onMouseDown={(e) => e.preventDefault()}
+                  onClick={() => selectTicket(t)}
+                  className={`flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-left text-sm ${
+                    highlighted === i + 1 ? "bg-nb-orange/10 text-nb-ink" : "text-nb-ink hover:bg-nb-orange/10"
+                  }`}
+                >
+                  <span
+                    className="h-2 w-2 shrink-0 rounded-full"
+                    style={{ backgroundColor: t.color ?? "#9ca3af" }}
+                  />
+                  <span className="truncate">
+                    <span className="font-semibold">{t.key}</span> · {t.summary}
+                  </span>
+                </button>
+              ))}
+              {isSearchingText && searching && (
+                <p className="px-2 py-1.5 text-xs font-medium text-nb-ink/50">Searching…</p>
+              )}
+              {isSearchingText && !searching && comboOptions.length === 0 && (
+                <p className="px-2 py-1.5 text-xs font-medium text-nb-ink/50">
+                  {searchError ?? "No matching tickets"}
+                </p>
+              )}
+            </div>
+          )}
         </div>
 
         {hasTicket && (
           <div className="mb-5 flex items-center gap-2 rounded-full border border-nb-orange/30 bg-nb-orange/10 px-3 py-2 text-xs font-bold text-nb-ink">
             <span
               className="h-2.5 w-2.5 shrink-0 rounded-full"
-              style={{ backgroundColor: effectiveTicket!.color ?? "#9ca3af" }}
+              style={{ backgroundColor: ticket!.color ?? "#9ca3af" }}
             />
             <span>
-              Jira ticket · {effectiveTicket!.key} · {effectiveTicket!.summary}
+              Jira ticket · {ticket!.key} · {ticket!.summary}
             </span>
           </div>
         )}
