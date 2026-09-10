@@ -11,7 +11,8 @@ with a local SQLite copy kept as a backup/report.
 - Prisma + SQLite (swappable for Postgres/Supabase later — just change the
   Prisma datasource and run a migration)
 - NextAuth v5 — Google login for the app, also used to read your Google Calendar
-- Jira Cloud REST API (API token auth) for tickets + worklogs
+- Jira Cloud REST API (API token auth by default, or optional Atlassian
+  OAuth 2.0 3LO) for tickets + worklogs
 - `react-big-calendar` with the drag-and-drop addon for the weekly view (Mon–Fri only)
 
 ## Setup
@@ -28,6 +29,12 @@ with a local SQLite copy kept as a backup/report.
      profile/email, so also enable the **Google Calendar API** for your project
      under APIs & Services, and add `.../auth/calendar.readonly` as a scope on
      the OAuth consent screen if using External/testing mode.
+   - `JIRA_OAUTH_CLIENT_ID` / `JIRA_OAUTH_CLIENT_SECRET` (optional): only
+     needed if you want to offer the OAuth connection method in Settings
+     instead of a manual API token. Register an OAuth 2.0 (3LO) app at
+     https://developer.atlassian.com/console/myapps/ with callback URL
+     `http://localhost:3456/api/jira/callback` and permissions
+     `read:jira-work`, `write:jira-work`, `read:jira-user`, `offline_access`.
 
 2. Install dependencies and set up the database (already done once, re-run if
    you pull schema changes):
@@ -48,6 +55,11 @@ with a local SQLite copy kept as a backup/report.
    - Your Atlassian account email
    - An API token from https://id.atlassian.com/manage-profile/security/api-tokens
 
+   If you configured `JIRA_OAUTH_CLIENT_ID`/`SECRET`, a toggle appears to
+   "Use Atlassian OAuth instead of an API token" — check it and click
+   **Connect Jira** to use OAuth instead (no token to copy/paste; revoke
+   access anytime from your Atlassian account settings).
+
 5. Back on the calendar, click **Sync** to pull your assigned, non-closed
    tickets, then drag one onto the calendar to create a time entry — it's
    saved locally and pushed to Jira as a worklog immediately. Move/resize an
@@ -57,6 +69,8 @@ with a local SQLite copy kept as a backup/report.
 
 - `npm install` requires `--legacy-peer-deps` due to an unrelated npm/arborist
   peer-resolution bug with some transitive deps.
-- The Jira API token is encrypted (AES-256-GCM) before being stored in SQLite.
+- Jira credentials (API token, or OAuth access/refresh tokens if using that
+  method) are encrypted (AES-256-GCM) before being stored in SQLite, and are
+  only ever used server-side.
 - Middleware (`src/proxy.ts`) protects all routes except `/login` and the auth
   API, using an Edge-safe NextAuth config (no Prisma in Edge runtime).

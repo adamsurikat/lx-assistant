@@ -1,23 +1,69 @@
-import { decryptSecret } from "@/lib/crypto";
+import { decryptSecret, encryptSecret } from "@/lib/crypto";
 import { prisma } from "@/lib/prisma";
+import { refreshAccessToken } from "@/lib/atlassian-oauth";
 
 export class JiraNotConfiguredError extends Error {
   constructor() {
-    super("Jira is not connected for this user. Add your Jira details in Settings.");
+    super("Jira is not connected for this user. Connect Jira in Settings.");
     this.name = "JiraNotConfiguredError";
   }
 }
 
-export interface JiraUserConfig {
-  jiraEmail: string;
-  apiToken: string;
-  siteUrl: string;
-}
+export type JiraUserConfig =
+  | { mode: "oauth"; accessToken: string; cloudId: string; siteUrl: string }
+  | { mode: "token"; jiraEmail: string; apiToken: string; siteUrl: string };
+
+// Refresh a bit before actual expiry to avoid racing a request against token
+// expiration.
+const EXPIRY_BUFFER_MS = 60_000;
 
 /**
- * Loads and decrypts the current user's Jira connection details from the DB.
+ * Loads the current user's Jira connection from the DB. Supports two
+ * connection methods (a user has at most one, but OAuth takes priority if
+ * somehow both are present):
+ *  - "oauth": Atlassian OAuth 2.0 (3LO), optional, set up via Settings.
+ *    Transparently refreshes (and persists) the access token if expired.
+ *  - "token": a manually-entered Jira API token (the default/simple method).
  */
 export async function getJiraConfigForUser(userId: string): Promise<JiraUserConfig> {
+  const connection = await prisma.jiraConnection.findUnique({
+    where: { userId },
+  });
+
+  if (connection) {
+    if (connection.expiresAt.getTime() - EXPIRY_BUFFER_MS > Date.now()) {
+      return {
+        mode: "oauth",
+        accessToken: decryptSecret(connection.accessTokenCipher),
+        cloudId: connection.cloudId,
+        siteUrl: connection.siteUrl,
+      };
+    }
+
+    // Access token is expired (or nearly so) — refresh it and persist the
+    // new tokens. Atlassian may rotate the refresh token, so always store
+    // what it returns.
+    const refreshToken = decryptSecret(connection.refreshTokenCipher);
+    const tokens = await refreshAccessToken(refreshToken);
+    const expiresAt = new Date(Date.now() + tokens.expires_in * 1000);
+
+    await prisma.jiraConnection.update({
+      where: { userId },
+      data: {
+        accessTokenCipher: encryptSecret(tokens.access_token),
+        refreshTokenCipher: encryptSecret(tokens.refresh_token),
+        expiresAt,
+      },
+    });
+
+    return {
+      mode: "oauth",
+      accessToken: tokens.access_token,
+      cloudId: connection.cloudId,
+      siteUrl: connection.siteUrl,
+    };
+  }
+
   const user = await prisma.user.findUnique({
     where: { id: userId },
     select: { jiraEmail: true, jiraApiTokenCipher: true, jiraSiteUrl: true },
@@ -28,6 +74,7 @@ export async function getJiraConfigForUser(userId: string): Promise<JiraUserConf
   }
 
   return {
+    mode: "token",
     jiraEmail: user.jiraEmail,
     apiToken: decryptSecret(user.jiraApiTokenCipher),
     siteUrl: user.jiraSiteUrl,
@@ -35,10 +82,19 @@ export async function getJiraConfigForUser(userId: string): Promise<JiraUserConf
 }
 
 function authHeader(config: JiraUserConfig): string {
+  if (config.mode === "oauth") {
+    return `Bearer ${config.accessToken}`;
+  }
   const basic = Buffer.from(`${config.jiraEmail}:${config.apiToken}`).toString(
     "base64"
   );
   return `Basic ${basic}`;
+}
+
+function baseUrl(config: JiraUserConfig): string {
+  return config.mode === "oauth"
+    ? `https://api.atlassian.com/ex/jira/${config.cloudId}`
+    : config.siteUrl.replace(/\/$/, "");
 }
 
 async function jiraFetch(
@@ -46,7 +102,7 @@ async function jiraFetch(
   path: string,
   init: RequestInit = {}
 ): Promise<Response> {
-  const url = `${config.siteUrl.replace(/\/$/, "")}${path}`;
+  const url = `${baseUrl(config)}${path}`;
   const res = await fetch(url, {
     ...init,
     headers: {
