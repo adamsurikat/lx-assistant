@@ -26,6 +26,7 @@ model User {
   sessions    Session[]
   timeEntries TimeEntry[]
   tickets     Ticket[]
+  postIts     PostIt[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -186,4 +187,31 @@ model MapRoute {
 
   startPort MapPort @relation("RouteStart", fields: [startPortId], references: [id], onDelete: Cascade)
   endPort   MapPort @relation("RouteEnd", fields: [endPortId], references: [id], onDelete: Cascade)
+}
+
+// A single sticky note on a user's personal post-it board (free-form
+// brainstorming/notes board, separate from the calendar/tickets).
+model PostIt {
+  id       String @id @default(cuid())
+  userId   String
+  text     String @default("")
+  color    String @default("yellow") // one of the palette keys in lib/postits.ts
+  x        Float  @default(40) // px offset within the board's scrollable canvas
+  y        Float  @default(40)
+  rotation Float  @default(0) // slight tilt in degrees, for a hand-placed look
+  zIndex   Int    @default(1) // raised on interaction so it sits above others
+
+  // Soft-delete marker: set when a note with actual (non-whitespace)
+  // content is removed from the board, so it can be recovered from the
+  // trash view instead of being lost immediately. Blank notes, and notes
+  // deleted a second time while already in the trash, are removed for
+  // good (see the DELETE route) rather than ever getting this set.
+  deletedAt DateTime?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
 }
