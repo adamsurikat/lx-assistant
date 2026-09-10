@@ -65,6 +65,38 @@ with a local SQLite copy kept as a backup/report.
    saved locally and pushed to Jira as a worklog immediately. Move/resize an
    entry to update both.
 
+## Bootstrapping map data
+
+The `/map` page's ports, depots, and sea routes live in the database
+(`MapPort`/`MapDepot`/`MapRoute`), not in code, so a brand-new database
+starts with an empty map. To seed it with real data instead:
+
+1. From an existing instance that already has map data, download a GeoJSON
+   export while signed in:
+   ```bash
+   curl -H "Cookie: <your session cookie>" http://localhost:3456/api/map/export -o mapData.geojson
+   ```
+   or just open `/api/map/export` in the browser (while logged in) — it
+   downloads a `.geojson` file. This repo's own map data is committed at
+   `prisma/mapData.geojson` and kept up to date the same way.
+2. On the new deployment, import it with the bootstrap script (safe to
+   re-run — matches existing rows by code/name and skips duplicates):
+   ```bash
+   npx tsx prisma/importMapGeoJSON.ts            # imports prisma/mapData.geojson
+   npx tsx prisma/importMapGeoJSON.ts path/to.geojson  # or a specific file
+   ```
+   Alternatively, `POST` the file's contents as JSON to `/api/map/import`
+   (while signed in) to import over the API instead of the CLI.
+
+The GeoJSON is a plain `FeatureCollection`: ports/depots are `Point`
+features (`properties.kind` is `"port"` or `"depot"`, plus `name`, `code`,
+`tenant`, `country`, `description`), and routes are `LineString` features
+(`properties.kind: "route"`) whose `startPort`/`endPort` reference a
+port's `code` (or `name`, if it has no code) and whose `control1`/
+`control2` are the two bezier control points that bow the curve — so it's
+also editable/authorable by hand or from another data source, not just
+round-tripped through the export endpoint.
+
 ## Notes
 
 - `npm install` requires `--legacy-peer-deps` due to an unrelated npm/arborist
