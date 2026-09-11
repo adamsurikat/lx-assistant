@@ -124,13 +124,16 @@ export interface JiraTicket {
 
 /**
  * Fetches issues assigned to the current user (via JQL `assignee = currentUser()`)
- * that are not in a Done/Cancelled/closed-style status category.
+ * that are not in a Done/Cancelled/closed-style status category, and that
+ * belong to a currently active (started, not yet closed) sprint — so
+ * backlog issues and issues on boards without sprints are excluded, only
+ * what's actually being worked on right now shows up in "My open tickets".
  */
 export async function fetchAssignedOpenTickets(
   config: JiraUserConfig
 ): Promise<JiraTicket[]> {
   const jql =
-    "assignee = currentUser() AND statusCategory != Done ORDER BY updated DESC";
+    "assignee = currentUser() AND statusCategory != Done AND sprint in openSprints() ORDER BY updated DESC";
   const res = await jiraFetch(
     config,
     `/rest/api/3/search/jql?jql=${encodeURIComponent(jql)}&fields=summary,status&maxResults=100`

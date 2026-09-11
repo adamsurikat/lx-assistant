@@ -54,7 +54,7 @@ export function TicketSidebar({
         {loading && <p className="text-sm font-medium text-nb-ink/50">Loading…</p>}
         {!loading && tickets.length === 0 && (
           <p className="text-sm font-medium text-nb-ink/50">
-            No open tickets. Click Sync to pull from Jira.
+            No open tickets in an active sprint. Click Sync to pull from Jira.
           </p>
         )}
         <ul className="space-y-2">
