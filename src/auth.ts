@@ -11,6 +11,22 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
     async jwt({ token, user, account }) {
       if (user) {
         token.userId = user.id;
+      } else if (typeof token.userId === "string") {
+        // Guard against a session whose user no longer exists in the
+        // current database — e.g. the DB was reset/swapped (this bit us
+        // when testing different Docker volumes: the JWT session cookie
+        // outlives the database, since sessions aren't DB-backed). Without
+        // this, every subsequent request would throw Prisma's P2025 from
+        // routes that scope queries by session.user.id. Invalidate the
+        // token instead so the user is treated as signed out and can log
+        // back in cleanly.
+        const exists = await prisma.user.findUnique({
+          where: { id: token.userId },
+          select: { id: true },
+        });
+        if (!exists) {
+          return {};
+        }
       }
 
       // `account` is only present on the initial sign-in request (it comes
