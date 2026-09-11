@@ -12,13 +12,20 @@ services:
       # trusted LAN), same as any other self-hosted NextAuth deployment.
       AUTH_TRUST_HOST: "true"
     env_file:
-      # Copy .env.local.example to .env.local and fill in real secrets
-      # first (see README "Setup" / "Running with Docker"). This is where
-      # DATABASE_URL/DATABASE_PROVIDER are set too — not hardcoded here —
-      # so switching to Postgres/Supabase is just an env change, no edits
-      # to this file needed. Not baked into the image (see .dockerignore),
-      # only loaded at container start.
+      # .env.local: your app secrets (AUTH_SECRET, Google/Jira OAuth
+      # creds, etc.) — same file used for local (non-Docker) dev, copied
+      # from .env.local.example. Never put DATABASE_URL/DATABASE_PROVIDER
+      # in here: this file also applies to `npm run dev`, and .env.local
+      # takes precedence there over the repo's tracked ./dev.db-pointing
+      # .env, so a container-only path here would silently break local
+      # dev (this bit us once already).
+      #
+      # .env.docker: Docker-only vars (DATABASE_URL/DATABASE_PROVIDER),
+      # copied from .env.docker.example — kept in its own file for
+      # exactly that reason. Loaded after .env.local so if you ever did
+      # duplicate a var in both, this one wins (it doesn't, by design).
       - .env.local
+      - .env.docker
     volumes:
       # /app/data (named volume `app_data`) is where the live, persistent
       # SQLite file actually lives and is read/written from at runtime —

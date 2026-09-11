@@ -111,11 +111,15 @@ drop-in alternative on top of that (a couple of extra env vars, no file
 changes needed). Either way, the schema is brought up to date automatically
 every time the container starts (see `docker-entrypoint.sh`).
 
-1. Fill in `.env.local` as in step 1 of Setup above (same env vars — the
-   compose file loads it via `env_file`). Use `http://localhost:3456/...` for
-   the Google/Jira OAuth redirect URIs if running locally, or your real
-   domain if deploying behind a reverse proxy. Then add a database config —
-   pick one:
+1. Fill in `.env.local` as in step 1 of Setup above (same file/vars used for
+   local dev — the compose file loads it via `env_file`). Use
+   `http://localhost:3456/...` for the Google/Jira OAuth redirect URIs if
+   running locally, or your real domain if deploying behind a reverse
+   proxy.
+
+   Then copy `.env.docker.example` to `.env.docker` and pick a database
+   config — this is a separate file from `.env.local` on purpose, so a
+   Docker-only setting can never leak into (and break) local `npm run dev`:
 
    **SQLite (default):**
    ```bash

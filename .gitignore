@@ -34,6 +34,7 @@ yarn-error.log*
 .env*
 !.env
 !.env.local.example
+!.env.docker.example
 
 # sqlite database + prisma generated client
 prisma/*.db
