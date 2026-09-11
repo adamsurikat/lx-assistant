@@ -49,7 +49,7 @@ export function TicketSidebar({
   const [savingJql, setSavingJql] = useState(false);
 
   const openEditor = () => {
-    setDraftJql(jql);
+    setDraftJql(jql || defaultJql);
     setEditingJql(true);
   };
 
@@ -66,7 +66,10 @@ export function TicketSidebar({
   const handleResetToDefault = async () => {
     setSavingJql(true);
     try {
-      await onSaveJql(defaultJql);
+      // Send an empty string so the server clears the stored override
+      // (ticketSyncJql = null) rather than saving the default text itself
+      // as a "custom" query, which would leave jqlIsDefault stuck false.
+      await onSaveJql("");
       setDraftJql(defaultJql);
       setEditingJql(false);
     } finally {
