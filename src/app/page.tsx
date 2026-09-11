@@ -101,6 +101,9 @@ export default function HomePage() {
   const [summaryOpen, setSummaryOpen] = useState(false);
   const [jiraConnected, setJiraConnected] = useState<boolean | null>(null);
   const [jiraSiteUrl, setJiraSiteUrl] = useState<string | null>(null);
+  const [ticketJql, setTicketJql] = useState("");
+  const [ticketJqlIsDefault, setTicketJqlIsDefault] = useState(true);
+  const [ticketDefaultJql, setTicketDefaultJql] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [editingEntryId, setEditingEntryId] = useState<string | null>(null);
   const [draftEntry, setDraftEntry] = useState<{ start: Date; end: Date } | null>(null);
@@ -182,6 +185,30 @@ export default function HomePage() {
     }
   }, []);
 
+  const loadTicketJql = useCallback(async () => {
+    const res = await fetch("/api/jira/jql");
+    if (res.ok) {
+      const data = await res.json();
+      setTicketJql(data.jql);
+      setTicketJqlIsDefault(Boolean(data.isDefault));
+      setTicketDefaultJql(data.defaultJql);
+    }
+  }, []);
+
+  const handleSaveJql = useCallback(async (jql: string) => {
+    const res = await fetch("/api/jira/jql", {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ jql }),
+    });
+    if (res.ok) {
+      const data = await res.json();
+      setTicketJql(data.jql);
+      setTicketJqlIsDefault(Boolean(data.isDefault));
+      setTicketDefaultJql(data.defaultJql);
+    }
+  }, []);
+
   const loadGoogleEvents = useCallback(async () => {
     const params = new URLSearchParams({
       from: weekStart.toISOString(),
@@ -199,7 +226,8 @@ export default function HomePage() {
     // eslint-disable-next-line react-hooks/set-state-in-effect -- intentional fetch-on-mount/navigate
     loadTickets();
     loadJiraStatus();
-  }, [loadTickets, loadJiraStatus]);
+    loadTicketJql();
+  }, [loadTickets, loadJiraStatus, loadTicketJql]);
 
   useEffect(() => {
     // Re-fetch whenever the visible week range changes (e.g. Back/Next).
@@ -584,6 +612,10 @@ export default function HomePage() {
                 onSync={handleSync}
                 onDragStartTicket={setDraggedTicketId}
                 onSelectTicket={handleSelectTicket}
+                jql={ticketJql}
+                jqlIsDefault={ticketJqlIsDefault}
+                defaultJql={ticketDefaultJql}
+                onSaveJql={handleSaveJql}
               />
             </>
           )}
