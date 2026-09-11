@@ -100,12 +100,16 @@ round-tripped through the export endpoint.
 ## Running with Docker
 
 The app also ships a `Dockerfile` + `docker-compose.yml` for a self-contained
-deployment. By default it uses SQLite, with two options for where the
-database file lives — controlled by the `SQLITE_MOUNT` env var, see step 1
-— and Postgres (e.g. Supabase) is supported as a drop-in alternative on top
-of that (a couple of extra env vars, no file changes needed). Either way,
-the schema is brought up to date automatically every time the container
-starts (see `docker-entrypoint.sh`).
+deployment. By default it uses SQLite and automatically reuses whatever
+database is already around, in priority order: (1) if the container has
+already run before, it keeps using its own persistent volume as-is; (2)
+otherwise, if you have a local `prisma/dev.db` (e.g. from `npm run dev`),
+that's copied in as the starting point; (3) otherwise, it creates a brand
+new empty database — no manual setup needed either way, and nothing is ever
+created on the host filesystem. Postgres (e.g. Supabase) is supported as a
+drop-in alternative on top of that (a couple of extra env vars, no file
+changes needed). Either way, the schema is brought up to date automatically
+every time the container starts (see `docker-entrypoint.sh`).
 
 1. Fill in `.env.local` as in step 1 of Setup above (same env vars — the
    compose file loads it via `env_file`). Use `http://localhost:3456/...` for
@@ -113,30 +117,19 @@ starts (see `docker-entrypoint.sh`).
    domain if deploying behind a reverse proxy. Then add a database config —
    pick one:
 
-   **SQLite, container-only (default — nothing created on the host):**
+   **SQLite (default):**
    ```bash
    DATABASE_URL="file:/app/data/dev.db"
    ```
-   Leave `SQLITE_MOUNT` unset. The database lives entirely inside a
-   Docker-managed named volume (`app_data`) — no file or directory is ever
-   created in your project folder. It's created fresh the first time, and
-   reused automatically after that across restarts/rebuilds, until you
-   explicitly delete it with `docker compose down -v` or `docker volume rm`.
-
-   **SQLite, reusing an existing host file:**
-   ```bash
-   DATABASE_URL="file:/app/data/dev.db"
-   ```
-   and, in your shell (or `.env.local`):
-   ```bash
-   SQLITE_MOUNT="/absolute/path/to/your/dev.db:/app/data/dev.db"
-   ```
-   Only set this when that host file **already exists** — e.g. you're
-   bringing in a database from a previous Docker run, or your local
-   `prisma/dev.db`. Bind-mounting a path that doesn't exist yet makes
-   Docker create a *directory* there instead of a file (a long-standing
-   Docker Engine quirk), so don't point this at a new/empty path; use the
-   container-only option above instead and let it create the file for you.
+   Nothing else to configure. The database lives on a Docker-managed named
+   volume (`app_data`) that persists across restarts/rebuilds on its own —
+   see the reuse priority above for what ends up in it the very first time.
+   If you already have a `prisma/dev.db` locally, it's picked up
+   automatically (via a read-only bind mount of `./prisma`, see
+   `docker-compose.yml`); you don't need to copy or move anything yourself.
+   Note the copy is one-way and only happens once, when the volume is still
+   empty — the container's own writes after that never affect your local
+   `prisma/dev.db`, so local (non-Docker) dev is unaffected either way.
 
    **Postgres / Supabase:**
    ```bash
@@ -146,14 +139,16 @@ starts (see `docker-entrypoint.sh`).
    Get the connection string from your Supabase project's
    **Settings → Database**. `DATABASE_PROVIDER` defaults to `sqlite` when
    unset, so it must be set explicitly to `postgresql` here — the
-   entrypoint uses it to switch the Prisma datasource accordingly.
-   `SQLITE_MOUNT` is irrelevant/unused in this case.
+   entrypoint uses it to switch the Prisma datasource accordingly. The
+   `app_data` volume and the `prisma/dev.db` auto-copy are simply unused
+   in this case.
 
 2. Build and start the container:
    ```bash
    docker compose up --build -d
    ```
-   The app is then available at http://localhost:3456. Logs (including the
+   The app is then available at http://localhost:3456. Logs (including
+   whether an existing database was found/copied, and the
    migration/schema-sync output) are available with `docker compose logs -f`.
 
 3. (Optional) bootstrap the map with this repo's real port/depot/route data,
@@ -165,9 +160,8 @@ starts (see `docker-entrypoint.sh`).
 
 4. To stop/restart without losing data, use `docker compose stop` /
    `docker compose start`, or `docker compose down` (also fine — the
-   `app_data` volume, any bind-mounted host file, and any Postgres/Supabase
-   database all survive that; only `docker compose down -v` or
-   `docker volume rm` deletes `app_data`).
+   `app_data` volume and any Postgres/Supabase database survive that; only
+   `docker compose down -v` or `docker volume rm` deletes `app_data`).
 
 Notes specific to the Docker setup:
 - `AUTH_TRUST_HOST=true` is set because NextAuth v5 otherwise refuses to

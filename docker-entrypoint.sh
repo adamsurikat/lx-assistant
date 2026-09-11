@@ -9,6 +9,22 @@ set -e
 PROVIDER="${DATABASE_PROVIDER:-sqlite}"
 echo "Database provider: $PROVIDER (DATABASE_URL=$DATABASE_URL)"
 
+if [ "$PROVIDER" = "sqlite" ]; then
+  # Priority: reuse an existing database file if one is already present in
+  # the persistent app_data volume (a previous container run) — otherwise,
+  # if the host has a local dev.db (from `npm run dev`, read-only bind
+  # mounted at /host-prisma by docker-compose.yml), seed the volume with a
+  # copy of that as the starting point instead of an empty database. Only
+  # ever a one-time copy on an empty volume: the container's own writes
+  # after this never touch the host's file.
+  DB_PATH="${DATABASE_URL#file:}"
+  if [ ! -f "$DB_PATH" ] && [ -f /host-prisma/dev.db ]; then
+    echo "No existing database at $DB_PATH; copying host's prisma/dev.db as the starting point..."
+    mkdir -p "$(dirname "$DB_PATH")"
+    cp /host-prisma/dev.db "$DB_PATH"
+  fi
+fi
+
 # prisma/schema.prisma ships with the datasource provider hardcoded to
 # "sqlite" (Prisma requires a literal string here, not env()) — patch it in
 # place to match DATABASE_PROVIDER before touching the database. Only the

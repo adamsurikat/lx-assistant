@@ -20,26 +20,22 @@ services:
       # only loaded at container start.
       - .env.local
     volumes:
-      # Where the SQLite file lives is controlled entirely by SQLITE_MOUNT
-      # (set in the shell or in .env.local, NOT hardcoded here) so there
-      # are two clean options without editing this file:
+      # /app/data (named volume `app_data`) is where the live, persistent
+      # SQLite file actually lives and is read/written from at runtime —
+      # this alone is enough for the container to keep reusing its own
+      # data across restarts/rebuilds indefinitely, on its own, with
+      # nothing created on the host filesystem.
       #
-      #   - Unset (default): "app_data:/app/data" — a Docker-managed named
-      #     volume. Nothing is created on the host filesystem; the DB file
-      #     is created inside the volume on first run and reused by that
-      #     same volume on every subsequent run, restart, or rebuild.
-      #
-      #   - Set to an existing host file, e.g.
-      #     SQLITE_MOUNT="./data/dev.db:/app/data/dev.db" — bind-mounts
-      #     that exact file into the container so it's reused as-is. Only
-      #     set this when the file already exists: bind-mounting a
-      #     *missing* file path makes Docker create a directory there
-      #     instead (a long-standing Docker Engine quirk), which is why
-      #     this isn't the default.
-      #
-      # Either way, DATABASE_URL (see below) must point at wherever this
-      # ends up mounted inside the container.
-      - ${SQLITE_MOUNT:-app_data:/app/data}
+      # ./prisma is additionally bind-mounted read-only at /host-prisma so
+      # docker-entrypoint.sh can detect and prioritize an *existing* local
+      # dev.db (e.g. from `npm run dev`) the very first time the volume is
+      # empty: if you already have prisma/dev.db, it's copied in as the
+      # starting point instead of creating a brand new empty database. This
+      # is read-only and one-way (host → container, once) — the running
+      # container's writes only ever go to the app_data volume, never back
+      # to your host's dev.db, so local (non-Docker) dev is unaffected.
+      - app_data:/app/data
+      - ./prisma:/host-prisma:ro
     restart: unless-stopped
 
 volumes:
