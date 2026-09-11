@@ -128,7 +128,7 @@ export interface JiraTicket {
 // backlog issues and issues on boards without sprints are excluded, so only
 // what's actually being worked on right now shows up.
 export const DEFAULT_TICKET_SYNC_JQL =
-  "assignee = currentUser() AND sprint in openSprints() ORDER BY updated DESC";
+  "assignee = currentUser() AND statusCategory != Done AND sprint in openSprints() ORDER BY updated DESC";
 
 /**
  * Fetches issues matching the given JQL (defaulting to
