@@ -1,7 +1,7 @@
 "use client";
 
 import dynamic from "next/dynamic";
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { AppHeader } from "@/components/AppHeader";
 import type { MapPortRecord, MapDepotRecord, MapRouteRecord } from "@/lib/mapTypes";
 
@@ -30,29 +30,35 @@ export default function MapPage() {
   const [editMode, setEditMode] = useState(false);
   const [pendingAdd, setPendingAdd] = useState<"port" | "depot" | null>(null);
   const [addRouteError, setAddRouteError] = useState<string | null>(null);
+  const [importStatus, setImportStatus] = useState<string | null>(null);
+  const [importError, setImportError] = useState<string | null>(null);
+  const [importing, setImporting] = useState(false);
+  const importInputRef = useRef<HTMLInputElement>(null);
+
+  const loadMapData = useCallback(async () => {
+    const [portsRes, depotsRes, routesRes] = await Promise.all([
+      fetch("/api/map/ports").then(jsonOrThrow),
+      fetch("/api/map/depots").then(jsonOrThrow),
+      fetch("/api/map/routes").then(jsonOrThrow),
+    ]);
+    setPorts(portsRes.ports);
+    setDepots(depotsRes.depots);
+    setRoutes(routesRes.routes);
+  }, []);
 
   useEffect(() => {
     let cancelled = false;
-    async function load() {
+    (async () => {
       try {
-        const [portsRes, depotsRes, routesRes] = await Promise.all([
-          fetch("/api/map/ports").then(jsonOrThrow),
-          fetch("/api/map/depots").then(jsonOrThrow),
-          fetch("/api/map/routes").then(jsonOrThrow),
-        ]);
-        if (cancelled) return;
-        setPorts(portsRes.ports);
-        setDepots(depotsRes.depots);
-        setRoutes(routesRes.routes);
+        await loadMapData();
       } finally {
         if (!cancelled) setLoading(false);
       }
-    }
-    load();
+    })();
     return () => {
       cancelled = true;
     };
-  }, []);
+  }, [loadMapData]);
 
   const handleMapClick = useCallback(
     async (lat: number, lng: number) => {
@@ -212,6 +218,50 @@ export default function MapPage() {
     await fetch(`/api/map/routes/${id}`, { method: "DELETE" });
   }, []);
 
+  const handleImportFileChange = useCallback(
+    async (e: React.ChangeEvent<HTMLInputElement>) => {
+      const file = e.target.files?.[0];
+      // Reset the input immediately so selecting the same file again still
+      // fires a change event (e.g. after fixing and re-exporting it).
+      e.target.value = "";
+      if (!file) return;
+
+      setImporting(true);
+      setImportError(null);
+      setImportStatus(null);
+      try {
+        const text = await file.text();
+        let geojson: unknown;
+        try {
+          geojson = JSON.parse(text);
+        } catch {
+          throw new Error("That file isn't valid JSON.");
+        }
+
+        const res = await fetch("/api/map/import", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(geojson),
+        });
+        const result = await res.json();
+        if (!res.ok) {
+          throw new Error(result?.error ?? `Import failed: ${res.status}`);
+        }
+
+        await loadMapData();
+        setImportStatus(
+          `Imported: ${result.portsCreated} ports, ${result.depotsCreated} depots, ` +
+            `${result.routesCreated} routes created (${result.portsSkipped + result.depotsSkipped + result.routesSkipped} already existed).`,
+        );
+      } catch (err) {
+        setImportError(err instanceof Error ? err.message : "Import failed.");
+      } finally {
+        setImporting(false);
+      }
+    },
+    [loadMapData],
+  );
+
   return (
     <div className="flex h-screen flex-col">
       <AppHeader active="map" />
@@ -225,6 +275,8 @@ export default function MapPage() {
                 setEditMode((v) => !v);
                 setPendingAdd(null);
                 setAddRouteError(null);
+                setImportError(null);
+                setImportStatus(null);
               }}
               className={`nb-btn px-3 py-1.5 text-xs font-semibold ${editMode ? "nb-btn-orange" : ""}`}
             >
@@ -249,7 +301,24 @@ export default function MapPage() {
                 <button type="button" onClick={handleOpenRoutePicker} className="nb-btn px-3 py-1.5 text-xs font-semibold">
                   + Route
                 </button>
+                <button
+                  type="button"
+                  onClick={() => importInputRef.current?.click()}
+                  disabled={importing}
+                  className="nb-btn px-3 py-1.5 text-xs font-semibold disabled:cursor-not-allowed disabled:opacity-50"
+                >
+                  {importing ? "Importing…" : "Import GeoJSON"}
+                </button>
+                <input
+                  ref={importInputRef}
+                  type="file"
+                  accept=".json,.geojson,application/geo+json,application/json"
+                  className="hidden"
+                  onChange={handleImportFileChange}
+                />
                 {addRouteError && <span className="text-xs font-medium text-red-600">{addRouteError}</span>}
+                {importError && <span className="text-xs font-medium text-red-600">{importError}</span>}
+                {importStatus && <span className="text-xs font-medium text-green-700">{importStatus}</span>}
               </>
             )}
           </div>
