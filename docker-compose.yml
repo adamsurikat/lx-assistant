@@ -4,10 +4,6 @@ services:
     ports:
       - "3456:3456"
     environment:
-      # SQLite file lives on the named volume below (mounted at /data) so
-      # it survives image rebuilds/`docker compose down` — overrides the
-      # repo's .env, which points at ./dev.db for local (non-Docker) dev.
-      DATABASE_URL: "file:/data/app.db"
       # NextAuth v5 refuses to trust the request's Host header by default
       # (to stop host-header spoofing) unless explicitly told to — needed
       # here since the container itself has no way to know its own public
@@ -17,12 +13,17 @@ services:
       AUTH_TRUST_HOST: "true"
     env_file:
       # Copy .env.local.example to .env.local and fill in real secrets
-      # first (see README "Setup") — this file is intentionally not baked
-      # into the image (see .dockerignore), only loaded at container start.
+      # first (see README "Setup" / "Running with Docker"). This is where
+      # DATABASE_URL/DATABASE_PROVIDER are set too — not hardcoded here —
+      # so switching to Postgres/Supabase is just an env change, no edits
+      # to this file needed. Not baked into the image (see .dockerignore),
+      # only loaded at container start.
       - .env.local
     volumes:
-      - app_data:/data
+      # Bind-mounted (not a named volume) so the default SQLite setup
+      # reuses ./data/dev.db as-is if it already exists on the host — e.g.
+      # from a previous run — instead of always starting from an empty
+      # database. Irrelevant when DATABASE_URL points at Postgres/Supabase
+      # instead, but harmless to leave mounted either way.
+      - ./data:/app/data
     restart: unless-stopped
-
-volumes:
-  app_data:
