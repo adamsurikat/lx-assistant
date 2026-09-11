@@ -100,14 +100,12 @@ round-tripped through the export endpoint.
 ## Running with Docker
 
 The app also ships a `Dockerfile` + `docker-compose.yml` for a self-contained
-deployment. By default it uses SQLite (same as local dev), with the database
-file bind-mounted from `./data/dev.db` on the host so it's **reused
-automatically if it already exists** — restarting, rebuilding, or recreating
-the container never starts from an empty database. Postgres (e.g. Supabase)
-is also supported as a drop-in alternative — just a couple of extra env
-vars, no file changes needed (see below). Either way, the schema is brought
-up to date automatically every time the container starts (see
-`docker-entrypoint.sh`).
+deployment. By default it uses SQLite, with two options for where the
+database file lives — controlled by the `SQLITE_MOUNT` env var, see step 1
+— and Postgres (e.g. Supabase) is supported as a drop-in alternative on top
+of that (a couple of extra env vars, no file changes needed). Either way,
+the schema is brought up to date automatically every time the container
+starts (see `docker-entrypoint.sh`).
 
 1. Fill in `.env.local` as in step 1 of Setup above (same env vars — the
    compose file loads it via `env_file`). Use `http://localhost:3456/...` for
@@ -115,14 +113,30 @@ up to date automatically every time the container starts (see
    domain if deploying behind a reverse proxy. Then add a database config —
    pick one:
 
-   **SQLite (default, no external database needed):**
+   **SQLite, container-only (default — nothing created on the host):**
    ```bash
    DATABASE_URL="file:/app/data/dev.db"
    ```
-   This path lives on the bind-mounted `./data` directory (see
-   `docker-compose.yml`) — if you already have a database from a previous
-   Docker run (or want to bring in your local `prisma/dev.db`), just copy it
-   to `./data/dev.db` first and it'll be used as-is.
+   Leave `SQLITE_MOUNT` unset. The database lives entirely inside a
+   Docker-managed named volume (`app_data`) — no file or directory is ever
+   created in your project folder. It's created fresh the first time, and
+   reused automatically after that across restarts/rebuilds, until you
+   explicitly delete it with `docker compose down -v` or `docker volume rm`.
+
+   **SQLite, reusing an existing host file:**
+   ```bash
+   DATABASE_URL="file:/app/data/dev.db"
+   ```
+   and, in your shell (or `.env.local`):
+   ```bash
+   SQLITE_MOUNT="/absolute/path/to/your/dev.db:/app/data/dev.db"
+   ```
+   Only set this when that host file **already exists** — e.g. you're
+   bringing in a database from a previous Docker run, or your local
+   `prisma/dev.db`. Bind-mounting a path that doesn't exist yet makes
+   Docker create a *directory* there instead of a file (a long-standing
+   Docker Engine quirk), so don't point this at a new/empty path; use the
+   container-only option above instead and let it create the file for you.
 
    **Postgres / Supabase:**
    ```bash
@@ -132,8 +146,8 @@ up to date automatically every time the container starts (see
    Get the connection string from your Supabase project's
    **Settings → Database**. `DATABASE_PROVIDER` defaults to `sqlite` when
    unset, so it must be set explicitly to `postgresql` here — the
-   entrypoint uses it to switch the Prisma datasource accordingly. The
-   `./data` bind mount is simply unused in this case.
+   entrypoint uses it to switch the Prisma datasource accordingly.
+   `SQLITE_MOUNT` is irrelevant/unused in this case.
 
 2. Build and start the container:
    ```bash
@@ -150,8 +164,10 @@ up to date automatically every time the container starts (see
    ```
 
 4. To stop/restart without losing data, use `docker compose stop` /
-   `docker compose start` (or `down`, which is also fine — nothing is
-   deleted from `./data` or Postgres just by tearing the container down).
+   `docker compose start`, or `docker compose down` (also fine — the
+   `app_data` volume, any bind-mounted host file, and any Postgres/Supabase
+   database all survive that; only `docker compose down -v` or
+   `docker volume rm` deletes `app_data`).
 
 Notes specific to the Docker setup:
 - `AUTH_TRUST_HOST=true` is set because NextAuth v5 otherwise refuses to

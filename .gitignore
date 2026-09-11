@@ -39,12 +39,6 @@ yarn-error.log*
 prisma/*.db
 prisma/*.db-journal
 
-# Docker: SQLite data directory bind-mounted into the container (see
-# docker-compose.yml) — keep the directory itself (.gitkeep) but not its
-# contents.
-/data/*
-!/data/.gitkeep
-
 # vercel
 .vercel
 
