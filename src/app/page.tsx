@@ -106,7 +106,11 @@ export default function HomePage() {
   const [ticketDefaultJql, setTicketDefaultJql] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [editingEntryId, setEditingEntryId] = useState<string | null>(null);
-  const [draftEntry, setDraftEntry] = useState<{ start: Date; end: Date } | null>(null);
+  const [draftEntry, setDraftEntry] = useState<{
+    start: Date;
+    end: Date;
+    ticketId?: string;
+  } | null>(null);
   // Ids of time entries (or "__draft__" for a not-yet-created entry) whose
   // create/update request is currently in flight — the server awaits the
   // Jira worklog sync before responding, so this drives a spinner on the
@@ -249,23 +253,11 @@ export default function HomePage() {
     setSyncing(false);
   };
 
-  const handleDropTicket = async (ticketId: string, start: Date, end: Date) => {
+  const handleDropTicket = (ticketId: string, start: Date, end: Date) => {
+    // Open the editor instead of creating the entry immediately so a
+    // Jira worklog comment is required, same as any other ticket entry.
     setError(null);
-    const res = await fetch("/api/time-entries", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        ticketId,
-        start: start.toISOString(),
-        end: end.toISOString(),
-      }),
-    });
-    if (!res.ok) {
-      const data = await res.json().catch(() => ({}));
-      setError(data.error ?? "Failed to create time entry.");
-      return;
-    }
-    await loadEntries();
+    setDraftEntry({ start, end, ticketId });
   };
 
   // Opens the editor with an uncommitted draft entry; nothing is written to
@@ -455,7 +447,9 @@ export default function HomePage() {
           comment: null,
           syncedToJira: false,
           lastSyncError: null,
-          ticket: null,
+          ticket: draftEntry.ticketId
+            ? (tickets.find((t) => t.id === draftEntry.ticketId) ?? null)
+            : null,
         }
       : null;
 
