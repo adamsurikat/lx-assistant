@@ -100,21 +100,47 @@ round-tripped through the export endpoint.
 ## Running with Docker
 
 The app also ships a `Dockerfile` + `docker-compose.yml` for a self-contained
-deployment — the SQLite database lives on a named Docker volume so it
-persists across image rebuilds, and pending Prisma migrations are applied
-automatically every time the container starts (see `docker-entrypoint.sh`).
+deployment. By default it uses SQLite (same as local dev), with the database
+file bind-mounted from `./data/dev.db` on the host so it's **reused
+automatically if it already exists** — restarting, rebuilding, or recreating
+the container never starts from an empty database. Postgres (e.g. Supabase)
+is also supported as a drop-in alternative — just a couple of extra env
+vars, no file changes needed (see below). Either way, the schema is brought
+up to date automatically every time the container starts (see
+`docker-entrypoint.sh`).
 
 1. Fill in `.env.local` as in step 1 of Setup above (same env vars — the
    compose file loads it via `env_file`). Use `http://localhost:3456/...` for
    the Google/Jira OAuth redirect URIs if running locally, or your real
-   domain if deploying behind a reverse proxy.
+   domain if deploying behind a reverse proxy. Then add a database config —
+   pick one:
+
+   **SQLite (default, no external database needed):**
+   ```bash
+   DATABASE_URL="file:/app/data/dev.db"
+   ```
+   This path lives on the bind-mounted `./data` directory (see
+   `docker-compose.yml`) — if you already have a database from a previous
+   Docker run (or want to bring in your local `prisma/dev.db`), just copy it
+   to `./data/dev.db` first and it'll be used as-is.
+
+   **Postgres / Supabase:**
+   ```bash
+   DATABASE_URL="postgresql://postgres:[password]@[host]:5432/postgres"
+   DATABASE_PROVIDER="postgresql"
+   ```
+   Get the connection string from your Supabase project's
+   **Settings → Database**. `DATABASE_PROVIDER` defaults to `sqlite` when
+   unset, so it must be set explicitly to `postgresql` here — the
+   entrypoint uses it to switch the Prisma datasource accordingly. The
+   `./data` bind mount is simply unused in this case.
 
 2. Build and start the container:
    ```bash
    docker compose up --build -d
    ```
    The app is then available at http://localhost:3456. Logs (including the
-   migration output) are available with `docker compose logs -f`.
+   migration/schema-sync output) are available with `docker compose logs -f`.
 
 3. (Optional) bootstrap the map with this repo's real port/depot/route data,
    the same way as the "Bootstrapping map data" section above, just run
@@ -124,21 +150,27 @@ automatically every time the container starts (see `docker-entrypoint.sh`).
    ```
 
 4. To stop/restart without losing data, use `docker compose stop` /
-   `docker compose start` (or `down`, which also keeps the named volume —
-   only `docker compose down -v` deletes the database).
+   `docker compose start` (or `down`, which is also fine — nothing is
+   deleted from `./data` or Postgres just by tearing the container down).
 
 Notes specific to the Docker setup:
-- `DATABASE_URL` is overridden in `docker-compose.yml` to point at
-  `/data/app.db` on the `app_data` named volume, instead of the repo's
-  `./dev.db` used for local (non-Docker) dev.
 - `AUTH_TRUST_HOST=true` is set because NextAuth v5 otherwise refuses to
   trust the container's request Host header by default (it can't know its
   own public URL ahead of time) — fine as long as the container only sits
   behind a reverse proxy you control, or on a trusted network.
+- Switching providers: `prisma/schema.prisma` is committed with
+  `provider = "sqlite"`, since Prisma requires that field to be a literal
+  string (it can't read it from an env var like the connection URL can) —
+  `docker-entrypoint.sh` rewrites it in place to match `DATABASE_PROVIDER`
+  before every start, so the same schema file works for either database
+  without you ever needing to edit it. The committed `prisma/migrations/`
+  SQL files are SQLite-specific though, so a Postgres/Supabase database is
+  brought in sync with `prisma db push` (schema-driven, safe to re-run)
+  instead of replaying that migration history.
 - The image installs and runs everything as `npm run start` (a normal
   `next start`, not Next's "standalone" output) so the Prisma CLI is
-  available at container startup to run migrations and, if you want, the
-  `map:import` bootstrap script from step 3.
+  available at container startup to run migrations/`db push` and, if you
+  want, the `map:import` bootstrap script from step 3.
 
 ## Notes
 
