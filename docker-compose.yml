@@ -20,10 +20,27 @@ services:
       # only loaded at container start.
       - .env.local
     volumes:
-      # Bind-mounted (not a named volume) so the default SQLite setup
-      # reuses ./data/dev.db as-is if it already exists on the host — e.g.
-      # from a previous run — instead of always starting from an empty
-      # database. Irrelevant when DATABASE_URL points at Postgres/Supabase
-      # instead, but harmless to leave mounted either way.
-      - ./data:/app/data
+      # Where the SQLite file lives is controlled entirely by SQLITE_MOUNT
+      # (set in the shell or in .env.local, NOT hardcoded here) so there
+      # are two clean options without editing this file:
+      #
+      #   - Unset (default): "app_data:/app/data" — a Docker-managed named
+      #     volume. Nothing is created on the host filesystem; the DB file
+      #     is created inside the volume on first run and reused by that
+      #     same volume on every subsequent run, restart, or rebuild.
+      #
+      #   - Set to an existing host file, e.g.
+      #     SQLITE_MOUNT="./data/dev.db:/app/data/dev.db" — bind-mounts
+      #     that exact file into the container so it's reused as-is. Only
+      #     set this when the file already exists: bind-mounting a
+      #     *missing* file path makes Docker create a directory there
+      #     instead (a long-standing Docker Engine quirk), which is why
+      #     this isn't the default.
+      #
+      # Either way, DATABASE_URL (see below) must point at wherever this
+      # ends up mounted inside the container.
+      - ${SQLITE_MOUNT:-app_data:/app/data}
     restart: unless-stopped
+
+volumes:
+  app_data:
