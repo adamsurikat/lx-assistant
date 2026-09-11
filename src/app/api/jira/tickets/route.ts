@@ -31,7 +31,14 @@ export async function POST() {
 
   try {
     const config = await getJiraConfigForUser(session.user.id);
-    const jiraTickets = await fetchAssignedOpenTickets(config);
+    const user = await prisma.user.findUnique({
+      where: { id: session.user.id },
+      select: { ticketSyncJql: true },
+    });
+    const jiraTickets = await fetchAssignedOpenTickets(
+      config,
+      user?.ticketSyncJql || undefined
+    );
 
     const existing = await prisma.ticket.findMany({
       where: { userId: session.user.id },

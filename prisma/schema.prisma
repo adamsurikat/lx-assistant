@@ -22,6 +22,11 @@ model User {
   jiraApiTokenCipher String? // Encrypted Jira API token (AES-256-GCM, see lib/crypto.ts)
   jiraSiteUrl        String? // e.g. https://yourcompany.atlassian.net
 
+  // Custom JQL used by the "Sync" button in the tickets drawer to decide
+  // which issues get pulled in, instead of the built-in default (see
+  // DEFAULT_TICKET_SYNC_JQL in lib/jira.ts). Null means "use the default".
+  ticketSyncJql String?
+
   accounts       Account[]
   sessions       Session[]
   timeEntries    TimeEntry[]
