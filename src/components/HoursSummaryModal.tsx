@@ -44,8 +44,8 @@ function monthLabel(monthKey: string): string {
 
 /**
  * Modal showing worked-vs-expected hours for a given month (8h/weekday
- * baseline), so the user can see at a glance whether they're ahead or
- * behind, with a per-day breakdown table.
+ * baseline), so the user can see their flex balance at a glance, with a
+ * per-day breakdown table.
  */
 export function HoursSummaryModal({ onClose }: HoursSummaryModalProps) {
   const [monthKey, setMonthKey] = useState(() => {
@@ -77,7 +77,7 @@ export function HoursSummaryModal({ onClose }: HoursSummaryModalProps) {
   };
 
   const diff = data?.totals.diffHours ?? 0;
-  const diffLabel = diff >= 0 ? `+${formatHours(diff)} ahead` : `${formatHours(diff)} behind`;
+  const diffLabel = diff >= 0 ? `+${formatHours(diff)}` : formatHours(diff);
 
   return (
     <div
@@ -134,7 +134,7 @@ export function HoursSummaryModal({ onClose }: HoursSummaryModalProps) {
                     diff >= 0 ? "text-nb-ink/60" : "text-white/80"
                   }`}
                 >
-                  Difference
+                  Flex
                 </p>
                 <p className="text-lg font-bold">{diffLabel}</p>
               </div>
