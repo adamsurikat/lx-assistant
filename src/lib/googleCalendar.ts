@@ -7,7 +7,7 @@ const GOOGLE_CALENDAR_EVENTS_URL =
 export class GoogleCalendarNotConnectedError extends Error {
   constructor() {
     super(
-      "Google Calendar isn't connected. Sign out and sign back in, granting calendar access, to see your meetings."
+      "Google Calendar isn't connected. Connect it in Settings to see your meetings."
     );
     this.name = "GoogleCalendarNotConnectedError";
   }
@@ -20,6 +20,20 @@ export interface GoogleCalendarEvent {
   end: string; // ISO timestamp
   allDay: boolean;
   htmlLink?: string;
+}
+
+/**
+ * Whether the user has granted the Calendar readonly scope (via the
+ * separate "Connect Google Calendar" flow in Settings) — distinct from
+ * simply being signed in with Google, which only grants basic profile
+ * info. Used to decide whether to fetch/show events for this user at all.
+ */
+export async function isGoogleCalendarConnected(userId: string): Promise<boolean> {
+  const account = await prisma.account.findFirst({
+    where: { userId, provider: "google" },
+    select: { scope: true, access_token: true },
+  });
+  return Boolean(account?.access_token && account.scope?.includes("calendar"));
 }
 
 /**

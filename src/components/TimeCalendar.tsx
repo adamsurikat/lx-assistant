@@ -8,6 +8,7 @@ import withDragAndDrop, {
 import { format } from "date-fns/format";
 import { parse } from "date-fns/parse";
 import { startOfWeek } from "date-fns/startOfWeek";
+import { addDays } from "date-fns/addDays";
 import { getDay } from "date-fns/getDay";
 import { enUS } from "date-fns/locale/en-US";
 import "react-big-calendar/lib/css/react-big-calendar.css";
@@ -71,6 +72,10 @@ export interface CalendarEventItem {
   // while the create/edit modal is open — rendered as a semi-transparent
   // outline until the user saves (or discards) it.
   pending?: boolean;
+  // True for the single full-day placeholder block shown in the Google
+  // column when Google Calendar isn't connected (see googleConnected prop)
+  // — a diagonally-striped, non-interactive stand-in for real events.
+  disabledPlaceholder?: boolean;
   googleLink?: string;
   ticketKey?: string;
   ticketStatus?: string;
@@ -104,6 +109,10 @@ function toDateKey(date: Date): string {
 interface TimeCalendarProps {
   events: CalendarEventItem[];
   googleEvents: CalendarEventItem[];
+  // Whether the signed-in user has granted Google Calendar (readonly)
+  // access. When false, googleEvents is ignored and the Google column
+  // instead shows a disabled/striped placeholder for each visible day.
+  googleConnected: boolean;
   date: Date;
   // Keyed by "YYYY-MM-DD" — total logged hours for that day, rendered
   // under the day's header label (omitted for days with no logged time).
@@ -119,6 +128,7 @@ interface TimeCalendarProps {
 export function TimeCalendar({
   events,
   googleEvents,
+  googleConnected,
   date,
   dayHourTotals,
   onNavigate,
@@ -128,11 +138,39 @@ export function TimeCalendar({
   onSelectEvent,
   draggedTicketId,
 }: TimeCalendarProps) {
-  const allEvents = [...events, ...googleEvents];
   // On mobile, only today's single day is shown (navigated day-by-day by
   // the parent page); desktop keeps the existing Mon–Fri work week view.
   const isMobile = useIsMobile();
   const view = isMobile ? "day" : "work_week";
+
+  // One full-column placeholder event per visible day in the Google
+  // sub-column, shown instead of real events when not connected.
+  const disabledGoogleEvents: CalendarEventItem[] = googleConnected
+    ? []
+    : (isMobile ? [date] : Array.from({ length: 5 }, (_, i) => addDays(startOfWeek(date, { weekStartsOn: 1 }), i))).map(
+        (day) => {
+          const start = new Date(day);
+          start.setHours(MIN_TIME.getHours(), MIN_TIME.getMinutes(), 0, 0);
+          const end = new Date(day);
+          end.setHours(MAX_TIME.getHours(), MAX_TIME.getMinutes(), 0, 0);
+          return {
+            id: `google-disabled-${toDateKey(day)}`,
+            title: "Not connected",
+            start,
+            end,
+            color: "transparent",
+            synced: false,
+            readOnly: true,
+            disabledPlaceholder: true,
+            resourceId: "google" as const,
+          };
+        }
+      );
+
+  const allEvents = [
+    ...events,
+    ...(googleConnected ? googleEvents : disabledGoogleEvents),
+  ];
 
   return (
     <div className="h-full min-w-0 flex-1 p-3">
@@ -179,7 +217,7 @@ export function TimeCalendar({
           onEventChange(event.id, new Date(start), new Date(end))
         }
         onSelectEvent={(event: CalendarEventItem, domEvent) => {
-          if (event.pending) return;
+          if (event.pending || event.disabledPlaceholder) return;
           onSelectEvent(event, domEvent);
         }}
         onSelectSlot={(slotInfo) => {
@@ -205,43 +243,60 @@ export function TimeCalendar({
               </div>
             );
           },
-          event: ({ event }: { event: CalendarEventItem }) => (
-            <div className="flex items-start gap-1">
-              {event.syncing && (
-                <span
-                  className="mt-0.5 h-2.5 w-2.5 shrink-0 animate-spin rounded-full border-2 border-current border-t-transparent opacity-80"
-                  aria-label="Syncing to Jira…"
-                />
-              )}
-              <div>
-                <div>{event.title}</div>
-                {event.duration && (
-                  <div className="text-[0.7rem] opacity-80">{event.duration}</div>
-                )}
+          event: ({ event }: { event: CalendarEventItem }) =>
+            event.disabledPlaceholder ? (
+              <div className="flex h-full items-center justify-center text-center text-[0.7rem] font-semibold uppercase tracking-wide text-nb-ink/40">
+                🚫 Google Calendar
+                <br />
+                not connected
               </div>
-            </div>
-          ),
+            ) : (
+              <div className="flex items-start gap-1">
+                {event.syncing && (
+                  <span
+                    className="mt-0.5 h-2.5 w-2.5 shrink-0 animate-spin rounded-full border-2 border-current border-t-transparent opacity-80"
+                    aria-label="Syncing to Jira…"
+                  />
+                )}
+                <div>
+                  <div>{event.title}</div>
+                  {event.duration && (
+                    <div className="text-[0.7rem] opacity-80">{event.duration}</div>
+                  )}
+                </div>
+              </div>
+            ),
         }}
         eventPropGetter={(event: CalendarEventItem) => ({
-          style: event.pending
+          style: event.disabledPlaceholder
             ? {
-                backgroundColor: "rgba(17,17,17,0.06)",
-                color: "#111111",
-                outline: "2px dashed rgba(17,17,17,0.5)",
-                outlineOffset: "-2px",
-                cursor: "default",
-              }
-            : {
-                backgroundColor: event.readOnly ? "#cdeede" : event.color,
-                color: event.readOnly ? "#111111" : event.unassigned ? "#111111" : "#fff",
-                opacity: event.syncError ? 0.6 : 1,
-                cursor: event.readOnly ? "pointer" : undefined,
-                outline:
-                  event.syncError || event.unassigned
-                    ? "1px dashed rgba(17,17,17,0.4)"
-                    : undefined,
+                backgroundColor: "#e5e5e5",
+                backgroundImage:
+                  "repeating-linear-gradient(45deg, rgba(17,17,17,0.08) 0, rgba(17,17,17,0.08) 6px, transparent 6px, transparent 16px)",
+                color: "rgba(17,17,17,0.45)",
+                outline: "1px solid rgba(17,17,17,0.15)",
                 outlineOffset: "-1px",
-              },
+                cursor: "not-allowed",
+              }
+            : event.pending
+              ? {
+                  backgroundColor: "rgba(17,17,17,0.06)",
+                  color: "#111111",
+                  outline: "2px dashed rgba(17,17,17,0.5)",
+                  outlineOffset: "-2px",
+                  cursor: "default",
+                }
+              : {
+                  backgroundColor: event.readOnly ? "#cdeede" : event.color,
+                  color: event.readOnly ? "#111111" : event.unassigned ? "#111111" : "#fff",
+                  opacity: event.syncError ? 0.6 : 1,
+                  cursor: event.readOnly ? "pointer" : undefined,
+                  outline:
+                    event.syncError || event.unassigned
+                      ? "1px dashed rgba(17,17,17,0.4)"
+                      : undefined,
+                  outlineOffset: "-1px",
+                },
         })}
       />
     </div>
