@@ -11,13 +11,11 @@ export const authConfig: NextAuthConfig = {
     Google({
       authorization: {
         params: {
-          // Request offline access + a refresh token (needed since we call
-          // the Calendar API from the backend, outside the login flow), and
-          // the read-only Calendar scope to show the user's meetings.
-          access_type: "offline",
-          prompt: "consent",
-          scope:
-            "openid email profile https://www.googleapis.com/auth/calendar.readonly",
+          // Just basic sign-in for the app itself — Google Calendar's
+          // read-only scope is requested separately (see the "Connect
+          // Google Calendar" flow in Settings) so users aren't forced to
+          // grant calendar access just to log in.
+          scope: "openid email profile",
         },
       },
     }),

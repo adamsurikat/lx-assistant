@@ -101,6 +101,7 @@ export default function HomePage() {
   const [summaryOpen, setSummaryOpen] = useState(false);
   const [jiraConnected, setJiraConnected] = useState<boolean | null>(null);
   const [jiraSiteUrl, setJiraSiteUrl] = useState<string | null>(null);
+  const [googleConnected, setGoogleConnected] = useState<boolean | null>(null);
   const [ticketJql, setTicketJql] = useState("");
   const [ticketJqlIsDefault, setTicketJqlIsDefault] = useState(true);
   const [ticketDefaultJql, setTicketDefaultJql] = useState("");
@@ -213,7 +214,18 @@ export default function HomePage() {
     }
   }, []);
 
+  const loadGoogleStatus = useCallback(async () => {
+    const res = await fetch("/api/google-calendar/status");
+    if (res.ok) {
+      const data = await res.json();
+      setGoogleConnected(Boolean(data.connected));
+    } else {
+      setGoogleConnected(false);
+    }
+  }, []);
+
   const loadGoogleEvents = useCallback(async () => {
+    if (!googleConnected) return;
     const params = new URLSearchParams({
       from: weekStart.toISOString(),
       to: weekEnd.toISOString(),
@@ -224,14 +236,15 @@ export default function HomePage() {
       setGoogleEvents(data.events ?? []);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [currentDate]);
+  }, [currentDate, googleConnected]);
 
   useEffect(() => {
     // eslint-disable-next-line react-hooks/set-state-in-effect -- intentional fetch-on-mount/navigate
     loadTickets();
     loadJiraStatus();
     loadTicketJql();
-  }, [loadTickets, loadJiraStatus, loadTicketJql]);
+    loadGoogleStatus();
+  }, [loadTickets, loadJiraStatus, loadTicketJql, loadGoogleStatus]);
 
   useEffect(() => {
     // Re-fetch whenever the visible week range changes (e.g. Back/Next).
@@ -616,6 +629,7 @@ export default function HomePage() {
           <TimeCalendar
             events={calendarEvents}
             googleEvents={googleCalendarEvents}
+            googleConnected={googleConnected ?? false}
             date={currentDate}
             dayHourTotals={dayHourTotals}
             onNavigate={setCurrentDate}
