@@ -143,8 +143,12 @@ export function PostItBoard() {
       // animation; only notes with real content that are eligible for the
       // trash get the fly-into-the-bin effect below.
       const eligibleForBin = !!note && note.text.trim() !== "";
-      fetch(`/api/postits/${id}`, { method: "DELETE" }).catch(() => {});
-      window.dispatchEvent(new Event(POSTITS_CHANGED_EVENT));
+      // Dispatch only once the DELETE has actually landed server-side —
+      // firing it immediately raced the header's count refetch against
+      // this request, so the badge could still read the pre-delete count.
+      fetch(`/api/postits/${id}`, { method: "DELETE" })
+        .catch(() => {})
+        .finally(() => window.dispatchEvent(new Event(POSTITS_CHANGED_EVENT)));
       if (!eligibleForBin) {
         setPostIts((prev) => prev?.filter((n) => n.id !== id) ?? prev);
         return;
