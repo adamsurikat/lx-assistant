@@ -284,6 +284,24 @@ h1, h2, h3, .nb-display {
   opacity: 0 !important;
 }
 
+/* The resize handles (top/bottom edges of a time-grid event, used to drag
+   an entry's start/end time) default to a sliver only as tall as their
+   little icon glyph — fiddly to grab precisely, especially the bottom one
+   people reach for constantly to extend an entry. Give both a real hit
+   area without changing their visual size (the icon itself still only
+   shows on hover, via the addon's own CSS). */
+.rbc-addons-dnd-resize-ns-anchor {
+  height: 14px !important;
+  display: flex;
+  align-items: center;
+}
+.rbc-addons-dnd-resize-ns-anchor:first-child {
+  align-items: flex-start;
+}
+.rbc-addons-dnd-resize-ns-anchor:last-child {
+  align-items: flex-end;
+}
+
 /* Post-it board: a dotted-grid canvas, sized to exactly fill its container
    (rather than a fixed oversized area you'd need to scroll around) so notes
    always stay fully visible without hunting for them off-screen. */
