@@ -651,6 +651,9 @@ function PostItNote({
   const [isEditing, setIsEditing] = useState(() => note.text.trim() === "");
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const [popover, setPopover] = useState<{ key: string; left: number; top: number } | null>(null);
+  const [linkPopover, setLinkPopover] = useState<{ url: string; left: number; top: number } | null>(
+    null
+  );
 
   useEffect(() => {
     if (!isEditing) return;
@@ -673,6 +676,10 @@ function PostItNote({
 
   const openTicketPopover = (key: string, rect: DOMRect) => {
     setPopover({ key, left: rect.left, top: rect.bottom + 6 });
+  };
+
+  const openLinkPopover = (url: string, rect: DOMRect) => {
+    setLinkPopover({ url, left: rect.left, top: rect.bottom + 6 });
   };
 
   // Attached to the (non-editing) text view only — flips into edit mode on
@@ -767,7 +774,7 @@ function PostItNote({
           {note.text.trim() === "" ? (
             <span className="text-nb-ink/30">Type a note…</span>
           ) : (
-            renderNoteText(note.text, openTicketPopover)
+            renderNoteText(note.text, openTicketPopover, openLinkPopover)
           )}
         </div>
       )}
@@ -777,6 +784,14 @@ function PostItNote({
           left={popover.left}
           top={popover.top}
           onClose={() => setPopover(null)}
+        />
+      )}
+      {linkPopover && (
+        <LinkRefPopover
+          url={linkPopover.url}
+          left={linkPopover.left}
+          top={linkPopover.top}
+          onClose={() => setLinkPopover(null)}
         />
       )}
     </div>
@@ -789,13 +804,14 @@ const URL_TRAILING_PUNCTUATION_RE = /[.,;:!?)\]]+$/;
 
 /**
  * Splits a note's text on Jira ticket key matches (e.g. "PROJ-123") and
- * URL-like substrings, rendering ticket keys as clickable buttons that open
- * the ticket popover and URLs as real hyperlinks, leaving the rest of the
- * text as plain text.
+ * URL-like substrings, rendering both as clickable buttons that open a
+ * small info popover (ticket details or link preview), leaving the rest of
+ * the text as plain text.
  */
 function renderNoteText(
   text: string,
-  onOpen: (key: string, rect: DOMRect) => void
+  onOpenTicket: (key: string, rect: DOMRect) => void,
+  onOpenLink: (url: string, rect: DOMRect) => void
 ): ReactNode[] {
   const nodes: ReactNode[] = [];
   const combined = new RegExp(
@@ -822,18 +838,19 @@ function renderNoteText(
     }
 
     if (urlMatch) {
-      const href = urlMatch.startsWith("www.") ? `https://${urlMatch}` : urlMatch;
+      const url = urlMatch;
       nodes.push(
-        <a
+        <button
           key={`url-${index}`}
-          href={href}
-          target="_blank"
-          rel="noopener noreferrer"
+          type="button"
           className="cursor-pointer font-medium text-nb-ink underline decoration-2 underline-offset-2 hover:text-nb-orange"
-          onClick={(e) => e.stopPropagation()}
+          onClick={(e) => {
+            e.stopPropagation();
+            onOpenLink(url, (e.target as HTMLElement).getBoundingClientRect());
+          }}
         >
-          {urlMatch}
-        </a>
+          {url}
+        </button>
       );
     } else {
       const key = full;
@@ -844,7 +861,7 @@ function renderNoteText(
           className="cursor-pointer font-bold text-nb-ink underline decoration-2 underline-offset-2 hover:text-nb-orange"
           onClick={(e) => {
             e.stopPropagation();
-            onOpen(key, (e.target as HTMLElement).getBoundingClientRect());
+            onOpenTicket(key, (e.target as HTMLElement).getBoundingClientRect());
           }}
         >
           {key}
@@ -948,6 +965,81 @@ function TicketRefPopover({
           </a>
         </>
       )}
+    </div>,
+    document.body
+  );
+}
+
+/** Small info popover shown when a URL-like substring in a note is clicked,
+ * mirroring the Jira ticket popover: displays the full link with quick
+ * "Open" and "Copy" actions instead of navigating away immediately. */
+function LinkRefPopover({
+  url,
+  left,
+  top,
+  onClose,
+}: {
+  url: string;
+  left: number;
+  top: number;
+  onClose: () => void;
+}) {
+  const popoverRef = useRef<HTMLDivElement>(null);
+  const [copied, setCopied] = useState(false);
+  const href = url.startsWith("www.") ? `https://${url}` : url;
+
+  useEffect(() => {
+    const handleClick = (e: MouseEvent) => {
+      if (popoverRef.current && !popoverRef.current.contains(e.target as Node)) onClose();
+    };
+    const handleKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") onClose();
+    };
+    document.addEventListener("mousedown", handleClick);
+    document.addEventListener("keydown", handleKey);
+    return () => {
+      document.removeEventListener("mousedown", handleClick);
+      document.removeEventListener("keydown", handleKey);
+    };
+  }, [onClose]);
+
+  const handleCopy = async () => {
+    try {
+      await navigator.clipboard.writeText(href);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 1500);
+    } catch {
+      // Clipboard access can fail (permissions, insecure context, etc.) —
+      // silently ignore, the user can still select/copy the text shown.
+    }
+  };
+
+  return createPortal(
+    <div
+      ref={popoverRef}
+      onClick={(e) => e.stopPropagation()}
+      onPointerDown={(e) => e.stopPropagation()}
+      className="nb-panel-sm fixed z-50 w-64 bg-white p-3 text-left text-sm normal-case"
+      style={{ left, top }}
+    >
+      <p className="mb-3 break-all font-medium text-nb-ink/80">{href}</p>
+      <div className="flex gap-2">
+        <button
+          type="button"
+          onClick={handleCopy}
+          className="nb-btn flex-1 justify-center px-3 py-1.5 text-xs"
+        >
+          {copied ? "Copied ✓" : "Copy link"}
+        </button>
+        <a
+          href={href}
+          target="_blank"
+          rel="noreferrer"
+          className="nb-btn nb-btn-orange flex-1 justify-center px-3 py-1.5 text-xs"
+        >
+          Open ↗
+        </a>
+      </div>
     </div>,
     document.body
   );
