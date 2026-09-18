@@ -13,3 +13,9 @@ export const POSTITS_CHANGED_EVENT = "postits:changed";
 // letters/digits, then a dash, then the issue number). Used to detect when a
 // note's text should be rendered as a clickable Jira reference.
 export const JIRA_TICKET_KEY_REGEX = /\b[A-Z][A-Z0-9]{1,9}-\d+\b/g;
+
+// Matches http(s) URLs and bare "www."-prefixed domains, so note text that
+// looks like a link can be rendered as a clickable hyperlink. Trailing
+// punctuation (., ,, ), etc.) is stripped by the caller so a URL at the end
+// of a sentence doesn't swallow the period.
+export const URL_REGEX = /\bhttps?:\/\/[^\s<>"')\]]+|\bwww\.[^\s<>"')\]]+/gi;

@@ -6,6 +6,7 @@ import {
   JIRA_TICKET_KEY_REGEX,
   POSTIT_COLORS,
   POSTITS_CHANGED_EVENT,
+  URL_REGEX,
   type PostItColor,
 } from "@/lib/postits";
 import { useIsMobile } from "@/lib/useIsMobile";
@@ -617,11 +618,11 @@ function PostItNote({
 
   const handlePointerDown = (e: React.PointerEvent<HTMLDivElement>) => {
     if (layout === "list" || e.button !== 0) return;
-    // Let clicks on buttons (color dots, delete, ticket-key refs) and text
-    // editing (the textarea) through untouched — everything else on the
-    // note, including its edges/background and its non-editing text view,
-    // picks it up for dragging.
-    if ((e.target as HTMLElement).closest("button, textarea")) return;
+    // Let clicks on buttons (color dots, delete, ticket-key refs), links
+    // (URLs in the note text) and text editing (the textarea) through
+    // untouched — everything else on the note, including its edges/
+    // background and its non-editing text view, picks it up for dragging.
+    if ((e.target as HTMLElement).closest("button, textarea, a")) return;
     onDragStart?.();
     dragMoved.current = false;
     dragState.current = { startX: e.clientX, startY: e.clientY, noteX: note.x, noteY: note.y };
@@ -782,38 +783,75 @@ function PostItNote({
   );
 }
 
+// Trailing punctuation that's almost never actually part of a URL, so it
+// reads naturally when a link ends a sentence, e.g. "see www.example.com."
+const URL_TRAILING_PUNCTUATION_RE = /[.,;:!?)\]]+$/;
+
 /**
  * Splits a note's text on Jira ticket key matches (e.g. "PROJ-123") and
- * renders each match as a clickable button that opens the ticket popover,
- * leaving the rest of the text as plain text.
+ * URL-like substrings, rendering ticket keys as clickable buttons that open
+ * the ticket popover and URLs as real hyperlinks, leaving the rest of the
+ * text as plain text.
  */
 function renderNoteText(
   text: string,
   onOpen: (key: string, rect: DOMRect) => void
 ): ReactNode[] {
   const nodes: ReactNode[] = [];
-  const re = new RegExp(JIRA_TICKET_KEY_REGEX);
+  const combined = new RegExp(
+    `(${URL_REGEX.source})|(${JIRA_TICKET_KEY_REGEX.source})`,
+    "gi"
+  );
   let lastIndex = 0;
   let match: RegExpExecArray | null;
-  while ((match = re.exec(text))) {
-    if (match.index > lastIndex) {
-      nodes.push(text.slice(lastIndex, match.index));
+  while ((match = combined.exec(text))) {
+    let [full, urlMatch] = match;
+    const index = match.index;
+    if (urlMatch) {
+      // Strip trailing punctuation from the match, keeping it as plain text.
+      const trailing = urlMatch.match(URL_TRAILING_PUNCTUATION_RE)?.[0] ?? "";
+      if (trailing) {
+        urlMatch = urlMatch.slice(0, urlMatch.length - trailing.length);
+        full = urlMatch;
+        combined.lastIndex -= trailing.length;
+      }
     }
-    const key = match[0];
-    nodes.push(
-      <button
-        key={`${key}-${match.index}`}
-        type="button"
-        className="cursor-pointer font-bold text-nb-ink underline decoration-2 underline-offset-2 hover:text-nb-orange"
-        onClick={(e) => {
-          e.stopPropagation();
-          onOpen(key, (e.target as HTMLElement).getBoundingClientRect());
-        }}
-      >
-        {key}
-      </button>
-    );
-    lastIndex = match.index + key.length;
+
+    if (index > lastIndex) {
+      nodes.push(text.slice(lastIndex, index));
+    }
+
+    if (urlMatch) {
+      const href = urlMatch.startsWith("www.") ? `https://${urlMatch}` : urlMatch;
+      nodes.push(
+        <a
+          key={`url-${index}`}
+          href={href}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="cursor-pointer font-medium text-nb-ink underline decoration-2 underline-offset-2 hover:text-nb-orange"
+          onClick={(e) => e.stopPropagation()}
+        >
+          {urlMatch}
+        </a>
+      );
+    } else {
+      const key = full;
+      nodes.push(
+        <button
+          key={`ticket-${index}`}
+          type="button"
+          className="cursor-pointer font-bold text-nb-ink underline decoration-2 underline-offset-2 hover:text-nb-orange"
+          onClick={(e) => {
+            e.stopPropagation();
+            onOpen(key, (e.target as HTMLElement).getBoundingClientRect());
+          }}
+        >
+          {key}
+        </button>
+      );
+    }
+    lastIndex = index + full.length;
   }
   if (lastIndex < text.length) {
     nodes.push(text.slice(lastIndex));
