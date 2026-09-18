@@ -843,7 +843,7 @@ function renderNoteText(
         <button
           key={`url-${index}`}
           type="button"
-          className="cursor-pointer font-medium text-nb-ink underline decoration-2 underline-offset-2 hover:text-nb-orange"
+          className="cursor-pointer text-left font-medium text-nb-ink underline decoration-2 underline-offset-2 hover:text-nb-orange"
           onClick={(e) => {
             e.stopPropagation();
             onOpenLink(url, (e.target as HTMLElement).getBoundingClientRect());
@@ -858,7 +858,7 @@ function renderNoteText(
         <button
           key={`ticket-${index}`}
           type="button"
-          className="cursor-pointer font-bold text-nb-ink underline decoration-2 underline-offset-2 hover:text-nb-orange"
+          className="cursor-pointer text-left font-bold text-nb-ink underline decoration-2 underline-offset-2 hover:text-nb-orange"
           onClick={(e) => {
             e.stopPropagation();
             onOpenTicket(key, (e.target as HTMLElement).getBoundingClientRect());
