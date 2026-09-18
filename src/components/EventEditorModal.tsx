@@ -78,6 +78,7 @@ export function EventEditorModal({
   const [searchError, setSearchError] = useState<string | null>(null);
   const comboRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
+  const titleInputRef = useRef<HTMLInputElement>(null);
 
   // Lets the user drag the modal panel around the screen by its header.
   const [dragOffset, setDragOffset] = useState({ x: 0, y: 0 });
@@ -188,6 +189,12 @@ export function EventEditorModal({
       setComboOpen(false);
       setQuery("");
       inputRef.current?.blur();
+    } else if (e.key === "Tab") {
+      // Close the autosuggest and jump straight to the title field instead
+      // of tabbing through the dropdown options.
+      e.preventDefault();
+      setComboOpen(false);
+      titleInputRef.current?.focus();
     }
   };
 
@@ -354,6 +361,7 @@ export function EventEditorModal({
             Title{!hasTicket && <span className="text-nb-pink"> *</span>}
           </label>
           <input
+            ref={titleInputRef}
             type="text"
             value={effectiveTitle}
             onChange={(e) => setTitle(e.target.value)}
