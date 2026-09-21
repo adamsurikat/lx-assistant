@@ -25,6 +25,7 @@ export async function PATCH(
     description?: string;
     lat?: number;
     lng?: number;
+    featureFlagIds?: string[];
   };
 
   const port = await prisma.mapPort.update({
@@ -37,7 +38,13 @@ export async function PATCH(
       ...(body.description !== undefined ? { description: body.description } : {}),
       ...(typeof body.lat === "number" ? { lat: body.lat } : {}),
       ...(typeof body.lng === "number" ? { lng: body.lng } : {}),
+      // `set` replaces the full list of assigned flags rather than adding
+      // to it, so the caller always sends the complete desired set.
+      ...(body.featureFlagIds
+        ? { featureFlags: { set: body.featureFlagIds.map((id) => ({ id })) } }
+        : {}),
     },
+    include: { featureFlags: true },
   });
 
   return NextResponse.json({ port });

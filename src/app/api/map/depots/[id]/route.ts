@@ -25,6 +25,7 @@ export async function PATCH(
     tenant?: string;
     lat?: number;
     lng?: number;
+    featureFlagIds?: string[];
   };
 
   const depot = await prisma.mapDepot.update({
@@ -37,7 +38,11 @@ export async function PATCH(
       ...(body.tenant !== undefined ? { tenant: body.tenant.trim().toLowerCase() } : {}),
       ...(typeof body.lat === "number" ? { lat: body.lat } : {}),
       ...(typeof body.lng === "number" ? { lng: body.lng } : {}),
+      ...(body.featureFlagIds
+        ? { featureFlags: { set: body.featureFlagIds.map((id) => ({ id })) } }
+        : {}),
     },
+    include: { featureFlags: true },
   });
 
   return NextResponse.json({ depot });

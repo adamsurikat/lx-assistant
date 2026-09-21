@@ -10,7 +10,7 @@ export async function GET() {
 
   const routes = await prisma.mapRoute.findMany({
     orderBy: { createdAt: "asc" },
-    include: { startPort: true, endPort: true },
+    include: { startPort: true, endPort: true, featureFlags: true },
   });
   return NextResponse.json({ routes });
 }
@@ -30,6 +30,7 @@ export async function POST(request: Request) {
     control1Lng?: number;
     control2Lat?: number;
     control2Lng?: number;
+    featureFlagIds?: string[];
   };
 
   if (typeof body.startPortId !== "string" || typeof body.endPortId !== "string") {
@@ -64,8 +65,11 @@ export async function POST(request: Request) {
       control1Lng: body.control1Lng!,
       control2Lat: body.control2Lat!,
       control2Lng: body.control2Lng!,
+      ...(body.featureFlagIds
+        ? { featureFlags: { connect: body.featureFlagIds.map((id) => ({ id })) } }
+        : {}),
     },
-    include: { startPort: true, endPort: true },
+    include: { startPort: true, endPort: true, featureFlags: true },
   });
 
   return NextResponse.json({ route });

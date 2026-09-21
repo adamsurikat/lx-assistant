@@ -172,6 +172,8 @@ model MapPort {
   // routes anchored to it (a route can't dangle unconnected from a port).
   routesAsStart MapRoute[] @relation("RouteStart")
   routesAsEnd   MapRoute[] @relation("RouteEnd")
+
+  featureFlags FeatureFlag[]
 }
 
 // A truck depot marker annotated on the Map page. Same shape/semantics as
@@ -192,6 +194,8 @@ model MapDepot {
   lng         Float
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
+
+  featureFlags FeatureFlag[]
 }
 
 // A sea route drawn on the Map page as a cubic bezier curve. Its endpoints
@@ -216,6 +220,28 @@ model MapRoute {
 
   startPort MapPort @relation("RouteStart", fields: [startPortId], references: [id], onDelete: Cascade)
   endPort   MapPort @relation("RouteEnd", fields: [endPortId], references: [id], onDelete: Cascade)
+
+  featureFlags FeatureFlag[]
+}
+
+// A tag (e.g. "beta", "deprecated", "under construction") that can be
+// attached to any number of ports, depots, and/or routes on the Map page,
+// and each of those can carry any number of flags — a many-to-many
+// relationship in both directions, modeled here as three separate
+// implicit join tables (one per map item type) rather than a single
+// polymorphic one, since Prisma can't natively relate one side to "any of
+// several models".
+model FeatureFlag {
+  id        String   @id @default(cuid())
+  name      String   @unique
+  // Swatch color for badges/UI, e.g. a hex code. Empty string means unset.
+  color     String   @default("")
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  ports  MapPort[]
+  depots MapDepot[]
+  routes MapRoute[]
 }
 
 // A single sticky note on a user's personal post-it board (free-form

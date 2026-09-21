@@ -8,7 +8,10 @@ export async function GET() {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
-  const depots = await prisma.mapDepot.findMany({ orderBy: { createdAt: "asc" } });
+  const depots = await prisma.mapDepot.findMany({
+    orderBy: { createdAt: "asc" },
+    include: { featureFlags: true },
+  });
   return NextResponse.json({ depots });
 }
 
@@ -26,6 +29,7 @@ export async function POST(request: Request) {
     tenant?: string;
     lat?: number;
     lng?: number;
+    featureFlagIds?: string[];
   };
 
   if (typeof body.lat !== "number" || typeof body.lng !== "number") {
@@ -41,7 +45,11 @@ export async function POST(request: Request) {
       tenant: body.tenant?.trim().toLowerCase() || "",
       lat: body.lat,
       lng: body.lng,
+      ...(body.featureFlagIds
+        ? { featureFlags: { connect: body.featureFlagIds.map((id) => ({ id })) } }
+        : {}),
     },
+    include: { featureFlags: true },
   });
 
   return NextResponse.json({ depot });

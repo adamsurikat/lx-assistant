@@ -5,6 +5,12 @@
 // have to import Prisma's generated types (which include Date fields that
 // come back as strings once serialized over JSON).
 
+export interface FeatureFlagRecord {
+  id: string;
+  name: string;
+  color: string;
+}
+
 export interface MapPortRecord {
   id: string;
   name: string;
@@ -14,6 +20,7 @@ export interface MapPortRecord {
   description: string;
   lat: number;
   lng: number;
+  featureFlags?: FeatureFlagRecord[];
 }
 
 export interface MapDepotRecord {
@@ -25,6 +32,7 @@ export interface MapDepotRecord {
   tenant: string;
   lat: number;
   lng: number;
+  featureFlags?: FeatureFlagRecord[];
 }
 
 export interface MapRouteRecord {
@@ -37,6 +45,7 @@ export interface MapRouteRecord {
   control1Lng: number;
   control2Lat: number;
   control2Lng: number;
+  featureFlags?: FeatureFlagRecord[];
 }
 
 // Builds a cubic bezier curve between two [lat, lng] points so routes can be
