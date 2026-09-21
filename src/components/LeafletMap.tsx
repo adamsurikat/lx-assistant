@@ -39,6 +39,10 @@ function labelForTenant(tenant: string): string {
 const DEFAULT_PORT_COLOR = "#2563eb";
 const DEFAULT_DEPOT_COLOR = "#ff5f1f";
 const DEFAULT_ROUTE_COLOR = "#111111";
+// A shared, stable empty Set — reused wherever "no matches" needs to be
+// returned from a useMemo, so the identity doesn't change every render
+// (which would otherwise retrigger effects that depend on it).
+const EMPTY_ID_SET = new Set<string>();
 function colorForTenant(tenant: string, fallback: string): string {
   return TENANT_COLORS[tenant.toLowerCase()] ?? fallback;
 }
@@ -164,12 +168,16 @@ function MapLegend({
   showUnassignedDepot,
   hoveredTenant,
   onHoverTenant,
+  hoveredFeatureFlag,
+  onHoverFeatureFlag,
 }: {
   tenants: string[];
   showUnassignedPort: boolean;
   showUnassignedDepot: boolean;
   hoveredTenant: string | null;
   onHoverTenant: (tenant: string | null) => void;
+  hoveredFeatureFlag: string | null;
+  onHoverFeatureFlag: (flag: string | null) => void;
 }) {
   return (
     <div className="pointer-events-none absolute right-3 top-3 z-[1000] w-52 rounded-lg border border-nb-ink/10 bg-white/95 p-3 text-xs text-nb-ink shadow-md backdrop-blur-sm">
@@ -200,6 +208,24 @@ function MapLegend({
             Unassigned
           </li>
         )}
+      </ul>
+      <p className="mb-2 font-semibold uppercase tracking-wide text-nb-ink/60">Feature flags</p>
+      <ul className="mb-3 flex flex-col gap-1.5">
+        {KNOWN_FEATURE_FLAG_NAMES.map((flag) => (
+          <li
+            key={flag}
+            onMouseEnter={() => onHoverFeatureFlag(flag)}
+            onMouseLeave={() => onHoverFeatureFlag(null)}
+            className={`flex cursor-default items-center gap-2 rounded pointer-events-auto px-1 -mx-1 py-0.5 transition-colors ${
+              hoveredFeatureFlag === flag ? "bg-nb-ink/10" : ""
+            }`}
+          >
+            <span className="flex h-3 w-3 shrink-0 items-center justify-center rounded-sm border border-nb-ink/30 bg-nb-ink/5 text-[8px] font-bold uppercase text-nb-ink/60">
+              ⚑
+            </span>
+            {flag}
+          </li>
+        ))}
       </ul>
       <p className="mb-2 font-semibold uppercase tracking-wide text-nb-ink/60">Legend</p>
       <ul className="flex flex-col gap-1.5">
@@ -582,11 +608,37 @@ export default function LeafletMap({
     if (!hoveredTenant) return new Set<string>();
     return new Set(depots.filter((d) => d.tenant?.toLowerCase() === hoveredTenant).map((d) => d.id));
   }, [depots, hoveredTenant]);
+
+  // Hovering a feature flag in the legend highlights every port carrying
+  // that flag, the same way a tenant hover does. Depots don't currently
+  // support feature flags at all, so a flag hover has no depot matches —
+  // meaning every depot fades out along with non-matching ports, same as
+  // "no match" behaves for a search/tenant filter.
+  const [hoveredFeatureFlag, setHoveredFeatureFlag] = useState<string | null>(null);
+  const hoverFlagPortIds = useMemo(() => {
+    if (!hoveredFeatureFlag) return new Set<string>();
+    return new Set(
+      ports.filter((p) => p.featureFlags?.some((f) => f.name === hoveredFeatureFlag)).map((p) => p.id),
+    );
+  }, [ports, hoveredFeatureFlag]);
+
   // Search takes priority over a tenant hover if both are somehow active;
   // `null` means "no filter active" (full opacity, no pulse) rather than
   // "filter active but nothing matches".
-  const activePortIds = query ? matchedPortIds : hoveredTenant ? hoverPortIds : null;
-  const activeDepotIds = query ? matchedDepotIds : hoveredTenant ? hoverDepotIds : null;
+  const activePortIds = query
+    ? matchedPortIds
+    : hoveredTenant
+      ? hoverPortIds
+      : hoveredFeatureFlag
+        ? hoverFlagPortIds
+        : null;
+  const activeDepotIds = query
+    ? matchedDepotIds
+    : hoveredTenant
+      ? hoverDepotIds
+      : hoveredFeatureFlag
+        ? EMPTY_ID_SET
+        : null;
 
   // Applies the fade/pulse styling directly to marker DOM elements (same
   // ref+querySelector approach as setPortActive above) rather than
@@ -599,21 +651,22 @@ export default function LeafletMap({
   // search's pulse animation.
   useEffect(() => {
     const nonMatchOpacity = query ? 0.25 : 0;
+    const isHovering = hoveredTenant !== null || hoveredFeatureFlag !== null;
     for (const [id, marker] of portMarkerRefs.current) {
       const isMatch = activePortIds?.has(id) ?? true;
       marker.setOpacity(activePortIds ? (isMatch ? 1 : nonMatchOpacity) : 1);
       const badge = marker.getElement()?.querySelector(".port-marker-badge");
       badge?.classList.toggle("search-match-badge", query !== "" && isMatch);
-      badge?.classList.toggle("port-marker-badge--active", hoveredTenant !== null && isMatch);
+      badge?.classList.toggle("port-marker-badge--active", isHovering && isMatch);
     }
     for (const [id, marker] of depotMarkerRefs.current) {
       const isMatch = activeDepotIds?.has(id) ?? true;
       marker.setOpacity(activeDepotIds ? (isMatch ? 1 : nonMatchOpacity) : 1);
       const badge = marker.getElement()?.querySelector(".port-marker-badge");
       badge?.classList.toggle("search-match-badge", query !== "" && isMatch);
-      badge?.classList.toggle("port-marker-badge--active", hoveredTenant !== null && isMatch);
+      badge?.classList.toggle("port-marker-badge--active", isHovering && isMatch);
     }
-  }, [activePortIds, activeDepotIds, query, hoveredTenant, ports, depots]);
+  }, [activePortIds, activeDepotIds, query, hoveredTenant, hoveredFeatureFlag, ports, depots]);
 
   // Legend always lists every known tenant (not just ones currently used
   // on the map) so it doubles as a reference key, plus a generic
@@ -639,6 +692,8 @@ export default function LeafletMap({
         showUnassignedDepot={tenantsInUse.hasUnassignedDepot}
         hoveredTenant={hoveredTenant}
         onHoverTenant={setHoveredTenant}
+        hoveredFeatureFlag={hoveredFeatureFlag}
+        onHoverFeatureFlag={setHoveredFeatureFlag}
       />
       <MapContainer
       center={[50, 8]}
