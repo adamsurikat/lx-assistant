@@ -158,14 +158,17 @@ export default function HomePage() {
   const weekEnd = new Date(weekStart);
   weekEnd.setDate(weekEnd.getDate() + 14); // load 2 weeks so week nav feels responsive
 
-  const loadTickets = useCallback(async () => {
-    setLoadingTickets(true);
+  // `silent` skips the loading-placeholder toggle — used when reloading
+  // after a background Jira sync, so the already-rendered ticket list
+  // (from the DB) doesn't flash to "Loading…" and back.
+  const loadTickets = useCallback(async (silent = false) => {
+    if (!silent) setLoadingTickets(true);
     const res = await fetch("/api/jira/tickets");
     if (res.ok) {
       const data = await res.json();
       setTickets(data.tickets);
     }
-    setLoadingTickets(false);
+    if (!silent) setLoadingTickets(false);
   }, []);
 
   const loadEntries = useCallback(async () => {
@@ -246,7 +249,7 @@ export default function HomePage() {
       const data = await res.json().catch(() => ({}));
       setError(data.error ?? "Failed to sync tickets from Jira.");
     } else {
-      await loadTickets();
+      await loadTickets(true);
     }
     setSyncing(false);
   }, [loadTickets]);
