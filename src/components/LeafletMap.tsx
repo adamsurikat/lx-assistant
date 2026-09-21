@@ -666,7 +666,16 @@ export default function LeafletMap({
       badge?.classList.toggle("search-match-badge", query !== "" && isMatch);
       badge?.classList.toggle("port-marker-badge--active", isHovering && isMatch);
     }
-  }, [activePortIds, activeDepotIds, query, hoveredTenant, hoveredFeatureFlag, ports, depots]);
+    // A route only stays visible while at least one of its two end ports
+    // is visible too — otherwise hovering a tenant/feature flag (or
+    // searching) left every route on screen regardless of whether either
+    // endpoint actually matched, which made the highlight misleading.
+    for (const route of routes) {
+      const endpointVisible =
+        !activePortIds || activePortIds.has(route.startPortId) || activePortIds.has(route.endPortId);
+      routeLineRefs.current.get(route.id)?.setStyle({ opacity: endpointVisible ? 1 : nonMatchOpacity });
+    }
+  }, [activePortIds, activeDepotIds, query, hoveredTenant, hoveredFeatureFlag, ports, depots, routes]);
 
   // Legend always lists every known tenant (not just ones currently used
   // on the map) so it doubles as a reference key, plus a generic
@@ -718,6 +727,12 @@ export default function LeafletMap({
         const startPort = portsById.get(route.startPortId);
         const endPort = portsById.get(route.endPortId);
         if (!startPort || !endPort) return null;
+        // A hidden route (per the legend/search filtering handled in the
+        // effect above) shouldn't still react to hover — otherwise its
+        // glow highlight could pop in even though the route itself is
+        // faded out.
+        const routeVisible =
+          !activePortIds || activePortIds.has(route.startPortId) || activePortIds.has(route.endPortId);
 
         return (
           <Fragment key={route.id}>
@@ -729,6 +744,7 @@ export default function LeafletMap({
               pathOptions={{ color: "#000000", weight: 24, opacity: 0 }}
               eventHandlers={{
                 mouseover: () => {
+                  if (!routeVisible) return;
                   portMarkerRefs.current.get(route.startPortId)?.openTooltip();
                   portMarkerRefs.current.get(route.endPortId)?.openTooltip();
                   setPortActive(route.startPortId, true);
