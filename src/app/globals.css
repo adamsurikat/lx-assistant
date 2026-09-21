@@ -385,6 +385,23 @@ h1, h2, h3, .nb-display {
   display: none;
 }
 
+/* Applied instead of unmounting the Tooltip when edit mode is on — see
+   LeafletMap.tsx for why (Leaflet leaks a stale DOM focus listener when a
+   marker's tooltip is unbound while the marker stays mounted, which later
+   throws "this._tooltip is null" on focus). Hiding via CSS keeps the
+   tooltip bound so that listener never fires against a null tooltip. */
+/* Applied to the map container while edit mode is on, to hide the always-
+   mounted marker Tooltips (see LeafletMap.tsx) purely via CSS rather than
+   unmounting them — Leaflet leaks a stale DOM focus listener when a
+   marker's tooltip is unbound while the marker stays mounted, which later
+   throws "this._tooltip is null" the next time that element gets focus.
+   Toggling a class on an ancestor (not the Tooltip's own className prop)
+   is required here since react-leaflet's Tooltip only applies className
+   at creation time and won't react to later prop changes. */
+.map-edit-mode .leaflet-tooltip.map-label-popup {
+  display: none;
+}
+
 /* Port marker: CSS-only hover effect (no JS state needed since Leaflet's
    div-icon markers are real DOM nodes) — scales up slightly and adds a
    colored glow ring on top of its normal shadow. */

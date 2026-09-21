@@ -608,7 +608,7 @@ export default function LeafletMap({
       center={[50, 8]}
       zoom={5}
       minZoom={2}
-      className={`h-full w-full ${pendingAdd ? "cursor-crosshair" : ""}`}
+      className={`h-full w-full ${pendingAdd ? "cursor-crosshair" : ""} ${editMode ? "map-edit-mode" : ""}`}
       worldCopyJump
       zoomControl={false}
     >
@@ -736,16 +736,23 @@ export default function LeafletMap({
             },
           }}
         >
-          {!editMode && (
-            <Tooltip
-              className="map-label-popup"
-              direction="bottom"
-              offset={[0, 16]}
-            >
-              {port.name}
-              {port.code ? ` ${port.code}` : ""}
-            </Tooltip>
-          )}
+          {/* Always mounted (rather than `{!editMode && ...}`) — toggling
+              editMode used to unmount/remount this Tooltip, and Leaflet
+              leaks a native focus listener on the marker's DOM element
+              when a tooltip is unbound while the marker itself stays
+              mounted. That stale listener later throws
+              "this._tooltip is null" the next time the element gets
+              focus. Visibility in edit mode is instead controlled by the
+              .map-edit-mode class on the map container (see globals.css),
+              which keeps the tooltip bound the whole time. */}
+          <Tooltip
+            className="map-label-popup"
+            direction="bottom"
+            offset={[0, 16]}
+          >
+            {port.name}
+            {port.code ? ` ${port.code}` : ""}
+          </Tooltip>
           {editMode && (
             <Popup offset={[0, -14]}>
               <EditForm
@@ -779,16 +786,16 @@ export default function LeafletMap({
             },
           }}
         >
-          {!editMode && (
-            <Tooltip
-              className="map-label-popup"
-              direction="bottom"
-              offset={[0, 14]}
-            >
-              {depot.name}
-              {depot.code ? ` ${depot.code}` : ""}
-            </Tooltip>
-          )}
+          {/* Always mounted — see the matching comment on the port marker's
+              Tooltip above for why. */}
+          <Tooltip
+            className="map-label-popup"
+            direction="bottom"
+            offset={[0, 14]}
+          >
+            {depot.name}
+            {depot.code ? ` ${depot.code}` : ""}
+          </Tooltip>
           {editMode && (
             <Popup offset={[0, -13]}>
               <EditForm
