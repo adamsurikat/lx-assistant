@@ -9,9 +9,6 @@
     "lint": "eslint",
     "map:import": "tsx prisma/importMapGeoJSON.ts"
   },
-  "prisma": {
-    "seed": "tsx prisma/seedFeatureFlags.ts"
-  },
   "dependencies": {
     "@auth/prisma-adapter": "^2.11.3",
     "@base2/pretty-print-object": "^1.0.2",

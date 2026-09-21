@@ -173,7 +173,10 @@ model MapPort {
   routesAsStart MapRoute[] @relation("RouteStart")
   routesAsEnd   MapRoute[] @relation("RouteEnd")
 
-  featureFlags FeatureFlag[]
+  // Feature flags tagged on this port (e.g. "tos", "gos", "booking") — a
+  // plain many-to-one relation (each row is one item/flag assignment,
+  // rather than a shared many-to-many flag entity).
+  featureFlags MapPortFeatureFlag[]
 }
 
 // A truck depot marker annotated on the Map page. Same shape/semantics as
@@ -195,7 +198,8 @@ model MapDepot {
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 
-  featureFlags FeatureFlag[]
+  // Feature flags tagged on this depot — see MapPort.featureFlags.
+  featureFlags MapDepotFeatureFlag[]
 }
 
 // A sea route drawn on the Map page as a cubic bezier curve. Its endpoints
@@ -221,27 +225,48 @@ model MapRoute {
   startPort MapPort @relation("RouteStart", fields: [startPortId], references: [id], onDelete: Cascade)
   endPort   MapPort @relation("RouteEnd", fields: [endPortId], references: [id], onDelete: Cascade)
 
-  featureFlags FeatureFlag[]
+  // Feature flags tagged on this route — see MapPort.featureFlags.
+  featureFlags MapRouteFeatureFlag[]
 }
 
-// A tag (e.g. "beta", "deprecated", "under construction") that can be
-// attached to any number of ports, depots, and/or routes on the Map page,
-// and each of those can carry any number of flags — a many-to-many
-// relationship in both directions, modeled here as three separate
-// implicit join tables (one per map item type) rather than a single
-// polymorphic one, since Prisma can't natively relate one side to "any of
-// several models".
-model FeatureFlag {
+// A single feature-flag tag (e.g. "tos", "gos", "booking") assigned to one
+// port. Modeled as a plain many-to-one relation — one row per assignment,
+// each pointing at exactly one MapPort — rather than a shared many-to-many
+// flag entity, since flag names here are just plain strings rather than
+// records with their own identity/metadata worth sharing across items.
+model MapPortFeatureFlag {
   id        String   @id @default(cuid())
-  name      String   @unique
-  // Swatch color for badges/UI, e.g. a hex code. Empty string means unset.
-  color     String   @default("")
+  name      String
+  mapPortId String
   createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
 
-  ports  MapPort[]
-  depots MapDepot[]
-  routes MapRoute[]
+  mapPort MapPort @relation(fields: [mapPortId], references: [id], onDelete: Cascade)
+
+  @@unique([mapPortId, name])
+}
+
+// Same shape as MapPortFeatureFlag, but for depots.
+model MapDepotFeatureFlag {
+  id         String   @id @default(cuid())
+  name       String
+  mapDepotId String
+  createdAt  DateTime @default(now())
+
+  mapDepot MapDepot @relation(fields: [mapDepotId], references: [id], onDelete: Cascade)
+
+  @@unique([mapDepotId, name])
+}
+
+// Same shape as MapPortFeatureFlag, but for routes.
+model MapRouteFeatureFlag {
+  id         String   @id @default(cuid())
+  name       String
+  mapRouteId String
+  createdAt  DateTime @default(now())
+
+  mapRoute MapRoute @relation(fields: [mapRouteId], references: [id], onDelete: Cascade)
+
+  @@unique([mapRouteId, name])
 }
 
 // A single sticky note on a user's personal post-it board (free-form

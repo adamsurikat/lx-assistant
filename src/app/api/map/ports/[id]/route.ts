@@ -25,7 +25,7 @@ export async function PATCH(
     description?: string;
     lat?: number;
     lng?: number;
-    featureFlagIds?: string[];
+    featureFlagNames?: string[];
   };
 
   const port = await prisma.mapPort.update({
@@ -38,10 +38,16 @@ export async function PATCH(
       ...(body.description !== undefined ? { description: body.description } : {}),
       ...(typeof body.lat === "number" ? { lat: body.lat } : {}),
       ...(typeof body.lng === "number" ? { lng: body.lng } : {}),
-      // `set` replaces the full list of assigned flags rather than adding
-      // to it, so the caller always sends the complete desired set.
-      ...(body.featureFlagIds
-        ? { featureFlags: { set: body.featureFlagIds.map((id) => ({ id })) } }
+      // The caller always sends the complete desired set of flag names, so
+      // drop every existing row and recreate it rather than diffing —
+      // there's no shared flag identity to preserve across the swap.
+      ...(body.featureFlagNames
+        ? {
+            featureFlags: {
+              deleteMany: {},
+              create: body.featureFlagNames.map((name) => ({ name })),
+            },
+          }
         : {}),
     },
     include: { featureFlags: true },

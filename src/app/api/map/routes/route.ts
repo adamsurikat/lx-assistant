@@ -30,7 +30,7 @@ export async function POST(request: Request) {
     control1Lng?: number;
     control2Lat?: number;
     control2Lng?: number;
-    featureFlagIds?: string[];
+    featureFlagNames?: string[];
   };
 
   if (typeof body.startPortId !== "string" || typeof body.endPortId !== "string") {
@@ -65,8 +65,8 @@ export async function POST(request: Request) {
       control1Lng: body.control1Lng!,
       control2Lat: body.control2Lat!,
       control2Lng: body.control2Lng!,
-      ...(body.featureFlagIds
-        ? { featureFlags: { connect: body.featureFlagIds.map((id) => ({ id })) } }
+      ...(body.featureFlagNames
+        ? { featureFlags: { create: body.featureFlagNames.map((name) => ({ name })) } }
         : {}),
     },
     include: { startPort: true, endPort: true, featureFlags: true },

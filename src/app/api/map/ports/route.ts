@@ -29,7 +29,7 @@ export async function POST(request: Request) {
     description?: string;
     lat?: number;
     lng?: number;
-    featureFlagIds?: string[];
+    featureFlagNames?: string[];
   };
 
   if (typeof body.lat !== "number" || typeof body.lng !== "number") {
@@ -45,8 +45,8 @@ export async function POST(request: Request) {
       description: body.description ?? "",
       lat: body.lat,
       lng: body.lng,
-      ...(body.featureFlagIds
-        ? { featureFlags: { connect: body.featureFlagIds.map((id) => ({ id })) } }
+      ...(body.featureFlagNames
+        ? { featureFlags: { create: body.featureFlagNames.map((name) => ({ name })) } }
         : {}),
     },
     include: { featureFlags: true },
