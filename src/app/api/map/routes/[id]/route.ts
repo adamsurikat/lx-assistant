@@ -26,6 +26,7 @@ export async function PATCH(
     control1Lng?: number;
     control2Lat?: number;
     control2Lng?: number;
+    featureFlagIds?: string[];
   };
 
   // A route's start/end are always a real port (never a free lat/lng), so
@@ -55,8 +56,11 @@ export async function PATCH(
       ...(typeof body.control1Lng === "number" ? { control1Lng: body.control1Lng } : {}),
       ...(typeof body.control2Lat === "number" ? { control2Lat: body.control2Lat } : {}),
       ...(typeof body.control2Lng === "number" ? { control2Lng: body.control2Lng } : {}),
+      ...(body.featureFlagIds
+        ? { featureFlags: { set: body.featureFlagIds.map((id) => ({ id })) } }
+        : {}),
     },
-    include: { startPort: true, endPort: true },
+    include: { startPort: true, endPort: true, featureFlags: true },
   });
 
   return NextResponse.json({ route });
