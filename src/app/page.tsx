@@ -238,22 +238,7 @@ export default function HomePage() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [currentDate, googleConnected]);
 
-  useEffect(() => {
-    // eslint-disable-next-line react-hooks/set-state-in-effect -- intentional fetch-on-mount/navigate
-    loadTickets();
-    loadJiraStatus();
-    loadTicketJql();
-    loadGoogleStatus();
-  }, [loadTickets, loadJiraStatus, loadTicketJql, loadGoogleStatus]);
-
-  useEffect(() => {
-    // Re-fetch whenever the visible week range changes (e.g. Back/Next).
-    // eslint-disable-next-line react-hooks/set-state-in-effect -- intentional fetch-on-navigate
-    loadEntries();
-    loadGoogleEvents();
-  }, [loadEntries, loadGoogleEvents]);
-
-  const handleSync = async () => {
+  const handleSync = useCallback(async () => {
     setSyncing(true);
     setError(null);
     const res = await fetch("/api/jira/tickets", { method: "POST" });
@@ -264,7 +249,33 @@ export default function HomePage() {
       await loadTickets();
     }
     setSyncing(false);
-  };
+  }, [loadTickets]);
+
+  useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- intentional fetch-on-mount/navigate
+    loadTickets();
+    loadJiraStatus();
+    loadTicketJql();
+    loadGoogleStatus();
+  }, [loadTickets, loadJiraStatus, loadTicketJql, loadGoogleStatus]);
+
+  // Once we know Jira is actually connected, kick off a background sync so
+  // the ticket drawer reflects the latest Jira state on every page load
+  // (rather than only showing whatever was last cached locally).
+  useEffect(() => {
+    if (jiraConnected) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect -- intentional fetch-on-mount once Jira connection status is known
+      handleSync();
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- only re-run when connection status changes, not on every handleSync identity change
+  }, [jiraConnected]);
+
+  useEffect(() => {
+    // Re-fetch whenever the visible week range changes (e.g. Back/Next).
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- intentional fetch-on-navigate
+    loadEntries();
+    loadGoogleEvents();
+  }, [loadEntries, loadGoogleEvents]);
 
   const handleDropTicket = (ticketId: string, start: Date, end: Date) => {
     // Open the editor instead of creating the entry immediately so a
