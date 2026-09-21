@@ -5,11 +5,20 @@
 // have to import Prisma's generated types (which include Date fields that
 // come back as strings once serialized over JSON).
 
-export interface FeatureFlagRecord {
+// One feature-flag tag assigned to a single port/depot/route (e.g. "tos",
+// "gos", "booking") — see MapPortFeatureFlag/MapDepotFeatureFlag/
+// MapRouteFeatureFlag in prisma/schema.prisma. Each row belongs to exactly
+// one item (many-to-one), so unlike a shared many-to-many tag there's no
+// separate "flag" identity/metadata beyond its name.
+export interface MapFeatureFlagRecord {
   id: string;
   name: string;
-  color: string;
 }
+
+// The fixed set of feature flag names currently in use — hardcoded rather
+// than user-creatable (see prisma/schema.prisma comments), so this is the
+// source of truth for what's selectable in the UI.
+export const KNOWN_FEATURE_FLAG_NAMES = ["tos", "gos", "booking"] as const;
 
 export interface MapPortRecord {
   id: string;
@@ -20,7 +29,7 @@ export interface MapPortRecord {
   description: string;
   lat: number;
   lng: number;
-  featureFlags?: FeatureFlagRecord[];
+  featureFlags?: MapFeatureFlagRecord[];
 }
 
 export interface MapDepotRecord {
@@ -32,7 +41,7 @@ export interface MapDepotRecord {
   tenant: string;
   lat: number;
   lng: number;
-  featureFlags?: FeatureFlagRecord[];
+  featureFlags?: MapFeatureFlagRecord[];
 }
 
 export interface MapRouteRecord {
@@ -45,8 +54,9 @@ export interface MapRouteRecord {
   control1Lng: number;
   control2Lat: number;
   control2Lng: number;
-  featureFlags?: FeatureFlagRecord[];
+  featureFlags?: MapFeatureFlagRecord[];
 }
+
 
 // Builds a cubic bezier curve between two [lat, lng] points so routes can be
 // drawn as smooth arcs instead of straight lines. Leaflet's Polyline only
