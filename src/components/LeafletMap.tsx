@@ -5,7 +5,7 @@ import { MapContainer, TileLayer, Marker, Popup, Tooltip, Polyline, ZoomControl,
 import L from "leaflet";
 import "leaflet/dist/leaflet.css";
 import type { MapPortRecord, MapDepotRecord, MapRouteRecord } from "@/lib/mapTypes";
-import { routeToPath } from "@/lib/mapTypes";
+import { routeToPath, KNOWN_FEATURE_FLAG_NAMES } from "@/lib/mapTypes";
 
 // Ports/depots tagged with one of these tenants get their own brand color
 // instead of the default marker color — both on the marker itself and on
@@ -246,6 +246,7 @@ function EditForm({
   tenant,
   country,
   description,
+  featureFlagNames,
   onSave,
   onDelete,
 }: {
@@ -254,18 +255,24 @@ function EditForm({
   tenant?: string;
   country: string;
   description: string;
+  // Only passed in for item types that support feature flags (currently just
+  // ports) — `undefined` hides the whole checkbox group instead of showing
+  // one with nothing checked.
+  featureFlagNames?: string[];
   onSave: (updates: {
     name: string;
     code?: string;
     tenant?: string;
     country: string;
     description: string;
+    featureFlagNames?: string[];
   }) => void;
   onDelete: () => void;
 }) {
   const [nameValue, setNameValue] = useState(name);
   const [codeValue, setCodeValue] = useState(code ?? "");
   const [tenantValue, setTenantValue] = useState(tenant ?? "");
+  const [selectedFlags, setSelectedFlags] = useState<string[]>(featureFlagNames ?? []);
 
   return (
     <div className="flex w-56 flex-col gap-1.5">
@@ -291,6 +298,27 @@ function EditForm({
           className="rounded border border-nb-ink/20 px-1.5 py-1 text-xs"
         />
       )}
+      {featureFlagNames !== undefined && (
+        <div className="flex flex-col gap-0.5 rounded border border-nb-ink/20 px-1.5 py-1">
+          <span className="text-[10px] font-semibold uppercase tracking-wide text-nb-ink/50">
+            Feature flags
+          </span>
+          {KNOWN_FEATURE_FLAG_NAMES.map((flagName) => (
+            <label key={flagName} className="flex items-center gap-1.5 text-xs">
+              <input
+                type="checkbox"
+                checked={selectedFlags.includes(flagName)}
+                onChange={(e) =>
+                  setSelectedFlags((prev) =>
+                    e.target.checked ? [...prev, flagName] : prev.filter((f) => f !== flagName),
+                  )
+                }
+              />
+              {flagName}
+            </label>
+          ))}
+        </div>
+      )}
       <div className="flex items-center justify-between gap-2 pt-0.5">
         <button
           type="button"
@@ -308,6 +336,7 @@ function EditForm({
               ...(tenant !== undefined ? { tenant: tenantValue } : {}),
               country,
               description,
+              ...(featureFlagNames !== undefined ? { featureFlagNames: selectedFlags } : {}),
             })
           }
           className="nb-btn nb-btn-orange px-2 py-1 text-xs font-semibold"
@@ -441,7 +470,14 @@ interface LeafletMapProps {
   onRouteControlDragEnd: (id: string, field: "control1" | "control2", lat: number, lng: number) => void;
   onPortSave: (
     id: string,
-    updates: { name: string; code?: string; tenant?: string; country: string; description: string },
+    updates: {
+      name: string;
+      code?: string;
+      tenant?: string;
+      country: string;
+      description: string;
+      featureFlagNames?: string[];
+    },
   ) => void;
   onDepotSave: (
     id: string,
@@ -761,6 +797,7 @@ export default function LeafletMap({
                 tenant={port.tenant}
                 country={port.country}
                 description={port.description}
+                featureFlagNames={port.featureFlags?.map((f) => f.name) ?? []}
                 onSave={(updates) => onPortSave(port.id, updates)}
                 onDelete={() => onPortDelete(port.id)}
               />

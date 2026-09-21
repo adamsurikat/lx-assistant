@@ -163,14 +163,28 @@ export default function MapPage() {
   const handlePortSave = useCallback(
     async (
       id: string,
-      updates: { name: string; code?: string; tenant?: string; country: string; description: string },
+      updates: {
+        name: string;
+        code?: string;
+        tenant?: string;
+        country: string;
+        description: string;
+        featureFlagNames?: string[];
+      },
     ) => {
       setPorts((prev) => prev.map((p) => (p.id === id ? { ...p, ...updates } : p)));
-      await fetch(`/api/map/ports/${id}`, {
+      const res = await fetch(`/api/map/ports/${id}`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(updates),
       });
+      if (res.ok) {
+        // The optimistic update above can't know the DB-assigned ids for
+        // any newly (re)created feature-flag rows, so once the real
+        // response comes back, reconcile with the authoritative record.
+        const { port } = await res.json();
+        setPorts((prev) => prev.map((p) => (p.id === id ? port : p)));
+      }
     },
     [],
   );
