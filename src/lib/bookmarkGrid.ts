@@ -31,6 +31,10 @@ const ENV_ALIASES: Record<string, string> = {
 const ENV_ORDER = ["Local", "Docker", "FAT", "Staging", "Prod"];
 
 const DEFAULT_TENANT = "Default";
+// The tenant label parsed out of an "... APAC" title (see envIndex/tenant
+// logic below) — used to detect the EU/APAC pairing described above.
+const APAC_TENANT = "APAC";
+const EU_TENANT = "EU";
 
 // Finds the word most link titles in this folder start with (e.g. "TAPI"
 // for "TAPI Local" / "TAPI FAT" / ...), so it can be stripped before reading
@@ -141,10 +145,25 @@ export function buildServiceGrid(folder: BookmarkFolder): ServiceGrid {
     }
   }
 
+  // When a folder has an explicit "APAC" tenant column (e.g. mc, rabbitMQ,
+  // TAPI admin — titles like "TAPI FAT APAC" vs. plain "TAPI FAT"), the
+  // untagged links are really the EU deployment rather than some generic
+  // fallback, so relabel that column "EU" instead of "Default" for display.
+  // Folders with no APAC counterpart (e.g. NodeRed's plain "Local" entry)
+  // keep the generic "Default" label, since there's no region being
+  // distinguished from.
+  if (tenants.has(DEFAULT_TENANT) && tenants.has(APAC_TENANT)) {
+    cells[EU_TENANT] = cells[DEFAULT_TENANT];
+    delete cells[DEFAULT_TENANT];
+    tenants.delete(DEFAULT_TENANT);
+    tenants.add(EU_TENANT);
+  }
+
   const sortedEnvironments = ENV_ORDER.filter((e) => environments.has(e));
   const sortedTenants = [...tenants].sort((a, b) => {
-    if (a === DEFAULT_TENANT) return -1;
-    if (b === DEFAULT_TENANT) return 1;
+    const isDefault = (t: string) => t === DEFAULT_TENANT || t === EU_TENANT;
+    if (isDefault(a) && !isDefault(b)) return -1;
+    if (isDefault(b) && !isDefault(a)) return 1;
     return a.localeCompare(b);
   });
 
