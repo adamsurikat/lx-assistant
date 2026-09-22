@@ -135,19 +135,25 @@ function makeDepotIcon(color: string, size = 26) {
 // Deliberately *not* a Leaflet Popup anchored to the item on the map (which
 // used to move with the map and could cover nearby markers) — it's docked
 // near the bottom of the map viewport instead, so it stays put regardless
-// of which item is selected or how the map is panned/zoomed.
-function MapEditPanel({ children, onClose }: { children: ReactNode; onClose: () => void }) {
+// of which item is selected or how the map is panned/zoomed. Uses the same
+// `nb-panel` card treatment (and the same plain-✕ close button style) as
+// the post-it board's trash panel, so it reads as part of the app's design
+// instead of a boxed-in overlay with a floating X.
+function MapEditPanel({ title, children, onClose }: { title: string; children: ReactNode; onClose: () => void }) {
   return (
     <div className="pointer-events-none absolute inset-x-0 bottom-4 z-[1100] flex justify-center px-3">
-      <div className="pointer-events-auto relative w-auto max-w-full rounded-lg border border-nb-ink/10 bg-white p-3 pr-7 shadow-xl">
-        <button
-          type="button"
-          onClick={onClose}
-          aria-label="Close"
-          className="absolute right-2 top-2 rounded px-1 text-xs font-semibold text-nb-ink/50 hover:bg-nb-ink/10 hover:text-nb-ink"
-        >
-          ✕
-        </button>
+      <div className="nb-panel pointer-events-auto w-full max-w-2xl bg-white p-4">
+        <div className="mb-3 flex items-center justify-between gap-3">
+          <h2 className="text-sm font-bold uppercase tracking-wide text-nb-ink/70">{title}</h2>
+          <button
+            type="button"
+            onClick={onClose}
+            aria-label="Close"
+            className="text-lg font-bold leading-none text-nb-ink/50 hover:text-nb-ink"
+          >
+            ✕
+          </button>
+        </div>
         {children}
       </div>
     </div>
@@ -331,50 +337,54 @@ function EditForm({
   const [selectedFlags, setSelectedFlags] = useState<string[]>(featureFlagNames ?? []);
 
   return (
-    <div className="flex w-56 flex-col gap-1.5">
-      <input
-        value={nameValue}
-        onChange={(e) => setNameValue(e.target.value)}
-        placeholder="Name"
-        className="rounded border border-nb-ink/20 px-1.5 py-1 text-xs font-semibold"
-      />
-      {code !== undefined && (
-        <input
-          value={codeValue}
-          onChange={(e) => setCodeValue(e.target.value.toUpperCase())}
-          placeholder="Code (e.g. BELF)"
-          className="rounded border border-nb-ink/20 px-1.5 py-1 text-xs font-semibold uppercase"
-        />
-      )}
-      {tenant !== undefined && (
-        <input
-          value={tenantValue}
-          onChange={(e) => setTenantValue(e.target.value)}
-          placeholder="Tenant (e.g. Stena Line)"
-          className="rounded border border-nb-ink/20 px-1.5 py-1 text-xs"
-        />
-      )}
-      {featureFlagNames !== undefined && (
-        <div className="flex flex-col gap-0.5 rounded border border-nb-ink/20 px-1.5 py-1">
-          <span className="text-[10px] font-semibold uppercase tracking-wide text-nb-ink/50">
-            Feature flags
-          </span>
-          {KNOWN_FEATURE_FLAG_NAMES.map((flagName) => (
-            <label key={flagName} className="flex items-center gap-1.5 text-xs">
-              <input
-                type="checkbox"
-                checked={selectedFlags.includes(flagName)}
-                onChange={(e) =>
-                  setSelectedFlags((prev) =>
-                    e.target.checked ? [...prev, flagName] : prev.filter((f) => f !== flagName),
-                  )
-                }
-              />
-              {flagName}
-            </label>
-          ))}
+    <div className="flex w-full flex-col gap-3">
+      <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+        <div className="flex flex-col gap-1.5">
+          <input
+            value={nameValue}
+            onChange={(e) => setNameValue(e.target.value)}
+            placeholder="Name"
+            className="rounded border border-nb-ink/20 px-1.5 py-1 text-xs font-semibold"
+          />
+          {code !== undefined && (
+            <input
+              value={codeValue}
+              onChange={(e) => setCodeValue(e.target.value.toUpperCase())}
+              placeholder="Code (e.g. BELF)"
+              className="rounded border border-nb-ink/20 px-1.5 py-1 text-xs font-semibold uppercase"
+            />
+          )}
+          {tenant !== undefined && (
+            <input
+              value={tenantValue}
+              onChange={(e) => setTenantValue(e.target.value)}
+              placeholder="Tenant (e.g. Stena Line)"
+              className="rounded border border-nb-ink/20 px-1.5 py-1 text-xs"
+            />
+          )}
         </div>
-      )}
+        {featureFlagNames !== undefined && (
+          <div className="flex flex-col gap-0.5 rounded border border-nb-ink/20 px-1.5 py-1">
+            <span className="text-[10px] font-semibold uppercase tracking-wide text-nb-ink/50">
+              Feature flags
+            </span>
+            {KNOWN_FEATURE_FLAG_NAMES.map((flagName) => (
+              <label key={flagName} className="flex items-center gap-1.5 text-xs">
+                <input
+                  type="checkbox"
+                  checked={selectedFlags.includes(flagName)}
+                  onChange={(e) =>
+                    setSelectedFlags((prev) =>
+                      e.target.checked ? [...prev, flagName] : prev.filter((f) => f !== flagName),
+                    )
+                  }
+                />
+                {flagName}
+              </label>
+            ))}
+          </div>
+        )}
+      </div>
       <label
         className={`flex cursor-pointer items-center gap-1.5 rounded px-1.5 py-1 text-xs font-semibold ${
           locked ? "bg-nb-ink/10 text-nb-ink/70" : "bg-emerald-100 text-emerald-700"
@@ -445,35 +455,37 @@ function RouteEditForm({
   const [endPortValue, setEndPortValue] = useState(endPortId);
 
   return (
-    <div className="flex w-60 flex-col gap-1.5">
-      <label className="text-[10px] font-semibold uppercase tracking-wide text-nb-ink/50">
-        Start port
-        <select
-          value={startPortValue}
-          onChange={(e) => setStartPortValue(e.target.value)}
-          className="mt-0.5 w-full rounded border border-nb-ink/20 px-1.5 py-1 text-xs font-normal normal-case"
-        >
-          {ports.map((port) => (
-            <option key={port.id} value={port.id}>
-              {port.name}
-            </option>
-          ))}
-        </select>
-      </label>
-      <label className="text-[10px] font-semibold uppercase tracking-wide text-nb-ink/50">
-        End port
-        <select
-          value={endPortValue}
-          onChange={(e) => setEndPortValue(e.target.value)}
-          className="mt-0.5 w-full rounded border border-nb-ink/20 px-1.5 py-1 text-xs font-normal normal-case"
-        >
-          {ports.map((port) => (
-            <option key={port.id} value={port.id}>
-              {port.name}
-            </option>
-          ))}
-        </select>
-      </label>
+    <div className="flex w-full flex-col gap-3">
+      <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+        <label className="text-[10px] font-semibold uppercase tracking-wide text-nb-ink/50">
+          Start port
+          <select
+            value={startPortValue}
+            onChange={(e) => setStartPortValue(e.target.value)}
+            className="mt-0.5 w-full rounded border border-nb-ink/20 px-1.5 py-1 text-xs font-normal normal-case"
+          >
+            {ports.map((port) => (
+              <option key={port.id} value={port.id}>
+                {port.name}
+              </option>
+            ))}
+          </select>
+        </label>
+        <label className="text-[10px] font-semibold uppercase tracking-wide text-nb-ink/50">
+          End port
+          <select
+            value={endPortValue}
+            onChange={(e) => setEndPortValue(e.target.value)}
+            className="mt-0.5 w-full rounded border border-nb-ink/20 px-1.5 py-1 text-xs font-normal normal-case"
+          >
+            {ports.map((port) => (
+              <option key={port.id} value={port.id}>
+                {port.name}
+              </option>
+            ))}
+          </select>
+        </label>
+      </div>
       <label
         className={`flex cursor-pointer items-center gap-1.5 rounded px-1.5 py-1 text-xs font-semibold ${
           locked ? "bg-nb-ink/10 text-nb-ink/70" : "bg-emerald-100 text-emerald-700"
@@ -1030,7 +1042,10 @@ export default function LeafletMap({
       ))}
       </MapContainer>
       {editMode && selectedItem && (
-        <MapEditPanel onClose={closeItem}>
+        <MapEditPanel
+          title={selectedItem.type === "port" ? "Edit port" : selectedItem.type === "depot" ? "Edit depot" : "Edit route"}
+          onClose={closeItem}
+        >
           {selectedItem.type === "port" &&
             (() => {
               const port = portsById.get(selectedItem.id);
