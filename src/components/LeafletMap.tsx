@@ -71,13 +71,13 @@ function getDepotIcon(color: string): L.DivIcon {
   return icon;
 }
 
-// Leaflet's default marker icons reference image URLs that don't resolve
-// correctly when bundled by webpack, so we build custom colored div-icons
-// instead of relying on the default marker images.
-function makeIcon(color: string, size = 16, square = false) {
+// Bezier control-point ("handle") icon — a bright, high-contrast dot with a
+// thick white ring and glow so it's unmistakably a draggable handle even
+// against busy map tiles or overlapping route lines.
+function makeControlIcon(size = 16) {
   return L.divIcon({
     className: "",
-    html: `<span style="display:block;width:${size}px;height:${size}px;border-radius:${square ? "3px" : "50%"};background:${color};border:2px solid white;box-shadow:0 0 0 1px rgba(0,0,0,0.35)"></span>`,
+    html: `<span style="display:block;width:${size}px;height:${size}px;border-radius:50%;background:#f97316;border:3px solid white;box-shadow:0 0 0 2px #f97316,0 0 8px 2px rgba(249,115,22,0.7)"></span>`,
     iconSize: [size, size],
     iconAnchor: [size / 2, size / 2],
     popupAnchor: [0, -size / 2],
@@ -568,7 +568,7 @@ export default function LeafletMap({
   onDepotDelete,
   onRouteDelete,
 }: LeafletMapProps) {
-  const controlIcon = useMemo(() => makeIcon("#7c3aed", 10, true), []);
+  const controlIcon = useMemo(() => makeControlIcon(16), []);
   const portsById = useMemo(() => new Map(ports.map((p) => [p.id, p])), [ports]);
   // Lets a hovered route (Polyline) open the tooltip label of the two ports
   // it connects, even though the mouse itself is over the line rather than
@@ -855,10 +855,31 @@ export default function LeafletMap({
             />
             {editMode && unlockedIds.has(route.id) && (
               <>
+                {/* Dashed guide lines from each anchor port to its nearest
+                    handle make the bezier's shape easier to reason about —
+                    control1 pulls the curve away from the start port,
+                    control2 from the end port. */}
+                <Polyline
+                  positions={[
+                    [startPort.lat, startPort.lng],
+                    [route.control1Lat, route.control1Lng],
+                  ]}
+                  pathOptions={{ color: "#f97316", weight: 1.5, dashArray: "4 4", opacity: 0.85 }}
+                  interactive={false}
+                />
+                <Polyline
+                  positions={[
+                    [endPort.lat, endPort.lng],
+                    [route.control2Lat, route.control2Lng],
+                  ]}
+                  pathOptions={{ color: "#f97316", weight: 1.5, dashArray: "4 4", opacity: 0.85 }}
+                  interactive={false}
+                />
                 <Marker
                   position={[route.control1Lat, route.control1Lng]}
                   icon={controlIcon}
                   draggable
+                  zIndexOffset={1000}
                   eventHandlers={{
                     dragend: (e) => {
                       const { lat, lng } = e.target.getLatLng();
@@ -870,6 +891,7 @@ export default function LeafletMap({
                   position={[route.control2Lat, route.control2Lng]}
                   icon={controlIcon}
                   draggable
+                  zIndexOffset={1000}
                   eventHandlers={{
                     dragend: (e) => {
                       const { lat, lng } = e.target.getLatLng();
