@@ -598,9 +598,9 @@ function FlyToFocus({ request }: { request: FocusRequest | null }) {
   useEffect(() => {
     if (!request || request.points.length === 0) return;
     if (request.points.length === 1) {
-      map.flyTo(request.points[0], Math.min(Math.max(map.getZoom(), 6), 7), { duration: 0.5 });
+      map.flyTo(request.points[0], 12, { duration: 0.5 });
     } else {
-      map.flyToBounds(L.latLngBounds(request.points), { padding: [64, 64], maxZoom: 7, duration: 0.5 });
+      map.flyToBounds(L.latLngBounds(request.points), { padding: [64, 64], maxZoom: 12, duration: 0.5 });
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [request?.nonce]);
