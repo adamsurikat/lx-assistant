@@ -1244,6 +1244,7 @@ export default function LeafletMap({
               if (!port) return null;
               return (
                 <EditForm
+                  key={port.id}
                   name={port.name}
                   code={port.code}
                   tenant={port.tenant}
@@ -1266,6 +1267,7 @@ export default function LeafletMap({
               if (!depot) return null;
               return (
                 <EditForm
+                  key={depot.id}
                   name={depot.name}
                   code={depot.code}
                   tenant={depot.tenant}
@@ -1287,6 +1289,7 @@ export default function LeafletMap({
               if (!route) return null;
               return (
                 <RouteEditForm
+                  key={route.id}
                   name={route.name}
                   description={route.description}
                   startPortId={route.startPortId}
