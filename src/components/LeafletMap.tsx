@@ -689,10 +689,6 @@ export default function LeafletMap({
   // it here and its edit form renders in a floating panel docked near the
   // bottom of the map (see the JSX below) instead.
   const [selectedItem, setSelectedItem] = useState<{ type: "port" | "depot" | "route"; id: string } | null>(null);
-  // Bumped on every discard so the just-discarded form remounts with the
-  // reverted data instead of keeping its stale local input state (see the
-  // key comment on the EditForm/RouteEditForm instances below).
-  const [discardNonce, setDiscardNonce] = useState(0);
   const openItem = (type: "port" | "depot" | "route", id: string) => {
     setSelectedItem({ type, id });
   };
@@ -1223,10 +1219,7 @@ export default function LeafletMap({
               if (!port) return null;
               return (
                 <EditForm
-                  // Discarding reverts the port's data in place (same id),
-                  // so the nonce forces a remount to pick up the reverted
-                  // values instead of leaving the form's stale local state.
-                  key={`${port.id}-${discardNonce}`}
+                  key={port.id}
                   name={port.name}
                   code={port.code}
                   tenant={port.tenant}
@@ -1236,7 +1229,7 @@ export default function LeafletMap({
                   onSave={(updates) => onPortSave(port.id, updates)}
                   onDiscard={() => {
                     onPortDiscard(port.id);
-                    setDiscardNonce((n) => n + 1);
+                    closeItem();
                   }}
                   onDelete={() => {
                     onPortDelete(port.id);
@@ -1251,7 +1244,7 @@ export default function LeafletMap({
               if (!depot) return null;
               return (
                 <EditForm
-                  key={`${depot.id}-${discardNonce}`}
+                  key={depot.id}
                   name={depot.name}
                   code={depot.code}
                   tenant={depot.tenant}
@@ -1260,7 +1253,7 @@ export default function LeafletMap({
                   onSave={(updates) => onDepotSave(depot.id, updates)}
                   onDiscard={() => {
                     onDepotDiscard(depot.id);
-                    setDiscardNonce((n) => n + 1);
+                    closeItem();
                   }}
                   onDelete={() => {
                     onDepotDelete(depot.id);
@@ -1275,7 +1268,7 @@ export default function LeafletMap({
               if (!route) return null;
               return (
                 <RouteEditForm
-                  key={`${route.id}-${discardNonce}`}
+                  key={route.id}
                   name={route.name}
                   description={route.description}
                   startPortId={route.startPortId}
@@ -1284,7 +1277,7 @@ export default function LeafletMap({
                   onSave={(updates) => onRouteSave(route.id, updates)}
                   onDiscard={() => {
                     onRouteDiscard(route.id);
-                    setDiscardNonce((n) => n + 1);
+                    closeItem();
                   }}
                   onDelete={() => {
                     onRouteDelete(route.id);
