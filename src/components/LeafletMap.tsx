@@ -949,7 +949,7 @@ export default function LeafletMap({
       center={[50, 8]}
       zoom={5}
       minZoom={2}
-      className={`h-full w-full ${pendingAdd ? "cursor-crosshair" : ""} ${editMode ? "map-edit-mode" : ""}`}
+      className={`h-full w-full ${pendingAdd ? "cursor-crosshair" : ""}`}
       worldCopyJump
       zoomControl={false}
     >
@@ -1160,9 +1160,8 @@ export default function LeafletMap({
               when a tooltip is unbound while the marker itself stays
               mounted. That stale listener later throws
               "this._tooltip is null" the next time the element gets
-              focus. Visibility in edit mode is instead controlled by the
-              .map-edit-mode class on the map container (see globals.css),
-              which keeps the tooltip bound the whole time. */}
+              focus. It now just uses Leaflet's normal hover-triggered
+              tooltip behavior in both view and edit mode. */}
           <Tooltip
             className="map-label-popup"
             direction="bottom"
