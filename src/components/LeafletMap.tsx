@@ -1011,12 +1011,12 @@ export default function LeafletMap({
                 else routeGlowRefs.current.delete(route.id);
               }}
               positions={routeToPath(route, startPort, endPort)}
-              // Always a bright, fixed highlight color (not the route's own
+              // Always a fixed white highlight color (not the route's own
               // tenant color) — a cross-tenant route falls back to near-black
               // (DEFAULT_ROUTE_COLOR), so a same-colored "glow" behind it was
               // essentially invisible against the map. This guarantees the
               // highlight stands out regardless of the route's own color.
-              pathOptions={{ color: "#f97316", weight: 14, opacity: 0 }}
+              pathOptions={{ color: "#ffffff", weight: 14, opacity: 0 }}
               interactive={false}
             />
             <Polyline
