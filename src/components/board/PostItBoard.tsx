@@ -253,8 +253,14 @@ export function PostItBoard() {
   // Keeps every note fully contained within the canvas's current on-screen
   // size — whenever the board container is resized (e.g. the browser
   // window is narrowed), any note that would now stick out past the right
-  // or bottom edge is pulled back in. Runs on the desktop canvas layout
-  // only; the mobile list layout doesn't use x/y positioning at all.
+  // or bottom edge is pulled back in visually. This is purely a rendering
+  // adjustment for the current session: it does NOT persist to the
+  // database (no scheduleSave call), so a note's actual stored x/y is only
+  // ever updated by the user deliberately dragging it. Reloading the page
+  // (or widening the window back out) always starts from the real saved
+  // position again, re-clamped for whatever the current size happens to
+  // be. Runs on the desktop canvas layout only; the mobile list layout
+  // doesn't use x/y positioning at all.
   useEffect(() => {
     if (isMobile) return;
     const board = boardRef.current;
@@ -271,7 +277,6 @@ export function PostItBoard() {
           const y = Math.min(n.y, maxY);
           if (x === n.x && y === n.y) return n;
           changed = true;
-          scheduleSave(n.id, { x, y });
           return { ...n, x, y };
         });
         return changed ? next : prev;
@@ -289,7 +294,7 @@ export function PostItBoard() {
     });
     observer.observe(board);
     return () => observer.disconnect();
-  }, [isMobile, scheduleSave]);
+  }, [isMobile]);
 
   // There's no toolbar/button anymore — double-clicking or double-tapping
   // empty board space (i.e. not on top of an existing note) creates a new
