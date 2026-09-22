@@ -309,14 +309,6 @@ function EditForm({
 
   return (
     <div className="flex w-56 flex-col gap-1.5">
-      <label
-        className={`flex cursor-pointer items-center gap-1.5 rounded px-1.5 py-1 text-xs font-semibold ${
-          locked ? "bg-nb-ink/10 text-nb-ink/70" : "bg-emerald-100 text-emerald-700"
-        }`}
-      >
-        <input type="checkbox" checked={locked} onChange={onToggleLock} className="h-3.5 w-3.5" />
-        Locked
-      </label>
       <input
         value={nameValue}
         onChange={(e) => setNameValue(e.target.value)}
@@ -360,6 +352,14 @@ function EditForm({
           ))}
         </div>
       )}
+      <label
+        className={`flex cursor-pointer items-center gap-1.5 rounded px-1.5 py-1 text-xs font-semibold ${
+          locked ? "bg-nb-ink/10 text-nb-ink/70" : "bg-emerald-100 text-emerald-700"
+        }`}
+      >
+        <input type="checkbox" checked={locked} onChange={onToggleLock} className="h-3.5 w-3.5" />
+        Locked
+      </label>
       <div className="flex items-center justify-between gap-2 pt-0.5">
         <button
           type="button"
@@ -423,14 +423,6 @@ function RouteEditForm({
 
   return (
     <div className="flex w-60 flex-col gap-1.5">
-      <label
-        className={`flex cursor-pointer items-center gap-1.5 rounded px-1.5 py-1 text-xs font-semibold ${
-          locked ? "bg-nb-ink/10 text-nb-ink/70" : "bg-emerald-100 text-emerald-700"
-        }`}
-      >
-        <input type="checkbox" checked={locked} onChange={onToggleLock} className="h-3.5 w-3.5" />
-        Locked
-      </label>
       <label className="text-[10px] font-semibold uppercase tracking-wide text-nb-ink/50">
         Start port
         <select
@@ -458,6 +450,14 @@ function RouteEditForm({
             </option>
           ))}
         </select>
+      </label>
+      <label
+        className={`flex cursor-pointer items-center gap-1.5 rounded px-1.5 py-1 text-xs font-semibold ${
+          locked ? "bg-nb-ink/10 text-nb-ink/70" : "bg-emerald-100 text-emerald-700"
+        }`}
+      >
+        <input type="checkbox" checked={locked} onChange={onToggleLock} className="h-3.5 w-3.5" />
+        Locked
       </label>
       <div className="flex items-center justify-between gap-2 pt-0.5">
         <button
