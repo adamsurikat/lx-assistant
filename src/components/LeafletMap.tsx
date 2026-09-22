@@ -309,15 +309,14 @@ function EditForm({
 
   return (
     <div className="flex w-56 flex-col gap-1.5">
-      <button
-        type="button"
-        onClick={onToggleLock}
-        className={`flex items-center justify-center gap-1.5 rounded px-1.5 py-1 text-xs font-semibold ${
-          locked ? "bg-nb-ink/10 text-nb-ink/70 hover:bg-nb-ink/15" : "bg-emerald-100 text-emerald-700 hover:bg-emerald-200"
+      <label
+        className={`flex cursor-pointer items-center gap-1.5 rounded px-1.5 py-1 text-xs font-semibold ${
+          locked ? "bg-nb-ink/10 text-nb-ink/70" : "bg-emerald-100 text-emerald-700"
         }`}
       >
-        {locked ? "🔒 Locked — unlock to move" : "🔓 Unlocked — drag to move"}
-      </button>
+        <input type="checkbox" checked={!locked} onChange={onToggleLock} className="h-3.5 w-3.5" />
+        {locked ? "Locked — check to unlock and move" : "Unlocked — drag to move"}
+      </label>
       <input
         value={nameValue}
         onChange={(e) => setNameValue(e.target.value)}
@@ -424,15 +423,14 @@ function RouteEditForm({
 
   return (
     <div className="flex w-60 flex-col gap-1.5">
-      <button
-        type="button"
-        onClick={onToggleLock}
-        className={`flex items-center justify-center gap-1.5 rounded px-1.5 py-1 text-xs font-semibold ${
-          locked ? "bg-nb-ink/10 text-nb-ink/70 hover:bg-nb-ink/15" : "bg-emerald-100 text-emerald-700 hover:bg-emerald-200"
+      <label
+        className={`flex cursor-pointer items-center gap-1.5 rounded px-1.5 py-1 text-xs font-semibold ${
+          locked ? "bg-nb-ink/10 text-nb-ink/70" : "bg-emerald-100 text-emerald-700"
         }`}
       >
-        {locked ? "🔒 Locked — unlock to adjust curve" : "🔓 Unlocked — drag curve handles"}
-      </button>
+        <input type="checkbox" checked={!locked} onChange={onToggleLock} className="h-3.5 w-3.5" />
+        {locked ? "Locked — check to adjust curve" : "Unlocked — drag curve handles"}
+      </label>
       <label className="text-[10px] font-semibold uppercase tracking-wide text-nb-ink/50">
         Start port
         <select
