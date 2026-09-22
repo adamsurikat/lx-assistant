@@ -314,8 +314,8 @@ function EditForm({
           locked ? "bg-nb-ink/10 text-nb-ink/70" : "bg-emerald-100 text-emerald-700"
         }`}
       >
-        <input type="checkbox" checked={!locked} onChange={onToggleLock} className="h-3.5 w-3.5" />
-        {locked ? "Locked — check to unlock and move" : "Unlocked — drag to move"}
+        <input type="checkbox" checked={locked} onChange={onToggleLock} className="h-3.5 w-3.5" />
+        Locked
       </label>
       <input
         value={nameValue}
@@ -428,8 +428,8 @@ function RouteEditForm({
           locked ? "bg-nb-ink/10 text-nb-ink/70" : "bg-emerald-100 text-emerald-700"
         }`}
       >
-        <input type="checkbox" checked={!locked} onChange={onToggleLock} className="h-3.5 w-3.5" />
-        {locked ? "Locked — check to adjust curve" : "Unlocked — drag curve handles"}
+        <input type="checkbox" checked={locked} onChange={onToggleLock} className="h-3.5 w-3.5" />
+        Locked
       </label>
       <label className="text-[10px] font-semibold uppercase tracking-wide text-nb-ink/50">
         Start port
