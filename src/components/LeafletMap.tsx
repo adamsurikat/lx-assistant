@@ -273,6 +273,8 @@ function EditForm({
   country,
   description,
   featureFlagNames,
+  locked,
+  onToggleLock,
   onSave,
   onDelete,
 }: {
@@ -285,6 +287,11 @@ function EditForm({
   // ports) — `undefined` hides the whole checkbox group instead of showing
   // one with nothing checked.
   featureFlagNames?: string[];
+  // Whether the marker is currently locked (not draggable). The form shows
+  // an "Unlock to move" / "Lock" toggle so dragging is opt-in per popup
+  // visit rather than automatic whenever edit mode is on.
+  locked: boolean;
+  onToggleLock: () => void;
   onSave: (updates: {
     name: string;
     code?: string;
@@ -302,6 +309,15 @@ function EditForm({
 
   return (
     <div className="flex w-56 flex-col gap-1.5">
+      <button
+        type="button"
+        onClick={onToggleLock}
+        className={`flex items-center justify-center gap-1.5 rounded px-1.5 py-1 text-xs font-semibold ${
+          locked ? "bg-nb-ink/10 text-nb-ink/70 hover:bg-nb-ink/15" : "bg-emerald-100 text-emerald-700 hover:bg-emerald-200"
+        }`}
+      >
+        {locked ? "🔒 Locked — unlock to move" : "🔓 Unlocked — drag to move"}
+      </button>
       <input
         value={nameValue}
         onChange={(e) => setNameValue(e.target.value)}
@@ -552,6 +568,27 @@ export default function LeafletMap({
   // shown on hover — a "glow"/drop-shadow highlight in the route's own
   // color rather than swapping to a different highlight color.
   const routeGlowRefs = useRef(new Map<string, L.Polyline>());
+  // Ports/depots are locked (not draggable) by default, even while
+  // `editMode` is on, to guard against accidentally dragging a marker while
+  // just clicking around to edit its name/description. Opening a marker's
+  // popup shows an "Unlock to move" button; clicking it adds the marker's
+  // id here, which is what actually flips `draggable` on. Closing the
+  // popup re-locks it so the next time it's opened it starts locked again.
+  const [unlockedIds, setUnlockedIds] = useState<Set<string>>(new Set());
+  const lockMarker = (id: string) =>
+    setUnlockedIds((prev) => {
+      if (!prev.has(id)) return prev;
+      const next = new Set(prev);
+      next.delete(id);
+      return next;
+    });
+  const unlockMarker = (id: string) =>
+    setUnlockedIds((prev) => {
+      if (prev.has(id)) return prev;
+      const next = new Set(prev);
+      next.add(id);
+      return next;
+    });
   const routeStyleFor = (startPort: MapPortRecord, endPort: MapPortRecord) => ({
     color:
       startPort.tenant && startPort.tenant === endPort.tenant
@@ -831,7 +868,7 @@ export default function LeafletMap({
           key={port.id}
           position={[port.lat, port.lng]}
           icon={getPortIcon(colorForTenant(port.tenant, DEFAULT_PORT_COLOR))}
-          draggable={editMode}
+          draggable={editMode && unlockedIds.has(port.id)}
           ref={(m) => {
             if (m) portMarkerRefs.current.set(port.id, m);
             else portMarkerRefs.current.delete(port.id);
@@ -841,6 +878,7 @@ export default function LeafletMap({
               const { lat, lng } = e.target.getLatLng();
               onPortDragEnd(port.id, lat, lng);
             },
+            popupclose: () => lockMarker(port.id),
           }}
         >
           {/* Always mounted (rather than `{!editMode && ...}`) — toggling
@@ -869,6 +907,8 @@ export default function LeafletMap({
                 country={port.country}
                 description={port.description}
                 featureFlagNames={port.featureFlags?.map((f) => f.name) ?? []}
+                locked={!unlockedIds.has(port.id)}
+                onToggleLock={() => (unlockedIds.has(port.id) ? lockMarker(port.id) : unlockMarker(port.id))}
                 onSave={(updates) => onPortSave(port.id, updates)}
                 onDelete={() => onPortDelete(port.id)}
               />
@@ -882,7 +922,7 @@ export default function LeafletMap({
           key={depot.id}
           position={[depot.lat, depot.lng]}
           icon={getDepotIcon(colorForTenant(depot.tenant, DEFAULT_DEPOT_COLOR))}
-          draggable={editMode}
+          draggable={editMode && unlockedIds.has(depot.id)}
           ref={(m) => {
             if (m) depotMarkerRefs.current.set(depot.id, m);
             else depotMarkerRefs.current.delete(depot.id);
@@ -892,6 +932,7 @@ export default function LeafletMap({
               const { lat, lng } = e.target.getLatLng();
               onDepotDragEnd(depot.id, lat, lng);
             },
+            popupclose: () => lockMarker(depot.id),
           }}
         >
           {/* Always mounted — see the matching comment on the port marker's
@@ -912,6 +953,8 @@ export default function LeafletMap({
                 tenant={depot.tenant}
                 country={depot.country}
                 description={depot.description}
+                locked={!unlockedIds.has(depot.id)}
+                onToggleLock={() => (unlockedIds.has(depot.id) ? lockMarker(depot.id) : unlockMarker(depot.id))}
                 onSave={(updates) => onDepotSave(depot.id, updates)}
                 onDelete={() => onDepotDelete(depot.id)}
               />
