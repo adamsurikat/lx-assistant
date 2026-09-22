@@ -1,7 +1,7 @@
 "use client";
 
-import { Fragment, useEffect, useMemo, useRef, useState } from "react";
-import { MapContainer, TileLayer, Marker, Popup, Tooltip, Polyline, ZoomControl, useMap, useMapEvents } from "react-leaflet";
+import { Fragment, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
+import { MapContainer, TileLayer, Marker, Tooltip, Polyline, ZoomControl, useMap, useMapEvents } from "react-leaflet";
 import L from "leaflet";
 import "leaflet/dist/leaflet.css";
 import type { MapPortRecord, MapDepotRecord, MapRouteRecord } from "@/lib/mapTypes";
@@ -131,6 +131,29 @@ function makeDepotIcon(color: string, size = 26) {
 // or code. Purely a controlled input + match-count readout — the actual
 // filtering/highlighting logic lives in the parent (LeafletMap), since it
 // needs access to the marker refs and map instance.
+// Floating panel used for editing a selected port/depot/route in edit mode.
+// Deliberately *not* a Leaflet Popup anchored to the item on the map (which
+// used to move with the map and could cover nearby markers) — it's docked
+// near the bottom of the map viewport instead, so it stays put regardless
+// of which item is selected or how the map is panned/zoomed.
+function MapEditPanel({ children, onClose }: { children: ReactNode; onClose: () => void }) {
+  return (
+    <div className="pointer-events-none absolute inset-x-0 bottom-4 z-[1100] flex justify-center px-3">
+      <div className="pointer-events-auto relative w-auto max-w-full rounded-lg border border-nb-ink/10 bg-white p-3 pr-7 shadow-xl">
+        <button
+          type="button"
+          onClick={onClose}
+          aria-label="Close"
+          className="absolute right-2 top-2 rounded px-1 text-xs font-semibold text-nb-ink/50 hover:bg-nb-ink/10 hover:text-nb-ink"
+        >
+          ✕
+        </button>
+        {children}
+      </div>
+    </div>
+  );
+}
+
 function MapSearchBox({
   value,
   onChange,
@@ -568,6 +591,7 @@ export default function LeafletMap({
 }: LeafletMapProps) {
   const controlIcon = useMemo(() => makeControlIcon(16), []);
   const portsById = useMemo(() => new Map(ports.map((p) => [p.id, p])), [ports]);
+  const depotsById = useMemo(() => new Map(depots.map((d) => [d.id, d])), [depots]);
   // Lets a hovered route (Polyline) open the tooltip label of the two ports
   // it connects, even though the mouse itself is over the line rather than
   // either marker.
@@ -583,12 +607,13 @@ export default function LeafletMap({
   // shown on hover — a "glow"/drop-shadow highlight in the route's own
   // color rather than swapping to a different highlight color.
   const routeGlowRefs = useRef(new Map<string, L.Polyline>());
-  // Ports/depots are locked (not draggable) by default, even while
-  // `editMode` is on, to guard against accidentally dragging a marker while
-  // just clicking around to edit its name/description. Opening a marker's
-  // popup shows an "Unlock to move" button; clicking it adds the marker's
-  // id here, which is what actually flips `draggable` on. Closing the
-  // popup re-locks it so the next time it's opened it starts locked again.
+  // Ports/depots/routes are locked (not draggable) by default, even while
+  // `editMode` is on, to guard against accidentally dragging an item while
+  // just clicking around to edit its name/description. The edit panel (see
+  // `selectedItem` below) shows a "Locked" checkbox — unchecking it adds
+  // the item's id here, which is what actually flips `draggable` on.
+  // Closing the panel re-locks it so the next time it's opened it starts
+  // locked again.
   const [unlockedIds, setUnlockedIds] = useState<Set<string>>(new Set());
   const lockMarker = (id: string) =>
     setUnlockedIds((prev) => {
@@ -604,6 +629,34 @@ export default function LeafletMap({
       next.add(id);
       return next;
     });
+  // The item currently being edited. Rather than a Leaflet Popup anchored
+  // to the marker/route itself (which used to cover nearby items and move
+  // around with the map), clicking a port/depot/route in edit mode selects
+  // it here and its edit form renders in a floating panel docked near the
+  // bottom of the map (see the JSX below) instead.
+  const [selectedItem, setSelectedItem] = useState<{ type: "port" | "depot" | "route"; id: string } | null>(null);
+  const openItem = (type: "port" | "depot" | "route", id: string) => {
+    if (selectedItem && selectedItem.id !== id) lockMarker(selectedItem.id);
+    setSelectedItem({ type, id });
+  };
+  const closeItem = () => {
+    if (selectedItem) lockMarker(selectedItem.id);
+    setSelectedItem(null);
+  };
+  // Leaving edit mode should close any open panel (and re-lock everything)
+  // rather than leaving it dangling on screen. Adjusting state during
+  // render in response to a prop change (rather than in a useEffect) is
+  // the pattern React recommends for this — see "Adjusting state when a
+  // prop changes" — using a bit of state (not a ref) to remember the
+  // previous value, since refs can't be read/written during render.
+  const [prevEditMode, setPrevEditMode] = useState(editMode);
+  if (prevEditMode !== editMode) {
+    setPrevEditMode(editMode);
+    if (!editMode) {
+      if (selectedItem) setSelectedItem(null);
+      if (unlockedIds.size > 0) setUnlockedIds(new Set());
+    }
+  }
   const routeStyleFor = (startPort: MapPortRecord, endPort: MapPortRecord) => ({
     color:
       startPort.tenant && startPort.tenant === endPort.tenant
@@ -828,25 +881,11 @@ export default function LeafletMap({
                   routeLineRefs.current.get(route.id)?.setStyle({ weight: 2 });
                   routeGlowRefs.current.get(route.id)?.setStyle({ opacity: 0 });
                 },
-                popupclose: () => lockMarker(route.id),
+                click: () => {
+                  if (editMode) openItem("route", route.id);
+                },
               }}
-            >
-              {editMode && (
-                <Popup>
-                  <RouteEditForm
-                    name={route.name}
-                    description={route.description}
-                    startPortId={route.startPortId}
-                    endPortId={route.endPortId}
-                    ports={ports}
-                    locked={!unlockedIds.has(route.id)}
-                    onToggleLock={() => (unlockedIds.has(route.id) ? lockMarker(route.id) : unlockMarker(route.id))}
-                    onSave={(updates) => onRouteSave(route.id, updates)}
-                    onDelete={() => onRouteDelete(route.id)}
-                  />
-                </Popup>
-              )}
-            </Polyline>
+            />
             <Polyline
               ref={(l) => {
                 if (l) routeGlowRefs.current.set(route.id, l);
@@ -932,7 +971,9 @@ export default function LeafletMap({
               const { lat, lng } = e.target.getLatLng();
               onPortDragEnd(port.id, lat, lng);
             },
-            popupclose: () => lockMarker(port.id),
+            click: () => {
+              if (editMode) openItem("port", port.id);
+            },
           }}
         >
           {/* Always mounted (rather than `{!editMode && ...}`) — toggling
@@ -952,22 +993,6 @@ export default function LeafletMap({
             {port.name}
             {port.code ? ` ${port.code}` : ""}
           </Tooltip>
-          {editMode && (
-            <Popup offset={[0, -14]}>
-              <EditForm
-                name={port.name}
-                code={port.code}
-                tenant={port.tenant}
-                country={port.country}
-                description={port.description}
-                featureFlagNames={port.featureFlags?.map((f) => f.name) ?? []}
-                locked={!unlockedIds.has(port.id)}
-                onToggleLock={() => (unlockedIds.has(port.id) ? lockMarker(port.id) : unlockMarker(port.id))}
-                onSave={(updates) => onPortSave(port.id, updates)}
-                onDelete={() => onPortDelete(port.id)}
-              />
-            </Popup>
-          )}
         </Marker>
       ))}
 
@@ -986,7 +1011,9 @@ export default function LeafletMap({
               const { lat, lng } = e.target.getLatLng();
               onDepotDragEnd(depot.id, lat, lng);
             },
-            popupclose: () => lockMarker(depot.id),
+            click: () => {
+              if (editMode) openItem("depot", depot.id);
+            },
           }}
         >
           {/* Always mounted — see the matching comment on the port marker's
@@ -999,24 +1026,78 @@ export default function LeafletMap({
             {depot.name}
             {depot.code ? ` ${depot.code}` : ""}
           </Tooltip>
-          {editMode && (
-            <Popup offset={[0, -13]}>
-              <EditForm
-                name={depot.name}
-                code={depot.code}
-                tenant={depot.tenant}
-                country={depot.country}
-                description={depot.description}
-                locked={!unlockedIds.has(depot.id)}
-                onToggleLock={() => (unlockedIds.has(depot.id) ? lockMarker(depot.id) : unlockMarker(depot.id))}
-                onSave={(updates) => onDepotSave(depot.id, updates)}
-                onDelete={() => onDepotDelete(depot.id)}
-              />
-            </Popup>
-          )}
         </Marker>
       ))}
       </MapContainer>
+      {editMode && selectedItem && (
+        <MapEditPanel onClose={closeItem}>
+          {selectedItem.type === "port" &&
+            (() => {
+              const port = portsById.get(selectedItem.id);
+              if (!port) return null;
+              return (
+                <EditForm
+                  name={port.name}
+                  code={port.code}
+                  tenant={port.tenant}
+                  country={port.country}
+                  description={port.description}
+                  featureFlagNames={port.featureFlags?.map((f) => f.name) ?? []}
+                  locked={!unlockedIds.has(port.id)}
+                  onToggleLock={() => (unlockedIds.has(port.id) ? lockMarker(port.id) : unlockMarker(port.id))}
+                  onSave={(updates) => onPortSave(port.id, updates)}
+                  onDelete={() => {
+                    onPortDelete(port.id);
+                    closeItem();
+                  }}
+                />
+              );
+            })()}
+          {selectedItem.type === "depot" &&
+            (() => {
+              const depot = depotsById.get(selectedItem.id);
+              if (!depot) return null;
+              return (
+                <EditForm
+                  name={depot.name}
+                  code={depot.code}
+                  tenant={depot.tenant}
+                  country={depot.country}
+                  description={depot.description}
+                  locked={!unlockedIds.has(depot.id)}
+                  onToggleLock={() => (unlockedIds.has(depot.id) ? lockMarker(depot.id) : unlockMarker(depot.id))}
+                  onSave={(updates) => onDepotSave(depot.id, updates)}
+                  onDelete={() => {
+                    onDepotDelete(depot.id);
+                    closeItem();
+                  }}
+                />
+              );
+            })()}
+          {selectedItem.type === "route" &&
+            (() => {
+              const route = routes.find((r) => r.id === selectedItem.id);
+              if (!route) return null;
+              return (
+                <RouteEditForm
+                  name={route.name}
+                  description={route.description}
+                  startPortId={route.startPortId}
+                  endPortId={route.endPortId}
+                  ports={ports}
+                  locked={!unlockedIds.has(route.id)}
+                  onToggleLock={() => (unlockedIds.has(route.id) ? lockMarker(route.id) : unlockMarker(route.id))}
+                  onSave={(updates) => onRouteSave(route.id, updates)}
+                  onDelete={() => {
+                    onRouteDelete(route.id);
+                    closeItem();
+                  }}
+                />
+              );
+            })()}
+        </MapEditPanel>
+      )}
     </>
   );
 }
+
