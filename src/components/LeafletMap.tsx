@@ -855,6 +855,7 @@ export default function LeafletMap({
       const badge = marker.getElement()?.querySelector(".port-marker-badge");
       badge?.classList.toggle("search-match-badge", query !== "" && isMatch);
       badge?.classList.toggle("port-marker-badge--active", isHovering && isMatch);
+      badge?.classList.toggle("port-marker-badge--selected", selectedItem?.type === "port" && selectedItem.id === id);
     }
     for (const [id, marker] of depotMarkerRefs.current) {
       const isMatch = activeDepotIds?.has(id) ?? true;
@@ -862,6 +863,7 @@ export default function LeafletMap({
       const badge = marker.getElement()?.querySelector(".port-marker-badge");
       badge?.classList.toggle("search-match-badge", query !== "" && isMatch);
       badge?.classList.toggle("port-marker-badge--active", isHovering && isMatch);
+      badge?.classList.toggle("port-marker-badge--selected", selectedItem?.type === "depot" && selectedItem.id === id);
     }
     // A route only stays visible while at least one of its two end ports
     // is visible too — otherwise hovering a tenant/feature flag (or
@@ -886,7 +888,7 @@ export default function LeafletMap({
         line?.bringToFront();
       }
     }
-  }, [activePortIds, activeDepotIds, query, hoveredTenant, hoveredFeatureFlag, ports, depots, routes]);
+  }, [activePortIds, activeDepotIds, query, hoveredTenant, hoveredFeatureFlag, ports, depots, routes, selectedItem]);
 
   // Legend always lists every known tenant (not just ones currently used
   // on the map) so it doubles as a reference key, plus a generic

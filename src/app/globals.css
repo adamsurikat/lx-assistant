@@ -416,6 +416,14 @@ h1, h2, h3, .nb-display {
   box-shadow: 0 0 0 5px color-mix(in srgb, var(--badge-color, #2563eb) 35%, transparent), 0 2px 6px rgba(0, 0, 0, 0.5);
 }
 
+/* Currently-edited marker: same glow "backdrop" as the hover/active state,
+   but intentionally does NOT scale up — the edit panel already points at
+   this marker, so growing it would just shift its position under the
+   cursor/handles rather than helping it stand out. */
+.port-marker-badge--selected {
+  box-shadow: 0 0 0 5px color-mix(in srgb, var(--badge-color, #2563eb) 35%, transparent), 0 2px 6px rgba(0, 0, 0, 0.5);
+}
+
 /* Map search: markers matching the current search text pulse with a
    growing/fading ring in their own color, while everything else fades out
    (opacity handled inline via marker.setOpacity in LeafletMap.tsx) so
