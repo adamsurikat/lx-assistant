@@ -1028,7 +1028,7 @@ export default function LeafletMap({
               pathOptions={routeStyleFor(startPort, endPort)}
               interactive={false}
             />
-            {editMode && (
+            {editMode && selectedItem?.type === "route" && selectedItem.id === route.id && (
               <>
                 {/* Dashed guide lines from each anchor port to its nearest
                     handle make the bezier's shape easier to reason about —
