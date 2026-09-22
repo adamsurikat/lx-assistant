@@ -113,10 +113,12 @@ export default function MapPage() {
     setRoutePicker({ startPortId: ports[0].id, endPortId: ports[1].id });
   }, [ports]);
 
-  const handleConfirmAddRoute = useCallback(async () => {
-    if (!routePicker) return;
-    const startPort = ports.find((p) => p.id === routePicker.startPortId);
-    const endPort = ports.find((p) => p.id === routePicker.endPortId);
+  // Shared by both route-creation flows: the start/end port picker (+
+  // Route button) and clicking a second port directly from another port's
+  // "Add route" button on its edit panel.
+  const createRoute = useCallback(async (startPortId: string, endPortId: string) => {
+    const startPort = ports.find((p) => p.id === startPortId);
+    const endPort = ports.find((p) => p.id === endPortId);
     if (!startPort || !endPort) return;
     const { route } = await jsonOrThrow(
       await fetch("/api/map/routes", {
@@ -135,8 +137,13 @@ export default function MapPage() {
       }),
     );
     setRoutes((prev) => [...prev, route]);
+  }, [ports]);
+
+  const handleConfirmAddRoute = useCallback(async () => {
+    if (!routePicker) return;
+    await createRoute(routePicker.startPortId, routePicker.endPortId);
     setRoutePicker(null);
-  }, [ports, routePicker]);
+  }, [routePicker, createRoute]);
 
   const handlePortDragEnd = useCallback(async (id: string, lat: number, lng: number) => {
     setPorts((prev) => prev.map((p) => (p.id === id ? { ...p, lat, lng } : p)));
@@ -482,6 +489,7 @@ export default function MapPage() {
               onPortDiscard={handleDiscardPort}
               onDepotDiscard={handleDiscardDepot}
               onRouteDiscard={handleDiscardRoute}
+              onCreateRoute={createRoute}
             />
           )}
           {routePicker && (
