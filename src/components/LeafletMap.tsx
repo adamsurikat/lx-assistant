@@ -39,6 +39,20 @@ function labelForTenant(tenant: string): string {
 const DEFAULT_PORT_COLOR = "#2563eb";
 const DEFAULT_DEPOT_COLOR = "#ff5f1f";
 const DEFAULT_ROUTE_COLOR = "#111111";
+// A port/depot marker only actually starts moving once dragged further
+// than this many screen pixels from where the drag began — below that, it
+// snaps straight back to its starting position. Guards against a plain
+// click (which Leaflet can report as a tiny drag) accidentally nudging an
+// item's stored position.
+const DRAG_DEADZONE_PX = 6;
+// Leaflet Marker instances keep a reference to the map they're bound to
+// on a non-typed internal `_map` field — used here so a marker's own drag
+// event handlers can convert lat/lng to screen pixels without needing a
+// separate `useMap()` call (which isn't available in this component,
+// since it's the one rendering <MapContainer> rather than a child of it).
+function mapFromMarkerEvent(e: L.LeafletEvent): L.Map | undefined {
+  return (e.target as L.Marker & { _map?: L.Map })._map;
+}
 // A shared, stable empty Set — reused wherever "no matches" needs to be
 // returned from a useMemo, so the identity doesn't change every render
 // (which would otherwise retrigger effects that depend on it).
@@ -670,6 +684,12 @@ export default function LeafletMap({
   // Same idea as portMarkerRefs, but for depot markers — used by the
   // search highlight effect below to dim/pulse depot markers directly.
   const depotMarkerRefs = useRef(new Map<string, L.Marker>());
+  // Remembers each port/depot marker's position at the start of a drag, so
+  // a very small accidental drag (e.g. the tiny mouse movement that can
+  // happen on a plain click) can be detected and ignored instead of
+  // nudging the item — see DRAG_DEADZONE_PX below.
+  const portDragStartRefs = useRef(new Map<string, L.LatLng>());
+  const depotDragStartRefs = useRef(new Map<string, L.LatLng>());
   // Lets the invisible wide hit-area line (below) reach into the visible
   // thin line and restyle it on hover, since they're two separate Polyline
   // instances.
@@ -1129,9 +1149,30 @@ export default function LeafletMap({
             else portMarkerRefs.current.delete(port.id);
           }}
           eventHandlers={{
+            dragstart: (e) => {
+              portDragStartRefs.current.set(port.id, e.target.getLatLng());
+            },
+            drag: (e) => {
+              const start = portDragStartRefs.current.get(port.id);
+              const map = mapFromMarkerEvent(e);
+              if (!start || !map) return;
+              const current = e.target.getLatLng();
+              const deltaPx = map.latLngToContainerPoint(start).distanceTo(map.latLngToContainerPoint(current));
+              if (deltaPx < DRAG_DEADZONE_PX) e.target.setLatLng(start);
+            },
             dragend: (e) => {
-              const { lat, lng } = e.target.getLatLng();
-              onPortDragEnd(port.id, lat, lng);
+              const start = portDragStartRefs.current.get(port.id);
+              portDragStartRefs.current.delete(port.id);
+              const map = mapFromMarkerEvent(e);
+              const current = e.target.getLatLng();
+              if (start && map) {
+                const deltaPx = map.latLngToContainerPoint(start).distanceTo(map.latLngToContainerPoint(current));
+                if (deltaPx < DRAG_DEADZONE_PX) {
+                  e.target.setLatLng(start);
+                  return;
+                }
+              }
+              onPortDragEnd(port.id, current.lat, current.lng);
             },
             click: () => {
               if (editMode) openItem("port", port.id);
@@ -1184,9 +1225,30 @@ export default function LeafletMap({
             else depotMarkerRefs.current.delete(depot.id);
           }}
           eventHandlers={{
+            dragstart: (e) => {
+              depotDragStartRefs.current.set(depot.id, e.target.getLatLng());
+            },
+            drag: (e) => {
+              const start = depotDragStartRefs.current.get(depot.id);
+              const map = mapFromMarkerEvent(e);
+              if (!start || !map) return;
+              const current = e.target.getLatLng();
+              const deltaPx = map.latLngToContainerPoint(start).distanceTo(map.latLngToContainerPoint(current));
+              if (deltaPx < DRAG_DEADZONE_PX) e.target.setLatLng(start);
+            },
             dragend: (e) => {
-              const { lat, lng } = e.target.getLatLng();
-              onDepotDragEnd(depot.id, lat, lng);
+              const start = depotDragStartRefs.current.get(depot.id);
+              depotDragStartRefs.current.delete(depot.id);
+              const map = mapFromMarkerEvent(e);
+              const current = e.target.getLatLng();
+              if (start && map) {
+                const deltaPx = map.latLngToContainerPoint(start).distanceTo(map.latLngToContainerPoint(current));
+                if (deltaPx < DRAG_DEADZONE_PX) {
+                  e.target.setLatLng(start);
+                  return;
+                }
+              }
+              onDepotDragEnd(depot.id, current.lat, current.lng);
             },
             click: () => {
               if (editMode) openItem("depot", depot.id);
