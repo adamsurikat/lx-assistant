@@ -333,6 +333,7 @@ function EditForm({
   featureFlagNames,
   onSave,
   onDiscard,
+  onAddRoute,
   onDelete,
 }: {
   name: string;
@@ -352,6 +353,10 @@ function EditForm({
     description: string;
     featureFlagNames?: string[];
   }) => void;
+  // Only passed in for ports (routes always connect two ports, so this
+  // doesn't make sense for depots) — starts the "click another port to
+  // connect a route to this one" flow.
+  onAddRoute?: () => void;
   // Reverts this item back to how it looked when edit mode was turned on
   // (position included) — items are always draggable while editing now, so
   // this is the way to undo an accidental move instead of a lock toggle.
@@ -430,13 +435,24 @@ function EditForm({
         </div>
       </div>
       <div className="flex items-center justify-between gap-2 pt-0.5">
-        <button
-          type="button"
-          onClick={onDelete}
-          className="rounded px-1.5 py-1 text-xs font-semibold text-red-600 hover:bg-red-50"
-        >
-          Delete
-        </button>
+        <div className="flex items-center gap-2">
+          <button
+            type="button"
+            onClick={onDelete}
+            className="rounded px-1.5 py-1 text-xs font-semibold text-red-600 hover:bg-red-50"
+          >
+            Delete
+          </button>
+          {onAddRoute && (
+            <button
+              type="button"
+              onClick={onAddRoute}
+              className="rounded px-1.5 py-1 text-xs font-semibold text-nb-ink/60 hover:bg-nb-ink/5"
+            >
+              Add route
+            </button>
+          )}
+        </div>
         <div className="flex items-center gap-2">
           <button
             type="button"
@@ -652,6 +668,7 @@ interface LeafletMapProps {
   onPortDiscard: (id: string) => void;
   onDepotDiscard: (id: string) => void;
   onRouteDiscard: (id: string) => void;
+  onCreateRoute: (startPortId: string, endPortId: string) => void;
 }
 
 export default function LeafletMap({
@@ -673,6 +690,7 @@ export default function LeafletMap({
   onPortDiscard,
   onDepotDiscard,
   onRouteDiscard,
+  onCreateRoute,
 }: LeafletMapProps) {
   const controlIcon = useMemo(() => makeControlIcon(16), []);
   const portsById = useMemo(() => new Map(ports.map((p) => [p.id, p])), [ports]);
@@ -715,6 +733,11 @@ export default function LeafletMap({
   const closeItem = () => {
     setSelectedItem(null);
   };
+  // Set to a port's id while "Add route" (in that port's edit panel) is
+  // waiting for the user to click a second port to connect it to — see
+  // the port marker's click handler and the banner rendered near the
+  // bottom of the map below.
+  const [routeDraftPortId, setRouteDraftPortId] = useState<string | null>(null);
   // Leaving edit mode should close any open panel rather than leaving it
   // dangling on screen. Adjusting state during render in response to a
   // prop change (rather than in a useEffect) is the pattern React
@@ -725,6 +748,7 @@ export default function LeafletMap({
   if (prevEditMode !== editMode) {
     setPrevEditMode(editMode);
     if (!editMode && selectedItem) setSelectedItem(null);
+    if (!editMode && routeDraftPortId) setRouteDraftPortId(null);
   }
   const routeStyleFor = (startPort: MapPortRecord, endPort: MapPortRecord) => ({
     color:
@@ -969,12 +993,13 @@ export default function LeafletMap({
       center={[50, 8]}
       zoom={5}
       minZoom={2}
-      className={`h-full w-full ${pendingAdd ? "cursor-crosshair" : ""}`}
+      className={`h-full w-full ${pendingAdd || routeDraftPortId ? "cursor-crosshair" : ""}`}
       worldCopyJump
       zoomControl={false}
     >
       <ZoomControl position="bottomright" />
       <ClickToAdd active={pendingAdd !== null} onClick={onMapClick} />
+      <ClickToAdd active={routeDraftPortId !== null} onClick={() => setRouteDraftPortId(null)} />
       <FitBoundsToMatches points={matchedPoints} />
       <FlyToFocus request={focusRequest} />
       <TileLayer
@@ -1175,6 +1200,11 @@ export default function LeafletMap({
               onPortDragEnd(port.id, current.lat, current.lng);
             },
             click: () => {
+              if (routeDraftPortId) {
+                if (routeDraftPortId !== port.id) onCreateRoute(routeDraftPortId, port.id);
+                setRouteDraftPortId(null);
+                return;
+              }
               if (editMode) openItem("port", port.id);
             },
             mouseover: () => {
@@ -1295,6 +1325,10 @@ export default function LeafletMap({
                     onPortDiscard(port.id);
                     closeItem();
                   }}
+                  onAddRoute={() => {
+                    setRouteDraftPortId(port.id);
+                    closeItem();
+                  }}
                   onDelete={() => {
                     onPortDelete(port.id);
                     closeItem();
@@ -1357,6 +1391,22 @@ export default function LeafletMap({
               );
             })()}
         </MapEditPanel>
+      )}
+      {routeDraftPortId && (
+        <div className="pointer-events-none absolute inset-x-0 top-3 z-[1100] flex justify-center px-3">
+          <div className="nb-panel pointer-events-auto flex items-center gap-3 bg-white px-4 py-2">
+            <p className="text-xs font-semibold text-nb-ink">
+              Click another port to connect a route to {portsById.get(routeDraftPortId)?.name ?? "this port"}…
+            </p>
+            <button
+              type="button"
+              onClick={() => setRouteDraftPortId(null)}
+              className="rounded px-1.5 py-1 text-xs font-semibold text-nb-ink/60 hover:bg-nb-ink/5"
+            >
+              Cancel
+            </button>
+          </div>
+        </div>
       )}
     </>
   );
