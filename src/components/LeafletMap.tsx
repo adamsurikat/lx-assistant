@@ -355,27 +355,42 @@ function EditForm({
     <div className="flex w-full flex-col gap-3">
       <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
         <div className="flex flex-col gap-1.5">
-          <input
-            value={nameValue}
-            onChange={(e) => setNameValue(e.target.value)}
-            placeholder="Name"
-            className="rounded border border-nb-ink/20 px-1.5 py-1 text-xs font-semibold"
-          />
-          {code !== undefined && (
+          <label className="flex items-center gap-2">
+            <span className="w-14 shrink-0 text-[10px] font-semibold uppercase tracking-wide text-nb-ink/50">
+              Name
+            </span>
             <input
-              value={codeValue}
-              onChange={(e) => setCodeValue(e.target.value.toUpperCase())}
-              placeholder="Code (e.g. BELF)"
-              className="rounded border border-nb-ink/20 px-1.5 py-1 text-xs font-semibold uppercase"
+              value={nameValue}
+              onChange={(e) => setNameValue(e.target.value)}
+              placeholder="Name"
+              className="min-w-0 flex-1 rounded border border-nb-ink/20 px-1.5 py-1 text-xs font-semibold"
             />
+          </label>
+          {code !== undefined && (
+            <label className="flex items-center gap-2">
+              <span className="w-14 shrink-0 text-[10px] font-semibold uppercase tracking-wide text-nb-ink/50">
+                Code
+              </span>
+              <input
+                value={codeValue}
+                onChange={(e) => setCodeValue(e.target.value.toUpperCase())}
+                placeholder="Code (e.g. BELF)"
+                className="min-w-0 flex-1 rounded border border-nb-ink/20 px-1.5 py-1 text-xs font-semibold uppercase"
+              />
+            </label>
           )}
           {tenant !== undefined && (
-            <input
-              value={tenantValue}
-              onChange={(e) => setTenantValue(e.target.value)}
-              placeholder="Tenant (e.g. Stena Line)"
-              className="rounded border border-nb-ink/20 px-1.5 py-1 text-xs"
-            />
+            <label className="flex items-center gap-2">
+              <span className="w-14 shrink-0 text-[10px] font-semibold uppercase tracking-wide text-nb-ink/50">
+                Tenant
+              </span>
+              <input
+                value={tenantValue}
+                onChange={(e) => setTenantValue(e.target.value)}
+                placeholder="Tenant (e.g. Stena Line)"
+                className="min-w-0 flex-1 rounded border border-nb-ink/20 px-1.5 py-1 text-xs"
+              />
+            </label>
           )}
         </div>
         {featureFlagNames !== undefined && (
