@@ -746,6 +746,25 @@ export default function LeafletMap({
     const el = portMarkerRefs.current.get(portId)?.getElement();
     el?.querySelector(".port-marker-badge")?.classList.toggle("port-marker-badge--active", active);
   };
+  // Maps a port id to every route touching it, so hovering a port marker
+  // can highlight all of its connected routes (the reverse of hovering a
+  // route, which already highlights its two end ports via setPortActive).
+  const routesByPort = useMemo(() => {
+    const map = new Map<string, MapRouteRecord[]>();
+    for (const route of routes) {
+      map.set(route.startPortId, [...(map.get(route.startPortId) ?? []), route]);
+      map.set(route.endPortId, [...(map.get(route.endPortId) ?? []), route]);
+    }
+    return map;
+  }, [routes]);
+  const setRouteHighlighted = (routeId: string, active: boolean) => {
+    routeLineRefs.current.get(routeId)?.setStyle({ weight: active ? 3 : 2 });
+    routeGlowRefs.current.get(routeId)?.setStyle({ opacity: active ? 0.45 : 0 });
+    if (active) {
+      routeGlowRefs.current.get(routeId)?.bringToFront();
+      routeLineRefs.current.get(routeId)?.bringToFront();
+    }
+  };
 
   // Search box (top-left overlay, rendered below): matches ports/depots by
   // name or code, case-insensitively. Matching markers pulse and stay at
@@ -842,6 +861,23 @@ export default function LeafletMap({
         ? EMPTY_ID_SET
         : null;
 
+  // When hovering a tenant/feature flag, a route between a matching port
+  // and a *non-matching* one (e.g. a P&O Ferries port connected to a Stena
+  // Line port) still gets highlighted (see the endpointVisible/highlight
+  // logic below) — but without this, the far-end port itself would still
+  // fade out to 0 opacity, making the route look like it goes nowhere.
+  // This expands activePortIds with every port directly connected (via a
+  // route) to an already-matching port, so that far end stays visible too.
+  const connectedPortIds = useMemo(() => {
+    if (!activePortIds) return null;
+    const result = new Set(activePortIds);
+    for (const route of routes) {
+      if (activePortIds.has(route.startPortId)) result.add(route.endPortId);
+      if (activePortIds.has(route.endPortId)) result.add(route.startPortId);
+    }
+    return result;
+  }, [activePortIds, routes]);
+
   // Applies the fade/pulse styling directly to marker DOM elements (same
   // ref+querySelector approach as setPortActive above) rather than
   // recreating icons per marker, since highlight state changes far more
@@ -856,7 +892,8 @@ export default function LeafletMap({
     const isHovering = hoveredTenant !== null || hoveredFeatureFlag !== null;
     for (const [id, marker] of portMarkerRefs.current) {
       const isMatch = activePortIds?.has(id) ?? true;
-      marker.setOpacity(activePortIds ? (isMatch ? 1 : nonMatchOpacity) : 1);
+      const isVisible = isMatch || (isHovering && (connectedPortIds?.has(id) ?? false));
+      marker.setOpacity(activePortIds ? (isVisible ? 1 : nonMatchOpacity) : 1);
       const badge = marker.getElement()?.querySelector(".port-marker-badge");
       badge?.classList.toggle("search-match-badge", query !== "" && isMatch);
       badge?.classList.toggle("port-marker-badge--active", isHovering && isMatch);
@@ -893,7 +930,18 @@ export default function LeafletMap({
         line?.bringToFront();
       }
     }
-  }, [activePortIds, activeDepotIds, query, hoveredTenant, hoveredFeatureFlag, ports, depots, routes, selectedItem]);
+  }, [
+    activePortIds,
+    activeDepotIds,
+    connectedPortIds,
+    query,
+    hoveredTenant,
+    hoveredFeatureFlag,
+    ports,
+    depots,
+    routes,
+    selectedItem,
+  ]);
 
   // Legend always lists every known tenant (not just ones currently used
   // on the map) so it doubles as a reference key, plus a generic
@@ -968,18 +1016,14 @@ export default function LeafletMap({
                   portMarkerRefs.current.get(route.endPortId)?.openTooltip();
                   setPortActive(route.startPortId, true);
                   setPortActive(route.endPortId, true);
-                  routeLineRefs.current.get(route.id)?.setStyle({ weight: 3 });
-                  routeGlowRefs.current.get(route.id)?.setStyle({ opacity: 0.45 });
-                  routeGlowRefs.current.get(route.id)?.bringToFront();
-                  routeLineRefs.current.get(route.id)?.bringToFront();
+                  setRouteHighlighted(route.id, true);
                 },
                 mouseout: () => {
                   portMarkerRefs.current.get(route.startPortId)?.closeTooltip();
                   portMarkerRefs.current.get(route.endPortId)?.closeTooltip();
                   setPortActive(route.startPortId, false);
                   setPortActive(route.endPortId, false);
-                  routeLineRefs.current.get(route.id)?.setStyle({ weight: 2 });
-                  routeGlowRefs.current.get(route.id)?.setStyle({ opacity: 0 });
+                  setRouteHighlighted(route.id, false);
                 },
                 click: () => {
                   if (editMode) openItem("route", route.id);
@@ -1111,6 +1155,22 @@ export default function LeafletMap({
             },
             click: () => {
               if (editMode) openItem("port", port.id);
+            },
+            mouseover: () => {
+              for (const route of routesByPort.get(port.id) ?? []) {
+                const otherPortId = route.startPortId === port.id ? route.endPortId : route.startPortId;
+                portMarkerRefs.current.get(otherPortId)?.openTooltip();
+                setPortActive(otherPortId, true);
+                setRouteHighlighted(route.id, true);
+              }
+            },
+            mouseout: () => {
+              for (const route of routesByPort.get(port.id) ?? []) {
+                const otherPortId = route.startPortId === port.id ? route.endPortId : route.startPortId;
+                portMarkerRefs.current.get(otherPortId)?.closeTooltip();
+                setPortActive(otherPortId, false);
+                setRouteHighlighted(route.id, false);
+              }
             },
           }}
         >
