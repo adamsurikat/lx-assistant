@@ -5,7 +5,7 @@ import { MapContainer, TileLayer, Marker, Tooltip, Polyline, ZoomControl, useMap
 import L from "leaflet";
 import "leaflet/dist/leaflet.css";
 import type { MapPortRecord, MapDepotRecord, MapRouteRecord } from "@/lib/mapTypes";
-import { routeToPath, KNOWN_FEATURE_FLAG_NAMES } from "@/lib/mapTypes";
+import { routeToPath, cubicBezier, KNOWN_FEATURE_FLAG_NAMES } from "@/lib/mapTypes";
 
 // Ports/depots tagged with one of these tenants get their own brand color
 // instead of the default marker color — both on the marker itself and on
@@ -676,6 +676,11 @@ export default function LeafletMap({
   // shown on hover — a "glow"/drop-shadow highlight in the route's own
   // color rather than swapping to a different highlight color.
   const routeGlowRefs = useRef(new Map<string, L.Polyline>());
+  // Guide lines from each anchor port to its nearest bezier handle —
+  // updated imperatively (not via React re-render) while a handle is being
+  // dragged so the curve/guides track the cursor smoothly.
+  const routeGuide1Refs = useRef(new Map<string, L.Polyline>());
+  const routeGuide2Refs = useRef(new Map<string, L.Polyline>());
   // Ports/depots/routes are locked (not draggable) by default, even while
   // `editMode` is on, to guard against accidentally dragging an item while
   // just clicking around to edit its name/description. The edit panel (see
@@ -1006,6 +1011,10 @@ export default function LeafletMap({
                     control1 pulls the curve away from the start port,
                     control2 from the end port. */}
                 <Polyline
+                  ref={(l) => {
+                    if (l) routeGuide1Refs.current.set(route.id, l);
+                    else routeGuide1Refs.current.delete(route.id);
+                  }}
                   positions={[
                     [startPort.lat, startPort.lng],
                     [route.control1Lat, route.control1Lng],
@@ -1014,6 +1023,10 @@ export default function LeafletMap({
                   interactive={false}
                 />
                 <Polyline
+                  ref={(l) => {
+                    if (l) routeGuide2Refs.current.set(route.id, l);
+                    else routeGuide2Refs.current.delete(route.id);
+                  }}
                   positions={[
                     [endPort.lat, endPort.lng],
                     [route.control2Lat, route.control2Lng],
@@ -1027,6 +1040,21 @@ export default function LeafletMap({
                   draggable
                   zIndexOffset={1000}
                   eventHandlers={{
+                    drag: (e) => {
+                      const { lat, lng } = e.target.getLatLng();
+                      const path = cubicBezier(
+                        [startPort.lat, startPort.lng],
+                        [endPort.lat, endPort.lng],
+                        [lat, lng],
+                        [route.control2Lat, route.control2Lng],
+                      );
+                      routeLineRefs.current.get(route.id)?.setLatLngs(path);
+                      routeGlowRefs.current.get(route.id)?.setLatLngs(path);
+                      routeGuide1Refs.current.get(route.id)?.setLatLngs([
+                        [startPort.lat, startPort.lng],
+                        [lat, lng],
+                      ]);
+                    },
                     dragend: (e) => {
                       const { lat, lng } = e.target.getLatLng();
                       onRouteControlDragEnd(route.id, "control1", lat, lng);
@@ -1039,6 +1067,21 @@ export default function LeafletMap({
                   draggable
                   zIndexOffset={1000}
                   eventHandlers={{
+                    drag: (e) => {
+                      const { lat, lng } = e.target.getLatLng();
+                      const path = cubicBezier(
+                        [startPort.lat, startPort.lng],
+                        [endPort.lat, endPort.lng],
+                        [route.control1Lat, route.control1Lng],
+                        [lat, lng],
+                      );
+                      routeLineRefs.current.get(route.id)?.setLatLngs(path);
+                      routeGlowRefs.current.get(route.id)?.setLatLngs(path);
+                      routeGuide2Refs.current.get(route.id)?.setLatLngs([
+                        [endPort.lat, endPort.lng],
+                        [lat, lng],
+                      ]);
+                    },
                     dragend: (e) => {
                       const { lat, lng } = e.target.getLatLng();
                       onRouteControlDragEnd(route.id, "control2", lat, lng);
