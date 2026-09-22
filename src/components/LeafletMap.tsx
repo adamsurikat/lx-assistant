@@ -724,10 +724,24 @@ export default function LeafletMap({
     // is visible too — otherwise hovering a tenant/feature flag (or
     // searching) left every route on screen regardless of whether either
     // endpoint actually matched, which made the highlight misleading.
+    // Matching routes during a tenant/feature-flag hover (not a search)
+    // also get the same glow + thicker-line + front-of-stack treatment as
+    // a directly-hovered route, rather than just staying at their normal
+    // thin/default styling — a plain 2px dashed line was easy to overlook
+    // against the map tiles, which made it look like connected routes
+    // weren't showing up at all even though they technically were.
     for (const route of routes) {
       const endpointVisible =
         !activePortIds || activePortIds.has(route.startPortId) || activePortIds.has(route.endPortId);
-      routeLineRefs.current.get(route.id)?.setStyle({ opacity: endpointVisible ? 1 : nonMatchOpacity });
+      const highlight = isHovering && endpointVisible;
+      const line = routeLineRefs.current.get(route.id);
+      const glow = routeGlowRefs.current.get(route.id);
+      line?.setStyle({ opacity: endpointVisible ? 1 : nonMatchOpacity, weight: highlight ? 3 : 2 });
+      glow?.setStyle({ opacity: highlight ? 0.45 : 0 });
+      if (highlight) {
+        glow?.bringToFront();
+        line?.bringToFront();
+      }
     }
   }, [activePortIds, activeDepotIds, query, hoveredTenant, hoveredFeatureFlag, ports, depots, routes]);
 
