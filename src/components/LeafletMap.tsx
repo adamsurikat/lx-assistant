@@ -759,7 +759,7 @@ export default function LeafletMap({
   }, [routes]);
   const setRouteHighlighted = (routeId: string, active: boolean) => {
     routeLineRefs.current.get(routeId)?.setStyle({ weight: active ? 3 : 2 });
-    routeGlowRefs.current.get(routeId)?.setStyle({ opacity: active ? 0.45 : 0 });
+    routeGlowRefs.current.get(routeId)?.setStyle({ opacity: active ? 0.6 : 0 });
     if (active) {
       routeGlowRefs.current.get(routeId)?.bringToFront();
       routeLineRefs.current.get(routeId)?.bringToFront();
@@ -924,7 +924,7 @@ export default function LeafletMap({
       const line = routeLineRefs.current.get(route.id);
       const glow = routeGlowRefs.current.get(route.id);
       line?.setStyle({ opacity: endpointVisible ? 1 : nonMatchOpacity, weight: highlight ? 3 : 2 });
-      glow?.setStyle({ opacity: highlight ? 0.45 : 0 });
+      glow?.setStyle({ opacity: highlight ? 0.6 : 0 });
       if (highlight) {
         glow?.bringToFront();
         line?.bringToFront();
@@ -1036,7 +1036,12 @@ export default function LeafletMap({
                 else routeGlowRefs.current.delete(route.id);
               }}
               positions={routeToPath(route, startPort, endPort)}
-              pathOptions={{ color: routeStyleFor(startPort, endPort).color, weight: 12, opacity: 0 }}
+              // Always a bright, fixed highlight color (not the route's own
+              // tenant color) — a cross-tenant route falls back to near-black
+              // (DEFAULT_ROUTE_COLOR), so a same-colored "glow" behind it was
+              // essentially invisible against the map. This guarantees the
+              // highlight stands out regardless of the route's own color.
+              pathOptions={{ color: "#f97316", weight: 14, opacity: 0 }}
               interactive={false}
             />
             <Polyline
