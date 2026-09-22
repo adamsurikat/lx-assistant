@@ -861,22 +861,49 @@ export default function LeafletMap({
         ? EMPTY_ID_SET
         : null;
 
+  // Two ports can represent the same physical location under different
+  // tenants (e.g. a Stena Line "Cairnryan (LRP)" and a separate P&O
+  // Ferries "Cairnryan" record at identical coordinates) — they're
+  // distinct MapPort rows, each with their own routes, but visually read
+  // as "the same port" to a user. Without this, hovering one tenant would
+  // only ever show routes literally attached to *that tenant's* port
+  // record, even though a route sitting at the exact same spot looks like
+  // it should count too. This expands activePortIds with every port that
+  // shares coordinates with an already-matching port.
+  const coLocatedPortIds = useMemo(() => {
+    if (!activePortIds || activePortIds.size === 0) return activePortIds;
+    const keyFor = (lat: number, lng: number) => `${lat.toFixed(4)},${lng.toFixed(4)}`;
+    const idsByCoord = new Map<string, string[]>();
+    for (const p of ports) {
+      const key = keyFor(p.lat, p.lng);
+      idsByCoord.set(key, [...(idsByCoord.get(key) ?? []), p.id]);
+    }
+    const result = new Set(activePortIds);
+    for (const p of ports) {
+      if (activePortIds.has(p.id)) {
+        for (const id of idsByCoord.get(keyFor(p.lat, p.lng)) ?? []) result.add(id);
+      }
+    }
+    return result;
+  }, [activePortIds, ports]);
+
   // When hovering a tenant/feature flag, a route between a matching port
   // and a *non-matching* one (e.g. a P&O Ferries port connected to a Stena
   // Line port) still gets highlighted (see the endpointVisible/highlight
   // logic below) — but without this, the far-end port itself would still
   // fade out to 0 opacity, making the route look like it goes nowhere.
-  // This expands activePortIds with every port directly connected (via a
-  // route) to an already-matching port, so that far end stays visible too.
+  // This expands coLocatedPortIds with every port directly connected (via
+  // a route) to an already-matching (or co-located) port, so that far end
+  // stays visible too.
   const connectedPortIds = useMemo(() => {
-    if (!activePortIds) return null;
-    const result = new Set(activePortIds);
+    if (!coLocatedPortIds) return null;
+    const result = new Set(coLocatedPortIds);
     for (const route of routes) {
-      if (activePortIds.has(route.startPortId)) result.add(route.endPortId);
-      if (activePortIds.has(route.endPortId)) result.add(route.startPortId);
+      if (coLocatedPortIds.has(route.startPortId)) result.add(route.endPortId);
+      if (coLocatedPortIds.has(route.endPortId)) result.add(route.startPortId);
     }
     return result;
-  }, [activePortIds, routes]);
+  }, [coLocatedPortIds, routes]);
 
   // Applies the fade/pulse styling directly to marker DOM elements (same
   // ref+querySelector approach as setPortActive above) rather than
@@ -919,7 +946,7 @@ export default function LeafletMap({
     // weren't showing up at all even though they technically were.
     for (const route of routes) {
       const endpointVisible =
-        !activePortIds || activePortIds.has(route.startPortId) || activePortIds.has(route.endPortId);
+        !coLocatedPortIds || coLocatedPortIds.has(route.startPortId) || coLocatedPortIds.has(route.endPortId);
       const highlight = isHovering && endpointVisible;
       const line = routeLineRefs.current.get(route.id);
       const glow = routeGlowRefs.current.get(route.id);
@@ -933,6 +960,7 @@ export default function LeafletMap({
   }, [
     activePortIds,
     activeDepotIds,
+    coLocatedPortIds,
     connectedPortIds,
     query,
     hoveredTenant,
