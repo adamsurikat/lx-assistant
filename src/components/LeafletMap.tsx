@@ -139,20 +139,35 @@ function makeDepotIcon(color: string, size = 26) {
 // `nb-panel` card treatment (and the same plain-✕ close button style) as
 // the post-it board's trash panel, so it reads as part of the app's design
 // instead of a boxed-in overlay with a floating X.
-function MapEditPanel({ title, children, onClose }: { title: string; children: ReactNode; onClose: () => void }) {
+function MapEditPanel({
+  title,
+  onGoTo,
+  children,
+  onClose,
+}: {
+  title: string;
+  onGoTo: () => void;
+  children: ReactNode;
+  onClose: () => void;
+}) {
   return (
     <div className="pointer-events-none absolute inset-x-0 bottom-4 z-[1100] flex justify-center px-3">
       <div className="nb-panel pointer-events-auto w-full max-w-2xl bg-white p-4">
         <div className="mb-3 flex items-center justify-between gap-3">
           <h2 className="text-sm font-bold uppercase tracking-wide text-nb-ink/70">{title}</h2>
-          <button
-            type="button"
-            onClick={onClose}
-            aria-label="Close"
-            className="text-lg font-bold leading-none text-nb-ink/50 hover:text-nb-ink"
-          >
-            ✕
-          </button>
+          <div className="flex items-center gap-3">
+            <button type="button" onClick={onGoTo} className="nb-btn px-2 py-1 text-xs font-semibold">
+              Go to
+            </button>
+            <button
+              type="button"
+              onClick={onClose}
+              aria-label="Close"
+              className="text-lg font-bold leading-none text-nb-ink/50 hover:text-nb-ink"
+            >
+              ✕
+            </button>
+          </div>
         </div>
         {children}
       </div>
@@ -550,6 +565,29 @@ function FitBoundsToMatches({ points }: { points: Array<[number, number]> }) {
   return null;
 }
 
+// One-shot "go to" request: fired by the "Go to" button in the edit panel so
+// the map recenters on whatever's currently selected. A nonce is included
+// (rather than keying purely off the points) so clicking "Go to" again on an
+// already-centered item still re-triggers the flyTo/flash.
+interface FocusRequest {
+  points: Array<[number, number]>;
+  nonce: number;
+}
+
+function FlyToFocus({ request }: { request: FocusRequest | null }) {
+  const map = useMap();
+  useEffect(() => {
+    if (!request || request.points.length === 0) return;
+    if (request.points.length === 1) {
+      map.flyTo(request.points[0], Math.min(Math.max(map.getZoom(), 6), 7), { duration: 0.5 });
+    } else {
+      map.flyToBounds(L.latLngBounds(request.points), { padding: [64, 64], maxZoom: 7, duration: 0.5 });
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [request?.nonce]);
+  return null;
+}
+
 interface LeafletMapProps {
   ports: MapPortRecord[];
   depots: MapDepotRecord[];
@@ -690,6 +728,29 @@ export default function LeafletMap({
   // full opacity; everything else fades out so matches stand out.
   const [searchQuery, setSearchQuery] = useState("");
   const query = searchQuery.trim().toLowerCase();
+
+  // "Go to" button in the edit panel: recenters the map on the currently
+  // selected port/depot/route without changing the selection itself.
+  const [focusRequest, setFocusRequest] = useState<FocusRequest | null>(null);
+  const focusOnItem = (item: { type: "port" | "depot" | "route"; id: string }) => {
+    let points: Array<[number, number]> = [];
+    if (item.type === "port") {
+      const port = portsById.get(item.id);
+      if (port) points = [[port.lat, port.lng]];
+    } else if (item.type === "depot") {
+      const depot = depotsById.get(item.id);
+      if (depot) points = [[depot.lat, depot.lng]];
+    } else {
+      const route = routes.find((r) => r.id === item.id);
+      const startPort = route ? portsById.get(route.startPortId) : undefined;
+      const endPort = route ? portsById.get(route.endPortId) : undefined;
+      points = [startPort, endPort]
+        .filter((p): p is MapPortRecord => !!p)
+        .map((p) => [p.lat, p.lng]);
+    }
+    if (points.length === 0) return;
+    setFocusRequest({ points, nonce: Date.now() });
+  };
   const matchedPortIds = useMemo(() => {
     if (!query) return new Set<string>();
     return new Set(
@@ -846,6 +907,7 @@ export default function LeafletMap({
       <ZoomControl position="bottomright" />
       <ClickToAdd active={pendingAdd !== null} onClick={onMapClick} />
       <FitBoundsToMatches points={matchedPoints} />
+      <FlyToFocus request={focusRequest} />
       <TileLayer
         attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
         url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
@@ -1044,6 +1106,7 @@ export default function LeafletMap({
       {editMode && selectedItem && (
         <MapEditPanel
           title={selectedItem.type === "port" ? "Edit port" : selectedItem.type === "depot" ? "Edit depot" : "Edit route"}
+          onGoTo={() => focusOnItem(selectedItem)}
           onClose={closeItem}
         >
           {selectedItem.type === "port" &&
