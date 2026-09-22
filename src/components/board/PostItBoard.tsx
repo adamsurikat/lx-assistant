@@ -253,48 +253,45 @@ export function PostItBoard() {
   // Keeps every note fully contained within the canvas's current on-screen
   // size — whenever the board container is resized (e.g. the browser
   // window is narrowed), any note that would now stick out past the right
-  // or bottom edge is pulled back in visually. This is purely a rendering
-  // adjustment for the current session: it does NOT persist to the
-  // database (no scheduleSave call), so a note's actual stored x/y is only
-  // ever updated by the user deliberately dragging it. Reloading the page
-  // (or widening the window back out) always starts from the real saved
-  // position again, re-clamped for whatever the current size happens to
-  // be. Runs on the desktop canvas layout only; the mobile list layout
-  // doesn't use x/y positioning at all.
+  // or bottom edge is pulled back in visually. This only tracks the
+  // container's current pixel size in state; the actual clamping math
+  // happens at render time (see `displayPosition` below) against each
+  // note's real, untouched x/y, so it's purely a visual adjustment — the
+  // database is never touched by a resize, and growing the container back
+  // out (or reloading the page) naturally reveals the note's real saved
+  // position again instead of leaving it stuck at the clamped spot. Runs
+  // on the desktop canvas layout only; the mobile list layout doesn't use
+  // x/y positioning at all.
+  const [boardSize, setBoardSize] = useState<{ width: number; height: number } | null>(null);
   useEffect(() => {
     if (isMobile) return;
     const board = boardRef.current;
     if (!board) return;
 
-    const clampNotes = (width: number, height: number) => {
-      const maxX = Math.max(0, width - NOTE_SIZE);
-      const maxY = Math.max(0, height - NOTE_SIZE);
-      setPostIts((prev) => {
-        if (!prev) return prev;
-        let changed = false;
-        const next = prev.map((n) => {
-          const x = Math.min(n.x, maxX);
-          const y = Math.min(n.y, maxY);
-          if (x === n.x && y === n.y) return n;
-          changed = true;
-          return { ...n, x, y };
-        });
-        return changed ? next : prev;
-      });
-    };
-
-    // Clamp once immediately (covers notes saved from a wider window
-    // before this page load) and again on every subsequent resize.
-    clampNotes(board.clientWidth, board.clientHeight);
+    setBoardSize({ width: board.clientWidth, height: board.clientHeight });
     const observer = new ResizeObserver((entries) => {
       const entry = entries[0];
       if (!entry) return;
       const { width, height } = entry.contentRect;
-      clampNotes(width, height);
+      setBoardSize({ width, height });
     });
     observer.observe(board);
     return () => observer.disconnect();
   }, [isMobile]);
+
+  // Clamps a note's real x/y into whatever room the board currently has,
+  // for rendering only — see the comment on `boardSize` above. Falls back
+  // to the note's real position unchanged until the board's size has been
+  // measured at least once.
+  const displayPosition = useCallback(
+    (note: PostIt) => {
+      if (!boardSize) return { x: note.x, y: note.y };
+      const maxX = Math.max(0, boardSize.width - NOTE_SIZE);
+      const maxY = Math.max(0, boardSize.height - NOTE_SIZE);
+      return { x: Math.min(note.x, maxX), y: Math.min(note.y, maxY) };
+    },
+    [boardSize],
+  );
 
   // There's no toolbar/button anymore — double-clicking or double-tapping
   // empty board space (i.e. not on top of an existing note) creates a new
@@ -363,7 +360,7 @@ export function PostItBoard() {
           {postIts?.map((note) => (
             <PostItNote
               key={note.id}
-              note={note}
+              note={{ ...note, ...displayPosition(note) }}
               layout="canvas"
               removing={removingBoardIds.has(note.id)}
               removeOffset={removingOffsets.get(note.id)}
