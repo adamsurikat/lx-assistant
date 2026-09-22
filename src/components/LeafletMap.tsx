@@ -317,9 +317,8 @@ function EditForm({
   country,
   description,
   featureFlagNames,
-  locked,
-  onToggleLock,
   onSave,
+  onDiscard,
   onDelete,
 }: {
   name: string;
@@ -331,11 +330,6 @@ function EditForm({
   // ports) — `undefined` hides the whole checkbox group instead of showing
   // one with nothing checked.
   featureFlagNames?: string[];
-  // Whether the marker is currently locked (not draggable). The form shows
-  // an "Unlock to move" / "Lock" toggle so dragging is opt-in per popup
-  // visit rather than automatic whenever edit mode is on.
-  locked: boolean;
-  onToggleLock: () => void;
   onSave: (updates: {
     name: string;
     code?: string;
@@ -344,6 +338,10 @@ function EditForm({
     description: string;
     featureFlagNames?: string[];
   }) => void;
+  // Reverts this item back to how it looked when edit mode was turned on
+  // (position included) — items are always draggable while editing now, so
+  // this is the way to undo an accidental move instead of a lock toggle.
+  onDiscard: () => void;
   onDelete: () => void;
 }) {
   const [nameValue, setNameValue] = useState(name);
@@ -415,14 +413,6 @@ function EditForm({
               ))}
             </div>
           )}
-          <label
-            className={`flex cursor-pointer items-center gap-1.5 rounded px-1.5 py-1 text-xs font-semibold ${
-              locked ? "bg-nb-ink/10 text-nb-ink/70" : "bg-emerald-100 text-emerald-700"
-            }`}
-          >
-            <input type="checkbox" checked={locked} onChange={onToggleLock} className="h-3.5 w-3.5" />
-            Locked
-          </label>
         </div>
       </div>
       <div className="flex items-center justify-between gap-2 pt-0.5">
@@ -433,22 +423,31 @@ function EditForm({
         >
           Delete
         </button>
-        <button
-          type="button"
-          onClick={() =>
-            onSave({
-              name: nameValue,
-              ...(code !== undefined ? { code: codeValue } : {}),
-              ...(tenant !== undefined ? { tenant: tenantValue } : {}),
-              country,
-              description,
-              ...(featureFlagNames !== undefined ? { featureFlagNames: selectedFlags } : {}),
-            })
-          }
-          className="nb-btn nb-btn-orange px-2 py-1 text-xs font-semibold"
-        >
-          Save
-        </button>
+        <div className="flex items-center gap-2">
+          <button
+            type="button"
+            onClick={onDiscard}
+            className="rounded px-1.5 py-1 text-xs font-semibold text-nb-ink/60 hover:bg-nb-ink/5"
+          >
+            Discard
+          </button>
+          <button
+            type="button"
+            onClick={() =>
+              onSave({
+                name: nameValue,
+                ...(code !== undefined ? { code: codeValue } : {}),
+                ...(tenant !== undefined ? { tenant: tenantValue } : {}),
+                country,
+                description,
+                ...(featureFlagNames !== undefined ? { featureFlagNames: selectedFlags } : {}),
+              })
+            }
+            className="nb-btn nb-btn-orange px-2 py-1 text-xs font-semibold"
+          >
+            Save
+          </button>
+        </div>
       </div>
     </div>
   );
@@ -464,9 +463,8 @@ function RouteEditForm({
   startPortId,
   endPortId,
   ports,
-  locked,
-  onToggleLock,
   onSave,
+  onDiscard,
   onDelete,
 }: {
   name: string;
@@ -474,13 +472,12 @@ function RouteEditForm({
   startPortId: string;
   endPortId: string;
   ports: MapPortRecord[];
-  // Whether the route's bezier calibration handles are currently hidden.
-  // Shows an "Unlock to move" / "Lock" toggle, matching the port/depot
-  // marker popups — the control points only render once unlocked so they
-  // don't visually clutter every route just because edit mode is on.
-  locked: boolean;
-  onToggleLock: () => void;
   onSave: (updates: { name: string; description: string; startPortId: string; endPortId: string }) => void;
+  // Reverts this route's endpoints and bezier control points back to how
+  // they looked when edit mode was turned on — the calibration handles are
+  // always shown/draggable while editing now, so this is the way to undo
+  // an accidental drag instead of a lock toggle.
+  onDiscard: () => void;
   onDelete: () => void;
 }) {
   const [startPortValue, setStartPortValue] = useState(startPortId);
@@ -503,30 +500,20 @@ function RouteEditForm({
             ))}
           </select>
         </label>
-        <div className="flex flex-col gap-2">
-          <label className="text-[10px] font-semibold uppercase tracking-wide text-nb-ink/50">
-            End port
-            <select
-              value={endPortValue}
-              onChange={(e) => setEndPortValue(e.target.value)}
-              className="mt-0.5 w-full rounded border border-nb-ink/20 px-1.5 py-1 text-xs font-normal normal-case"
-            >
-              {ports.map((port) => (
-                <option key={port.id} value={port.id}>
-                  {port.name}
-                </option>
-              ))}
-            </select>
-          </label>
-          <label
-            className={`flex cursor-pointer items-center gap-1.5 rounded px-1.5 py-1 text-xs font-semibold ${
-              locked ? "bg-nb-ink/10 text-nb-ink/70" : "bg-emerald-100 text-emerald-700"
-            }`}
+        <label className="text-[10px] font-semibold uppercase tracking-wide text-nb-ink/50">
+          End port
+          <select
+            value={endPortValue}
+            onChange={(e) => setEndPortValue(e.target.value)}
+            className="mt-0.5 w-full rounded border border-nb-ink/20 px-1.5 py-1 text-xs font-normal normal-case"
           >
-            <input type="checkbox" checked={locked} onChange={onToggleLock} className="h-3.5 w-3.5" />
-            Locked
-          </label>
-        </div>
+            {ports.map((port) => (
+              <option key={port.id} value={port.id}>
+                {port.name}
+              </option>
+            ))}
+          </select>
+        </label>
       </div>
       <div className="flex items-center justify-between gap-2 pt-0.5">
         <button
@@ -536,20 +523,29 @@ function RouteEditForm({
         >
           Delete
         </button>
-        <button
-          type="button"
-          onClick={() =>
-            onSave({
-              name,
-              description,
-              startPortId: startPortValue,
-              endPortId: endPortValue,
-            })
-          }
-          className="nb-btn nb-btn-orange px-2 py-1 text-xs font-semibold"
-        >
-          Save
-        </button>
+        <div className="flex items-center gap-2">
+          <button
+            type="button"
+            onClick={onDiscard}
+            className="rounded px-1.5 py-1 text-xs font-semibold text-nb-ink/60 hover:bg-nb-ink/5"
+          >
+            Discard
+          </button>
+          <button
+            type="button"
+            onClick={() =>
+              onSave({
+                name,
+                description,
+                startPortId: startPortValue,
+                endPortId: endPortValue,
+              })
+            }
+            className="nb-btn nb-btn-orange px-2 py-1 text-xs font-semibold"
+          >
+            Save
+          </button>
+        </div>
       </div>
     </div>
   );
@@ -639,6 +635,9 @@ interface LeafletMapProps {
   onPortDelete: (id: string) => void;
   onDepotDelete: (id: string) => void;
   onRouteDelete: (id: string) => void;
+  onPortDiscard: (id: string) => void;
+  onDepotDiscard: (id: string) => void;
+  onRouteDiscard: (id: string) => void;
 }
 
 export default function LeafletMap({
@@ -657,6 +656,9 @@ export default function LeafletMap({
   onPortDelete,
   onDepotDelete,
   onRouteDelete,
+  onPortDiscard,
+  onDepotDiscard,
+  onRouteDiscard,
 }: LeafletMapProps) {
   const controlIcon = useMemo(() => makeControlIcon(16), []);
   const portsById = useMemo(() => new Map(ports.map((p) => [p.id, p])), [ports]);
@@ -681,55 +683,32 @@ export default function LeafletMap({
   // dragged so the curve/guides track the cursor smoothly.
   const routeGuide1Refs = useRef(new Map<string, L.Polyline>());
   const routeGuide2Refs = useRef(new Map<string, L.Polyline>());
-  // Ports/depots/routes are locked (not draggable) by default, even while
-  // `editMode` is on, to guard against accidentally dragging an item while
-  // just clicking around to edit its name/description. The edit panel (see
-  // `selectedItem` below) shows a "Locked" checkbox — unchecking it adds
-  // the item's id here, which is what actually flips `draggable` on.
-  // Closing the panel re-locks it so the next time it's opened it starts
-  // locked again.
-  const [unlockedIds, setUnlockedIds] = useState<Set<string>>(new Set());
-  const lockMarker = (id: string) =>
-    setUnlockedIds((prev) => {
-      if (!prev.has(id)) return prev;
-      const next = new Set(prev);
-      next.delete(id);
-      return next;
-    });
-  const unlockMarker = (id: string) =>
-    setUnlockedIds((prev) => {
-      if (prev.has(id)) return prev;
-      const next = new Set(prev);
-      next.add(id);
-      return next;
-    });
   // The item currently being edited. Rather than a Leaflet Popup anchored
   // to the marker/route itself (which used to cover nearby items and move
   // around with the map), clicking a port/depot/route in edit mode selects
   // it here and its edit form renders in a floating panel docked near the
   // bottom of the map (see the JSX below) instead.
   const [selectedItem, setSelectedItem] = useState<{ type: "port" | "depot" | "route"; id: string } | null>(null);
+  // Bumped on every discard so the just-discarded form remounts with the
+  // reverted data instead of keeping its stale local input state (see the
+  // key comment on the EditForm/RouteEditForm instances below).
+  const [discardNonce, setDiscardNonce] = useState(0);
   const openItem = (type: "port" | "depot" | "route", id: string) => {
-    if (selectedItem && selectedItem.id !== id) lockMarker(selectedItem.id);
     setSelectedItem({ type, id });
   };
   const closeItem = () => {
-    if (selectedItem) lockMarker(selectedItem.id);
     setSelectedItem(null);
   };
-  // Leaving edit mode should close any open panel (and re-lock everything)
-  // rather than leaving it dangling on screen. Adjusting state during
-  // render in response to a prop change (rather than in a useEffect) is
-  // the pattern React recommends for this — see "Adjusting state when a
-  // prop changes" — using a bit of state (not a ref) to remember the
-  // previous value, since refs can't be read/written during render.
+  // Leaving edit mode should close any open panel rather than leaving it
+  // dangling on screen. Adjusting state during render in response to a
+  // prop change (rather than in a useEffect) is the pattern React
+  // recommends for this — see "Adjusting state when a prop changes" —
+  // using a bit of state (not a ref) to remember the previous value,
+  // since refs can't be read/written during render.
   const [prevEditMode, setPrevEditMode] = useState(editMode);
   if (prevEditMode !== editMode) {
     setPrevEditMode(editMode);
-    if (!editMode) {
-      if (selectedItem) setSelectedItem(null);
-      if (unlockedIds.size > 0) setUnlockedIds(new Set());
-    }
+    if (!editMode && selectedItem) setSelectedItem(null);
   }
   const routeStyleFor = (startPort: MapPortRecord, endPort: MapPortRecord) => ({
     color:
@@ -1053,7 +1032,7 @@ export default function LeafletMap({
               pathOptions={routeStyleFor(startPort, endPort)}
               interactive={false}
             />
-            {editMode && unlockedIds.has(route.id) && (
+            {editMode && (
               <>
                 {/* Dashed guide lines from each anchor port to its nearest
                     handle make the bezier's shape easier to reason about —
@@ -1148,7 +1127,7 @@ export default function LeafletMap({
           key={port.id}
           position={[port.lat, port.lng]}
           icon={getPortIcon(colorForTenant(port.tenant, DEFAULT_PORT_COLOR))}
-          draggable={editMode && unlockedIds.has(port.id)}
+          draggable={editMode}
           ref={(m) => {
             if (m) portMarkerRefs.current.set(port.id, m);
             else portMarkerRefs.current.delete(port.id);
@@ -1204,7 +1183,7 @@ export default function LeafletMap({
           key={depot.id}
           position={[depot.lat, depot.lng]}
           icon={getDepotIcon(colorForTenant(depot.tenant, DEFAULT_DEPOT_COLOR))}
-          draggable={editMode && unlockedIds.has(depot.id)}
+          draggable={editMode}
           ref={(m) => {
             if (m) depotMarkerRefs.current.set(depot.id, m);
             else depotMarkerRefs.current.delete(depot.id);
@@ -1244,16 +1223,21 @@ export default function LeafletMap({
               if (!port) return null;
               return (
                 <EditForm
-                  key={port.id}
+                  // Discarding reverts the port's data in place (same id),
+                  // so the nonce forces a remount to pick up the reverted
+                  // values instead of leaving the form's stale local state.
+                  key={`${port.id}-${discardNonce}`}
                   name={port.name}
                   code={port.code}
                   tenant={port.tenant}
                   country={port.country}
                   description={port.description}
                   featureFlagNames={port.featureFlags?.map((f) => f.name) ?? []}
-                  locked={!unlockedIds.has(port.id)}
-                  onToggleLock={() => (unlockedIds.has(port.id) ? lockMarker(port.id) : unlockMarker(port.id))}
                   onSave={(updates) => onPortSave(port.id, updates)}
+                  onDiscard={() => {
+                    onPortDiscard(port.id);
+                    setDiscardNonce((n) => n + 1);
+                  }}
                   onDelete={() => {
                     onPortDelete(port.id);
                     closeItem();
@@ -1267,15 +1251,17 @@ export default function LeafletMap({
               if (!depot) return null;
               return (
                 <EditForm
-                  key={depot.id}
+                  key={`${depot.id}-${discardNonce}`}
                   name={depot.name}
                   code={depot.code}
                   tenant={depot.tenant}
                   country={depot.country}
                   description={depot.description}
-                  locked={!unlockedIds.has(depot.id)}
-                  onToggleLock={() => (unlockedIds.has(depot.id) ? lockMarker(depot.id) : unlockMarker(depot.id))}
                   onSave={(updates) => onDepotSave(depot.id, updates)}
+                  onDiscard={() => {
+                    onDepotDiscard(depot.id);
+                    setDiscardNonce((n) => n + 1);
+                  }}
                   onDelete={() => {
                     onDepotDelete(depot.id);
                     closeItem();
@@ -1289,15 +1275,17 @@ export default function LeafletMap({
               if (!route) return null;
               return (
                 <RouteEditForm
-                  key={route.id}
+                  key={`${route.id}-${discardNonce}`}
                   name={route.name}
                   description={route.description}
                   startPortId={route.startPortId}
                   endPortId={route.endPortId}
                   ports={ports}
-                  locked={!unlockedIds.has(route.id)}
-                  onToggleLock={() => (unlockedIds.has(route.id) ? lockMarker(route.id) : unlockMarker(route.id))}
                   onSave={(updates) => onRouteSave(route.id, updates)}
+                  onDiscard={() => {
+                    onRouteDiscard(route.id);
+                    setDiscardNonce((n) => n + 1);
+                  }}
                   onDelete={() => {
                     onRouteDelete(route.id);
                     closeItem();
