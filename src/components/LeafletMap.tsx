@@ -393,36 +393,38 @@ function EditForm({
             </label>
           )}
         </div>
-        {featureFlagNames !== undefined && (
-          <div className="flex flex-col gap-0.5 rounded border border-nb-ink/20 px-1.5 py-1">
-            <span className="text-[10px] font-semibold uppercase tracking-wide text-nb-ink/50">
-              Feature flags
-            </span>
-            {KNOWN_FEATURE_FLAG_NAMES.map((flagName) => (
-              <label key={flagName} className="flex items-center gap-1.5 text-xs">
-                <input
-                  type="checkbox"
-                  checked={selectedFlags.includes(flagName)}
-                  onChange={(e) =>
-                    setSelectedFlags((prev) =>
-                      e.target.checked ? [...prev, flagName] : prev.filter((f) => f !== flagName),
-                    )
-                  }
-                />
-                {flagName}
-              </label>
-            ))}
-          </div>
-        )}
+        <div className="flex flex-col gap-3">
+          {featureFlagNames !== undefined && (
+            <div className="flex flex-col gap-0.5 rounded border border-nb-ink/20 px-1.5 py-1">
+              <span className="text-[10px] font-semibold uppercase tracking-wide text-nb-ink/50">
+                Feature flags
+              </span>
+              {KNOWN_FEATURE_FLAG_NAMES.map((flagName) => (
+                <label key={flagName} className="flex items-center gap-1.5 text-xs">
+                  <input
+                    type="checkbox"
+                    checked={selectedFlags.includes(flagName)}
+                    onChange={(e) =>
+                      setSelectedFlags((prev) =>
+                        e.target.checked ? [...prev, flagName] : prev.filter((f) => f !== flagName),
+                      )
+                    }
+                  />
+                  {flagName}
+                </label>
+              ))}
+            </div>
+          )}
+          <label
+            className={`flex cursor-pointer items-center gap-1.5 rounded px-1.5 py-1 text-xs font-semibold ${
+              locked ? "bg-nb-ink/10 text-nb-ink/70" : "bg-emerald-100 text-emerald-700"
+            }`}
+          >
+            <input type="checkbox" checked={locked} onChange={onToggleLock} className="h-3.5 w-3.5" />
+            Locked
+          </label>
+        </div>
       </div>
-      <label
-        className={`flex cursor-pointer items-center gap-1.5 rounded px-1.5 py-1 text-xs font-semibold ${
-          locked ? "bg-nb-ink/10 text-nb-ink/70" : "bg-emerald-100 text-emerald-700"
-        }`}
-      >
-        <input type="checkbox" checked={locked} onChange={onToggleLock} className="h-3.5 w-3.5" />
-        Locked
-      </label>
       <div className="flex items-center justify-between gap-2 pt-0.5">
         <button
           type="button"
@@ -501,29 +503,31 @@ function RouteEditForm({
             ))}
           </select>
         </label>
-        <label className="text-[10px] font-semibold uppercase tracking-wide text-nb-ink/50">
-          End port
-          <select
-            value={endPortValue}
-            onChange={(e) => setEndPortValue(e.target.value)}
-            className="mt-0.5 w-full rounded border border-nb-ink/20 px-1.5 py-1 text-xs font-normal normal-case"
+        <div className="flex flex-col gap-2">
+          <label className="text-[10px] font-semibold uppercase tracking-wide text-nb-ink/50">
+            End port
+            <select
+              value={endPortValue}
+              onChange={(e) => setEndPortValue(e.target.value)}
+              className="mt-0.5 w-full rounded border border-nb-ink/20 px-1.5 py-1 text-xs font-normal normal-case"
+            >
+              {ports.map((port) => (
+                <option key={port.id} value={port.id}>
+                  {port.name}
+                </option>
+              ))}
+            </select>
+          </label>
+          <label
+            className={`flex cursor-pointer items-center gap-1.5 rounded px-1.5 py-1 text-xs font-semibold ${
+              locked ? "bg-nb-ink/10 text-nb-ink/70" : "bg-emerald-100 text-emerald-700"
+            }`}
           >
-            {ports.map((port) => (
-              <option key={port.id} value={port.id}>
-                {port.name}
-              </option>
-            ))}
-          </select>
-        </label>
+            <input type="checkbox" checked={locked} onChange={onToggleLock} className="h-3.5 w-3.5" />
+            Locked
+          </label>
+        </div>
       </div>
-      <label
-        className={`flex cursor-pointer items-center gap-1.5 rounded px-1.5 py-1 text-xs font-semibold ${
-          locked ? "bg-nb-ink/10 text-nb-ink/70" : "bg-emerald-100 text-emerald-700"
-        }`}
-      >
-        <input type="checkbox" checked={locked} onChange={onToggleLock} className="h-3.5 w-3.5" />
-        Locked
-      </label>
       <div className="flex items-center justify-between gap-2 pt-0.5">
         <button
           type="button"
