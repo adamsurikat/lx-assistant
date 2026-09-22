@@ -400,6 +400,8 @@ function RouteEditForm({
   startPortId,
   endPortId,
   ports,
+  locked,
+  onToggleLock,
   onSave,
   onDelete,
 }: {
@@ -408,6 +410,12 @@ function RouteEditForm({
   startPortId: string;
   endPortId: string;
   ports: MapPortRecord[];
+  // Whether the route's bezier calibration handles are currently hidden.
+  // Shows an "Unlock to move" / "Lock" toggle, matching the port/depot
+  // marker popups — the control points only render once unlocked so they
+  // don't visually clutter every route just because edit mode is on.
+  locked: boolean;
+  onToggleLock: () => void;
   onSave: (updates: { name: string; description: string; startPortId: string; endPortId: string }) => void;
   onDelete: () => void;
 }) {
@@ -416,6 +424,15 @@ function RouteEditForm({
 
   return (
     <div className="flex w-60 flex-col gap-1.5">
+      <button
+        type="button"
+        onClick={onToggleLock}
+        className={`flex items-center justify-center gap-1.5 rounded px-1.5 py-1 text-xs font-semibold ${
+          locked ? "bg-nb-ink/10 text-nb-ink/70 hover:bg-nb-ink/15" : "bg-emerald-100 text-emerald-700 hover:bg-emerald-200"
+        }`}
+      >
+        {locked ? "🔒 Locked — unlock to adjust curve" : "🔓 Unlocked — drag curve handles"}
+      </button>
       <label className="text-[10px] font-semibold uppercase tracking-wide text-nb-ink/50">
         Start port
         <select
@@ -799,6 +816,7 @@ export default function LeafletMap({
                   routeLineRefs.current.get(route.id)?.setStyle({ weight: 2 });
                   routeGlowRefs.current.get(route.id)?.setStyle({ opacity: 0 });
                 },
+                popupclose: () => lockMarker(route.id),
               }}
             >
               {editMode && (
@@ -809,6 +827,8 @@ export default function LeafletMap({
                     startPortId={route.startPortId}
                     endPortId={route.endPortId}
                     ports={ports}
+                    locked={!unlockedIds.has(route.id)}
+                    onToggleLock={() => (unlockedIds.has(route.id) ? lockMarker(route.id) : unlockMarker(route.id))}
                     onSave={(updates) => onRouteSave(route.id, updates)}
                     onDelete={() => onRouteDelete(route.id)}
                   />
@@ -833,7 +853,7 @@ export default function LeafletMap({
               pathOptions={routeStyleFor(startPort, endPort)}
               interactive={false}
             />
-            {editMode && (
+            {editMode && unlockedIds.has(route.id) && (
               <>
                 <Marker
                   position={[route.control1Lat, route.control1Lng]}
