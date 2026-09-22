@@ -445,7 +445,7 @@ function EditForm({
             }
             className="nb-btn nb-btn-orange px-2 py-1 text-xs font-semibold"
           >
-            Save
+            Done
           </button>
         </div>
       </div>
@@ -543,7 +543,7 @@ function RouteEditForm({
             }
             className="nb-btn nb-btn-orange px-2 py-1 text-xs font-semibold"
           >
-            Save
+            Done
           </button>
         </div>
       </div>
@@ -1226,7 +1226,10 @@ export default function LeafletMap({
                   country={port.country}
                   description={port.description}
                   featureFlagNames={port.featureFlags?.map((f) => f.name) ?? []}
-                  onSave={(updates) => onPortSave(port.id, updates)}
+                  onSave={(updates) => {
+                    onPortSave(port.id, updates);
+                    closeItem();
+                  }}
                   onDiscard={() => {
                     onPortDiscard(port.id);
                     closeItem();
@@ -1250,7 +1253,10 @@ export default function LeafletMap({
                   tenant={depot.tenant}
                   country={depot.country}
                   description={depot.description}
-                  onSave={(updates) => onDepotSave(depot.id, updates)}
+                  onSave={(updates) => {
+                    onDepotSave(depot.id, updates);
+                    closeItem();
+                  }}
                   onDiscard={() => {
                     onDepotDiscard(depot.id);
                     closeItem();
@@ -1274,7 +1280,10 @@ export default function LeafletMap({
                   startPortId={route.startPortId}
                   endPortId={route.endPortId}
                   ports={ports}
-                  onSave={(updates) => onRouteSave(route.id, updates)}
+                  onSave={(updates) => {
+                    onRouteSave(route.id, updates);
+                    closeItem();
+                  }}
                   onDiscard={() => {
                     onRouteDiscard(route.id);
                     closeItem();
