@@ -53,10 +53,6 @@ const DRAG_DEADZONE_PX = 6;
 function mapFromMarkerEvent(e: L.LeafletEvent): L.Map | undefined {
   return (e.target as L.Marker & { _map?: L.Map })._map;
 }
-// A shared, stable empty Set — reused wherever "no matches" needs to be
-// returned from a useMemo, so the identity doesn't change every render
-// (which would otherwise retrigger effects that depend on it).
-const EMPTY_ID_SET = new Set<string>();
 function colorForTenant(tenant: string, fallback: string): string {
   return TENANT_COLORS[tenant.toLowerCase()] ?? fallback;
 }
@@ -226,28 +222,59 @@ function MapLegend({
   showUnassignedDepot,
   hoveredTenant,
   onHoverTenant,
+  selectedTenants,
+  onToggleTenant,
   hoveredFeatureFlag,
   onHoverFeatureFlag,
+  selectedFeatureFlags,
+  onToggleFeatureFlag,
+  onClearFilters,
 }: {
   tenants: string[];
   showUnassignedPort: boolean;
   showUnassignedDepot: boolean;
   hoveredTenant: string | null;
   onHoverTenant: (tenant: string | null) => void;
+  // Tenants/flags "pinned" by clicking them (rather than just hovered) —
+  // these stay active as a filter regardless of mouse position, and any
+  // number of tenants/flags can be pinned at once (matches are unioned
+  // together, not intersected).
+  selectedTenants: Set<string>;
+  onToggleTenant: (tenant: string) => void;
   hoveredFeatureFlag: string | null;
   onHoverFeatureFlag: (flag: string | null) => void;
+  selectedFeatureFlags: Set<string>;
+  onToggleFeatureFlag: (flag: string) => void;
+  onClearFilters: () => void;
 }) {
+  const hasFilters = selectedTenants.size > 0 || selectedFeatureFlags.size > 0;
   return (
     <div className="pointer-events-none absolute right-3 top-3 z-[1000] w-52 rounded-lg border border-nb-ink/10 bg-white/95 p-3 text-xs text-nb-ink shadow-md backdrop-blur-sm">
-      <p className="mb-2 font-semibold uppercase tracking-wide text-nb-ink/60">Tenants</p>
+      <div className="mb-2 flex items-center justify-between">
+        <p className="font-semibold uppercase tracking-wide text-nb-ink/60">Tenants</p>
+        {hasFilters && (
+          <button
+            type="button"
+            onClick={onClearFilters}
+            className="pointer-events-auto text-[10px] font-semibold uppercase tracking-wide text-nb-orange hover:underline"
+          >
+            Clear
+          </button>
+        )}
+      </div>
       <ul className="mb-3 flex flex-col gap-1.5">
         {tenants.map((tenant) => (
           <li
             key={tenant}
             onMouseEnter={() => onHoverTenant(tenant)}
             onMouseLeave={() => onHoverTenant(null)}
-            className={`flex cursor-default items-center gap-2 rounded pointer-events-auto px-1 -mx-1 py-0.5 transition-colors ${
-              hoveredTenant === tenant ? "bg-nb-ink/10" : ""
+            onClick={() => onToggleTenant(tenant)}
+            className={`flex cursor-pointer items-center gap-2 rounded pointer-events-auto px-1 -mx-1 py-0.5 transition-colors ${
+              selectedTenants.has(tenant)
+                ? "bg-nb-orange/15 font-semibold ring-1 ring-inset ring-nb-orange/50"
+                : hoveredTenant === tenant
+                  ? "bg-nb-ink/10"
+                  : ""
             }`}
           >
             <span
@@ -274,8 +301,13 @@ function MapLegend({
             key={flag}
             onMouseEnter={() => onHoverFeatureFlag(flag)}
             onMouseLeave={() => onHoverFeatureFlag(null)}
-            className={`flex cursor-default items-center gap-2 rounded pointer-events-auto px-1 -mx-1 py-0.5 transition-colors ${
-              hoveredFeatureFlag === flag ? "bg-nb-ink/10" : ""
+            onClick={() => onToggleFeatureFlag(flag)}
+            className={`flex cursor-pointer items-center gap-2 rounded pointer-events-auto px-1 -mx-1 py-0.5 transition-colors ${
+              selectedFeatureFlags.has(flag)
+                ? "bg-nb-orange/15 font-semibold ring-1 ring-inset ring-nb-orange/50"
+                : hoveredFeatureFlag === flag
+                  ? "bg-nb-ink/10"
+                  : ""
             }`}
           >
             <span className="flex h-3 w-3 shrink-0 items-center justify-center rounded-sm border border-nb-ink/30 bg-nb-ink/5 text-[8px] font-bold uppercase text-nb-ink/60">
@@ -839,46 +871,78 @@ export default function LeafletMap({
   // that tenant's ports/depots the same way a search match does — but
   // without panning the map (a mouse hover shouldn't yank the camera
   // around), so it's kept separate from matchedPoints/FitBoundsToMatches.
+  // Clicking a tenant/flag instead "pins" it into these Sets so the filter
+  // stays active regardless of mouse position, and any number of
+  // tenants/flags can be pinned together — their matches are unioned, not
+  // intersected, so e.g. pinning two tenants shows both at once.
   const [hoveredTenant, setHoveredTenant] = useState<string | null>(null);
+  const [selectedTenants, setSelectedTenants] = useState<Set<string>>(new Set());
+  const toggleTenant = (tenant: string) =>
+    setSelectedTenants((prev) => {
+      const next = new Set(prev);
+      if (next.has(tenant)) next.delete(tenant);
+      else next.add(tenant);
+      return next;
+    });
+  const activeTenants = useMemo(() => {
+    if (!hoveredTenant) return selectedTenants;
+    const next = new Set(selectedTenants);
+    next.add(hoveredTenant);
+    return next;
+  }, [selectedTenants, hoveredTenant]);
   const hoverPortIds = useMemo(() => {
-    if (!hoveredTenant) return new Set<string>();
-    return new Set(ports.filter((p) => p.tenant?.toLowerCase() === hoveredTenant).map((p) => p.id));
-  }, [ports, hoveredTenant]);
+    if (activeTenants.size === 0) return new Set<string>();
+    return new Set(ports.filter((p) => p.tenant && activeTenants.has(p.tenant.toLowerCase())).map((p) => p.id));
+  }, [ports, activeTenants]);
   const hoverDepotIds = useMemo(() => {
-    if (!hoveredTenant) return new Set<string>();
-    return new Set(depots.filter((d) => d.tenant?.toLowerCase() === hoveredTenant).map((d) => d.id));
-  }, [depots, hoveredTenant]);
+    if (activeTenants.size === 0) return new Set<string>();
+    return new Set(depots.filter((d) => d.tenant && activeTenants.has(d.tenant.toLowerCase())).map((d) => d.id));
+  }, [depots, activeTenants]);
 
   // Hovering a feature flag in the legend highlights every port carrying
   // that flag, the same way a tenant hover does. Depots don't currently
-  // support feature flags at all, so a flag hover has no depot matches —
+  // support feature flags at all, so a flag filter has no depot matches —
   // meaning every depot fades out along with non-matching ports, same as
   // "no match" behaves for a search/tenant filter.
   const [hoveredFeatureFlag, setHoveredFeatureFlag] = useState<string | null>(null);
+  const [selectedFeatureFlags, setSelectedFeatureFlags] = useState<Set<string>>(new Set());
+  const toggleFeatureFlag = (flag: string) =>
+    setSelectedFeatureFlags((prev) => {
+      const next = new Set(prev);
+      if (next.has(flag)) next.delete(flag);
+      else next.add(flag);
+      return next;
+    });
+  const activeFeatureFlags = useMemo(() => {
+    if (!hoveredFeatureFlag) return selectedFeatureFlags;
+    const next = new Set(selectedFeatureFlags);
+    next.add(hoveredFeatureFlag);
+    return next;
+  }, [selectedFeatureFlags, hoveredFeatureFlag]);
   const hoverFlagPortIds = useMemo(() => {
-    if (!hoveredFeatureFlag) return new Set<string>();
+    if (activeFeatureFlags.size === 0) return new Set<string>();
     return new Set(
-      ports.filter((p) => p.featureFlags?.some((f) => f.name === hoveredFeatureFlag)).map((p) => p.id),
+      ports.filter((p) => p.featureFlags?.some((f) => activeFeatureFlags.has(f.name))).map((p) => p.id),
     );
-  }, [ports, hoveredFeatureFlag]);
+  }, [ports, activeFeatureFlags]);
+  const clearLegendFilters = () => {
+    setSelectedTenants(new Set());
+    setSelectedFeatureFlags(new Set());
+  };
 
-  // Search takes priority over a tenant hover if both are somehow active;
-  // `null` means "no filter active" (full opacity, no pulse) rather than
-  // "filter active but nothing matches".
-  const activePortIds = query
-    ? matchedPortIds
-    : hoveredTenant
-      ? hoverPortIds
-      : hoveredFeatureFlag
-        ? hoverFlagPortIds
-        : null;
-  const activeDepotIds = query
-    ? matchedDepotIds
-    : hoveredTenant
-      ? hoverDepotIds
-      : hoveredFeatureFlag
-        ? EMPTY_ID_SET
-        : null;
+  // Search takes priority over a tenant/feature-flag filter if both are
+  // somehow active; `null` means "no filter active" (full opacity, no
+  // pulse) rather than "filter active but nothing matches". A tenant and a
+  // flag filter can be active together (e.g. one pinned, one hovered, or
+  // both pinned) — their matches are unioned so either one showing a port
+  // is enough to keep it visible.
+  const hasLegendFilter = activeTenants.size > 0 || activeFeatureFlags.size > 0;
+  const activePortIds = useMemo(() => {
+    if (query) return matchedPortIds;
+    if (hasLegendFilter) return new Set([...hoverPortIds, ...hoverFlagPortIds]);
+    return null;
+  }, [query, matchedPortIds, hasLegendFilter, hoverPortIds, hoverFlagPortIds]);
+  const activeDepotIds = query ? matchedDepotIds : hasLegendFilter ? hoverDepotIds : null;
 
   // When hovering a tenant/feature flag, a route between a matching port
   // and a *non-matching* one (e.g. a P&O Ferries port connected to a Stena
@@ -908,7 +972,7 @@ export default function LeafletMap({
   // search's pulse animation.
   useEffect(() => {
     const nonMatchOpacity = query ? 0.25 : 0;
-    const isHovering = hoveredTenant !== null || hoveredFeatureFlag !== null;
+    const isHovering = hasLegendFilter;
     for (const [id, marker] of portMarkerRefs.current) {
       const isMatch = activePortIds?.has(id) ?? true;
       const isVisible = isMatch || (isHovering && (connectedPortIds?.has(id) ?? false));
@@ -954,8 +1018,7 @@ export default function LeafletMap({
     activeDepotIds,
     connectedPortIds,
     query,
-    hoveredTenant,
-    hoveredFeatureFlag,
+    hasLegendFilter,
     ports,
     depots,
     routes,
@@ -986,8 +1049,13 @@ export default function LeafletMap({
         showUnassignedDepot={tenantsInUse.hasUnassignedDepot}
         hoveredTenant={hoveredTenant}
         onHoverTenant={setHoveredTenant}
+        selectedTenants={selectedTenants}
+        onToggleTenant={toggleTenant}
         hoveredFeatureFlag={hoveredFeatureFlag}
         onHoverFeatureFlag={setHoveredFeatureFlag}
+        selectedFeatureFlags={selectedFeatureFlags}
+        onToggleFeatureFlag={toggleFeatureFlag}
+        onClearFilters={clearLegendFilters}
       />
       <MapContainer
       center={[50, 8]}
