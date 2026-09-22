@@ -28,6 +28,16 @@ export default function MapPage() {
   const [routes, setRoutes] = useState<MapRouteRecord[]>([]);
   const [loading, setLoading] = useState(true);
   const [editMode, setEditMode] = useState(false);
+  // Snapshot of every port/depot/route's data taken the moment edit mode is
+  // turned on, so an accidental drag or edit can be discarded back to
+  // exactly how it looked at the start of this editing session — items
+  // now start fully unlocked/draggable (no more per-item lock toggle), so
+  // this is the safety net that replaces it.
+  const [editSnapshot, setEditSnapshot] = useState<{
+    ports: MapPortRecord[];
+    depots: MapDepotRecord[];
+    routes: MapRouteRecord[];
+  } | null>(null);
   const [pendingAdd, setPendingAdd] = useState<"port" | "depot" | null>(null);
   const [addRouteError, setAddRouteError] = useState<string | null>(null);
   const [importStatus, setImportStatus] = useState<string | null>(null);
@@ -232,6 +242,95 @@ export default function MapPage() {
     await fetch(`/api/map/routes/${id}`, { method: "DELETE" });
   }, []);
 
+  // Reverts a single item back to how it looked when edit mode was turned
+  // on (its position, name/code/tenant/etc, or route endpoints/control
+  // points), persisting that reverted state. Items created during this
+  // editing session have no snapshot entry, so there's nothing to discard.
+  const handleDiscardPort = useCallback(
+    async (id: string) => {
+      const original = editSnapshot?.ports.find((p) => p.id === id);
+      if (!original) return;
+      setPorts((prev) => prev.map((p) => (p.id === id ? original : p)));
+      await fetch(`/api/map/ports/${id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          name: original.name,
+          code: original.code,
+          tenant: original.tenant,
+          country: original.country,
+          description: original.description,
+          lat: original.lat,
+          lng: original.lng,
+          featureFlagNames: original.featureFlags?.map((f) => f.name) ?? [],
+        }),
+      });
+    },
+    [editSnapshot],
+  );
+
+  const handleDiscardDepot = useCallback(
+    async (id: string) => {
+      const original = editSnapshot?.depots.find((d) => d.id === id);
+      if (!original) return;
+      setDepots((prev) => prev.map((d) => (d.id === id ? original : d)));
+      await fetch(`/api/map/depots/${id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          name: original.name,
+          code: original.code,
+          tenant: original.tenant,
+          country: original.country,
+          description: original.description,
+          lat: original.lat,
+          lng: original.lng,
+        }),
+      });
+    },
+    [editSnapshot],
+  );
+
+  const handleDiscardRoute = useCallback(
+    async (id: string) => {
+      const original = editSnapshot?.routes.find((r) => r.id === id);
+      if (!original) return;
+      setRoutes((prev) => prev.map((r) => (r.id === id ? original : r)));
+      await fetch(`/api/map/routes/${id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          name: original.name,
+          description: original.description,
+          startPortId: original.startPortId,
+          endPortId: original.endPortId,
+          control1Lat: original.control1Lat,
+          control1Lng: original.control1Lng,
+          control2Lat: original.control2Lat,
+          control2Lng: original.control2Lng,
+        }),
+      });
+    },
+    [editSnapshot],
+  );
+
+  // Reverts every existing port/depot/route back to the edit-session
+  // snapshot. Items added since the snapshot was taken are left alone
+  // (there's nothing to revert them to) and items deleted since aren't
+  // restored — this undoes moves/edits, not adds/deletes.
+  const handleDiscardAll = useCallback(async () => {
+    if (!editSnapshot) return;
+    await Promise.all([
+      ...editSnapshot.ports.filter((p) => ports.some((cur) => cur.id === p.id)).map((p) => handleDiscardPort(p.id)),
+      ...editSnapshot.depots
+        .filter((d) => depots.some((cur) => cur.id === d.id))
+        .map((d) => handleDiscardDepot(d.id)),
+      ...editSnapshot.routes
+        .filter((r) => routes.some((cur) => cur.id === r.id))
+        .map((r) => handleDiscardRoute(r.id)),
+    ]);
+  }, [editSnapshot, ports, depots, routes, handleDiscardPort, handleDiscardDepot, handleDiscardRoute]);
+
   const handleImportFileChange = useCallback(
     async (e: React.ChangeEvent<HTMLInputElement>) => {
       const file = e.target.files?.[0];
@@ -286,7 +385,15 @@ export default function MapPage() {
             <button
               type="button"
               onClick={() => {
-                setEditMode((v) => !v);
+                setEditMode((v) => {
+                  const next = !v;
+                  setEditSnapshot(
+                    next
+                      ? { ports: structuredClone(ports), depots: structuredClone(depots), routes: structuredClone(routes) }
+                      : null,
+                  );
+                  return next;
+                });
                 setPendingAdd(null);
                 setAddRouteError(null);
                 setImportError(null);
@@ -298,6 +405,9 @@ export default function MapPage() {
             </button>
             {editMode && (
               <>
+                <button type="button" onClick={handleDiscardAll} className="nb-btn px-3 py-1.5 text-xs font-semibold">
+                  Discard all
+                </button>
                 <button
                   type="button"
                   onClick={() => setPendingAdd(pendingAdd === "port" ? null : "port")}
@@ -369,6 +479,9 @@ export default function MapPage() {
               onPortDelete={handlePortDelete}
               onDepotDelete={handleDepotDelete}
               onRouteDelete={handleRouteDelete}
+              onPortDiscard={handleDiscardPort}
+              onDepotDiscard={handleDiscardDepot}
+              onRouteDiscard={handleDiscardRoute}
             />
           )}
           {routePicker && (
