@@ -22,7 +22,7 @@ interface PostIt {
   deletedAt?: string | null;
 }
 
-const NOTE_SIZE = 200;
+const NOTE_SIZE = 260;
 // Debounce for text/position PATCH requests so we don't spam the API while
 // the user is typing or mid-drag.
 const SAVE_DEBOUNCE_MS = 500;
@@ -766,12 +766,12 @@ function PostItNote({
           onChange={(e) => onChange({ text: e.target.value })}
           onBlur={handleBlur}
           placeholder="Type a note…"
-          className="postit-textarea h-32 w-full resize-none bg-transparent px-3 py-2 text-sm font-medium text-nb-ink outline-none placeholder:text-nb-ink/30"
+          className="postit-textarea h-[166px] w-full resize-none bg-transparent px-3 py-2 text-sm font-medium text-nb-ink outline-none placeholder:text-nb-ink/30"
         />
       ) : (
         <div
           onPointerUp={handleViewPointerUp}
-          className="postit-textarea h-32 w-full cursor-move overflow-auto whitespace-pre-wrap break-words px-3 py-2 text-sm font-medium text-nb-ink"
+          className="postit-textarea h-[166px] w-full cursor-move overflow-auto whitespace-pre-wrap break-words px-3 py-2 text-sm font-medium text-nb-ink"
         >
           {note.text.trim() === "" ? (
             <span className="text-nb-ink/30">Type a note…</span>
