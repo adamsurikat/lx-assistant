@@ -33,6 +33,7 @@ model User {
   tickets        Ticket[]
   jiraConnection JiraConnection?
   postIts        PostIt[]
+  googleCalendarEvents GoogleCalendarEvent[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -147,6 +148,29 @@ model TimeEntry {
   user   User    @relation(fields: [userId], references: [id], onDelete: Cascade)
   ticket Ticket? @relation(fields: [ticketId], references: [id], onDelete: SetNull)
 
+  @@index([userId, start])
+}
+
+// Local cache of the user's primary Google Calendar events (read-only
+// overlay on the app's calendar, see lib/googleCalendar.ts). Refreshed via
+// a background sync on page load rather than fetched live from Google on
+// every request. Only stores the fields the calendar UI actually renders
+// (title/time range/all-day flag/link) — no attendees, description, etc.
+model GoogleCalendarEvent {
+  id            String   @id @default(cuid())
+  userId        String
+  googleEventId String // Google's event id, unique per user's calendar
+  title         String
+  start         DateTime
+  end           DateTime
+  allDay        Boolean  @default(false)
+  htmlLink      String?
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, googleEventId])
   @@index([userId, start])
 }
 

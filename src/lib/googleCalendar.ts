@@ -96,9 +96,11 @@ async function getValidGoogleAccessToken(userId: string): Promise<string> {
 
 /**
  * Fetches the user's primary Google Calendar events within [timeMin, timeMax)
- * for display as a read-only overlay on the app's calendar.
+ * directly from the Google Calendar API. Internal — callers should go
+ * through `getCachedGoogleCalendarEvents`/`syncGoogleCalendarEvents` instead
+ * so the DB cache stays the source of truth for the UI.
  */
-export async function fetchGoogleCalendarEvents(
+async function fetchGoogleCalendarEventsFromApi(
   userId: string,
   timeMin: Date,
   timeMax: Date
@@ -146,4 +148,79 @@ export async function fetchGoogleCalendarEvents(
         htmlLink: item.htmlLink,
       };
     });
+}
+
+/**
+ * Reads the user's Google Calendar events for [timeMin, timeMax) from the
+ * local DB cache — no live Google API call. This is the primary path the
+ * calendar UI reads from; use `syncGoogleCalendarEvents` to refresh it.
+ * Matches events that overlap the window at all (same semantics as
+ * Google's own timeMin/timeMax), not just ones fully contained in it.
+ */
+export async function getCachedGoogleCalendarEvents(
+  userId: string,
+  timeMin: Date,
+  timeMax: Date
+): Promise<GoogleCalendarEvent[]> {
+  const rows = await prisma.googleCalendarEvent.findMany({
+    where: { userId, start: { lt: timeMax }, end: { gt: timeMin } },
+    orderBy: { start: "asc" },
+  });
+  return rows.map((row) => ({
+    id: row.googleEventId,
+    title: row.title,
+    start: row.start.toISOString(),
+    end: row.end.toISOString(),
+    allDay: row.allDay,
+    htmlLink: row.htmlLink ?? undefined,
+  }));
+}
+
+/**
+ * Fetches events from the live Google Calendar API for [timeMin, timeMax)
+ * and upserts them into the local DB cache, removing any previously-cached
+ * events in that same window that are no longer returned (e.g. deleted or
+ * moved out of range). Called as a background refresh, not on the UI's
+ * critical path — see /api/google-calendar/events's POST handler.
+ */
+export async function syncGoogleCalendarEvents(
+  userId: string,
+  timeMin: Date,
+  timeMax: Date
+): Promise<void> {
+  const events = await fetchGoogleCalendarEventsFromApi(userId, timeMin, timeMax);
+
+  for (const event of events) {
+    await prisma.googleCalendarEvent.upsert({
+      where: { userId_googleEventId: { userId, googleEventId: event.id } },
+      create: {
+        userId,
+        googleEventId: event.id,
+        title: event.title,
+        start: new Date(event.start),
+        end: new Date(event.end),
+        allDay: event.allDay,
+        htmlLink: event.htmlLink,
+      },
+      update: {
+        title: event.title,
+        start: new Date(event.start),
+        end: new Date(event.end),
+        allDay: event.allDay,
+        htmlLink: event.htmlLink,
+      },
+    });
+  }
+
+  const currentIds = new Set(events.map((e) => e.id));
+  const cachedInWindow = await prisma.googleCalendarEvent.findMany({
+    where: { userId, start: { lt: timeMax }, end: { gt: timeMin } },
+    select: { id: true, googleEventId: true },
+  });
+  const staleIds = cachedInWindow
+    .filter((row) => !currentIds.has(row.googleEventId))
+    .map((row) => row.id);
+  if (staleIds.length > 0) {
+    await prisma.googleCalendarEvent.deleteMany({ where: { id: { in: staleIds } } });
+  }
 }

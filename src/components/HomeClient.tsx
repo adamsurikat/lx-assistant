@@ -251,6 +251,22 @@ export function HomeClient({ initialTickets }: HomeClientProps) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [currentDate, googleConnected]);
 
+  // Refreshes the DB cache from the live Google Calendar API for the
+  // visible window, then reloads from the (now-updated) cache — mirrors
+  // handleSync's DB-first-then-background-refresh pattern for tickets.
+  const syncGoogleEvents = useCallback(async () => {
+    if (!googleConnected) return;
+    const params = new URLSearchParams({
+      from: weekStart.toISOString(),
+      to: weekEnd.toISOString(),
+    });
+    const res = await fetch(`/api/google-calendar/events?${params}`, { method: "POST" });
+    if (res.ok) {
+      await loadGoogleEvents();
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [currentDate, googleConnected, loadGoogleEvents]);
+
   const handleSync = useCallback(async () => {
     setSyncing(true);
     setError(null);
@@ -291,6 +307,17 @@ export function HomeClient({ initialTickets }: HomeClientProps) {
     loadEntries();
     loadGoogleEvents();
   }, [loadEntries, loadGoogleEvents]);
+
+  // Once we know Google Calendar is connected (or the visible week
+  // changes), kick off a background sync so the cached events reflect the
+  // latest Google state on every page load/navigation, same as tickets.
+  useEffect(() => {
+    if (googleConnected) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect -- intentional fetch-on-mount/navigate once connection status is known
+      syncGoogleEvents();
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- only re-run when connection status or week changes, not on every syncGoogleEvents identity change
+  }, [googleConnected, currentDate]);
 
   const handleDropTicket = (ticketId: string, start: Date, end: Date) => {
     // Open the editor instead of creating the entry immediately so a
