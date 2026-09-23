@@ -140,7 +140,9 @@ export function EventEditorModal({
   }, [comboOpen]);
 
   const handleQueryChange = (value: string) => {
-    setQuery(value);
+    // Jira keys use a dash (e.g. PROJ-123), not a space, so auto-convert
+    // spaces as the user types to make "proj 123" resolve like "proj-123".
+    setQuery(value.replace(/ /g, "-"));
     setHighlighted(0);
     setRemoteMatch(null);
     setSearchError(null);
