@@ -213,20 +213,6 @@ export function HomeClient({ initialTickets }: HomeClientProps) {
     }
   }, []);
 
-  const handleSaveJql = useCallback(async (jql: string) => {
-    const res = await fetch("/api/jira/jql", {
-      method: "PUT",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ jql }),
-    });
-    if (res.ok) {
-      const data = await res.json();
-      setTicketJql(data.jql);
-      setTicketJqlIsDefault(Boolean(data.isDefault));
-      setTicketDefaultJql(data.defaultJql);
-    }
-  }, []);
-
   const loadGoogleStatus = useCallback(async () => {
     const res = await fetch("/api/google-calendar/status");
     if (res.ok) {
@@ -270,15 +256,52 @@ export function HomeClient({ initialTickets }: HomeClientProps) {
   const handleSync = useCallback(async () => {
     setSyncing(true);
     setError(null);
-    const res = await fetch("/api/jira/tickets", { method: "POST" });
-    if (!res.ok) {
-      const data = await res.json().catch(() => ({}));
-      setError(data.error ?? "Failed to sync tickets from Jira.");
-    } else {
-      await loadTickets(true);
+    try {
+      const res = await fetch("/api/jira/tickets", { method: "POST" });
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({}));
+        setError(data.error ?? "Failed to sync tickets from Jira.");
+      } else {
+        await loadTickets(true);
+      }
+    } catch (err) {
+      setError(
+        err instanceof Error
+          ? `Failed to sync tickets from Jira: ${err.message}`
+          : "Failed to sync tickets from Jira."
+      );
+    } finally {
+      setSyncing(false);
     }
-    setSyncing(false);
   }, [loadTickets]);
+
+  const handleSaveJql = useCallback(async (jql: string): Promise<boolean> => {
+    try {
+      const res = await fetch("/api/jira/jql", {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ jql }),
+      });
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({}));
+        setError(data.error ?? "Failed to save Jira query.");
+        return false;
+      }
+      const data = await res.json();
+      setTicketJql(data.jql);
+      setTicketJqlIsDefault(Boolean(data.isDefault));
+      setTicketDefaultJql(data.defaultJql);
+      await handleSync();
+      return true;
+    } catch (err) {
+      setError(
+        err instanceof Error
+          ? `Failed to save Jira query: ${err.message}`
+          : "Failed to save Jira query."
+      );
+      return false;
+    }
+  }, [handleSync]);
 
   useEffect(() => {
     // Silent: we already have server-fetched tickets (see initialTickets
@@ -669,7 +692,6 @@ export function HomeClient({ initialTickets }: HomeClientProps) {
                 tickets={tickets}
                 loading={loadingTickets}
                 syncing={syncing}
-                onSync={handleSync}
                 onDragStartTicket={setDraggedTicketId}
                 onSelectTicket={handleSelectTicket}
                 jql={ticketJql}
