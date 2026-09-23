@@ -261,6 +261,9 @@ h1, h2, h3, .nb-display {
   font-weight: 600;
   font-size: 0.75rem;
 }
+.rbc-event.google-calendar-test-placeholder .rbc-event-label {
+  display: none;
+}
 .rbc-event.rbc-selected {
   filter: brightness(0.92);
   box-shadow: 0 4px 10px rgba(17, 17, 17, 0.28);
