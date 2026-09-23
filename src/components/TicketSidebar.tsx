@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, type MouseEvent } from "react";
+import { RECENTLY_VIEWED_TICKETS_JQL } from "@/lib/jiraJqlPresets";
 
 export interface TicketSummary {
   id: string;
@@ -77,6 +78,13 @@ export function TicketSidebar({
     }
   };
 
+  const selectedJqlPreset =
+    draftJql.trim() === defaultJql.trim()
+      ? "default"
+      : draftJql.trim() === RECENTLY_VIEWED_TICKETS_JQL
+        ? "recent"
+        : "custom";
+
   return (
     <div className="absolute inset-y-0 left-0 z-30 flex w-72 max-w-[85vw] shrink-0 flex-col border-r border-nb-ink/10 bg-white md:static md:z-auto md:max-w-none">
       <div className="flex items-center justify-between border-b border-nb-ink/10 p-3">
@@ -100,6 +108,23 @@ export function TicketSidebar({
       </div>
       {editingJql && (
         <div className="space-y-2 border-b border-nb-ink/10 bg-nb-paper p-3">
+          <label className="block text-[10px] font-semibold uppercase tracking-wide text-nb-ink/50">
+            Query preset
+            <select
+              value={selectedJqlPreset}
+              onChange={(e) => {
+                if (e.target.value === "default") setDraftJql(defaultJql);
+                if (e.target.value === "recent") {
+                  setDraftJql(RECENTLY_VIEWED_TICKETS_JQL);
+                }
+              }}
+              className="mt-1 w-full rounded border border-nb-ink/20 bg-white p-1.5 text-xs font-medium normal-case text-nb-ink"
+            >
+              <option value="default">Current default — active sprint tickets</option>
+              <option value="recent">Recently viewed — up to 15 tickets</option>
+              <option value="custom">Custom JQL</option>
+            </select>
+          </label>
           <label className="block text-[10px] font-semibold uppercase tracking-wide text-nb-ink/50">
             Custom sync query
             <textarea
@@ -169,4 +194,3 @@ export function TicketSidebar({
     </div>
   );
 }
-
