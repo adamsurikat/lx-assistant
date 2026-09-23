@@ -55,22 +55,9 @@ export function TicketSidebar({
   const handleSave = async () => {
     setSavingJql(true);
     try {
-      if (await onSaveJql(draftJql)) setEditingJql(false);
-    } finally {
-      setSavingJql(false);
-    }
-  };
-
-  const handleResetToDefault = async () => {
-    setSavingJql(true);
-    try {
-      // Send an empty string so the server clears the stored override
-      // (ticketSyncJql = null) rather than saving the default text itself
-      // as a "custom" query, which would leave jqlIsDefault stuck false.
-      if (await onSaveJql("")) {
-        setDraftJql(defaultJql);
-        setEditingJql(false);
-      }
+      const queryToSave =
+        draftJql.trim() === defaultJql.trim() ? "" : draftJql;
+      if (await onSaveJql(queryToSave)) setEditingJql(false);
     } finally {
       setSavingJql(false);
     }
@@ -97,7 +84,7 @@ export function TicketSidebar({
         <div className="flex items-center gap-1.5">
           <button
             onClick={editingJql ? () => setEditingJql(false) : openEditor}
-            title={jqlIsDefault ? "Using default JQL — click to customize" : `Custom JQL: ${jql}`}
+            title={jqlIsDefault ? "Using active sprint query — click to customize" : `Custom JQL: ${jql}`}
             className={`nb-btn px-2 py-1 text-xs font-semibold ${editingJql ? "nb-btn-orange" : ""}`}
           >
             JQL{!jqlIsDefault && " •"}
@@ -118,7 +105,7 @@ export function TicketSidebar({
               }}
               className="mt-1 w-full rounded border border-nb-ink/20 bg-white p-1.5 text-xs font-medium normal-case text-nb-ink"
             >
-              <option value="default">Current default — active sprint tickets</option>
+              <option value="default">Active sprint tickets</option>
               <option value="recent">Recently viewed — up to 15 tickets</option>
               <option value="custom">Custom JQL</option>
             </select>
@@ -135,19 +122,8 @@ export function TicketSidebar({
           </label>
           <p className="text-[10px] font-medium normal-case text-nb-ink/50">
             Saved queries sync immediately and are also used when the page loads.
-            Cleared/blank resets to default.
           </p>
           <div className="flex items-center justify-end gap-2">
-            {!jqlIsDefault && (
-              <button
-                type="button"
-                onClick={handleResetToDefault}
-                disabled={savingJql}
-                className="text-xs font-semibold text-nb-ink/60 hover:underline disabled:opacity-50"
-              >
-                Reset to default
-              </button>
-            )}
             <button
               type="button"
               onClick={handleSave}
