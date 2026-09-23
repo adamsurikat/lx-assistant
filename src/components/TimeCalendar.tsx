@@ -270,11 +270,12 @@ export function TimeCalendar({
         eventPropGetter={(event: CalendarEventItem) => ({
           style: event.disabledPlaceholder
             ? {
-                backgroundColor: "#e5e5e5",
+                backgroundColor: "#f7f7f7",
                 backgroundImage:
-                  "repeating-linear-gradient(45deg, rgba(17,17,17,0.08) 0, rgba(17,17,17,0.08) 6px, transparent 6px, transparent 16px)",
-                color: "rgba(17,17,17,0.45)",
-                outline: "1px solid rgba(17,17,17,0.15)",
+                  "repeating-linear-gradient(45deg, rgba(17,17,17,0.025) 0, rgba(17,17,17,0.025) 6px, transparent 6px, transparent 16px)",
+                color: "rgba(17,17,17,0.22)",
+                opacity: 0.6,
+                outline: "1px solid rgba(17,17,17,0.07)",
                 outlineOffset: "-1px",
                 cursor: "not-allowed",
               }
