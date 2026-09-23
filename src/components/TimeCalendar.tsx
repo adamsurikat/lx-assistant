@@ -127,6 +127,8 @@ interface TimeCalendarProps {
 
 export function TimeCalendar({
   events,
+  googleEvents,
+  googleConnected,
   date,
   dayHourTotals,
   onNavigate,
@@ -141,32 +143,35 @@ export function TimeCalendar({
   const isMobile = useIsMobile();
   const view = isMobile ? "day" : "work_week";
 
-  // Keep one full-column placeholder event per visible day in the Google
-  // sub-column for UI testing, instead of showing real Google events.
-  const visibleDays = isMobile
-    ? [date]
-    : Array.from({ length: 5 }, (_, i) =>
-        addDays(startOfWeek(date, { weekStartsOn: 1 }), i)
-      );
-  const disabledGoogleEvents: CalendarEventItem[] = visibleDays.map((day) => {
-    const start = new Date(day);
-    start.setHours(MIN_TIME.getHours(), MIN_TIME.getMinutes(), 0, 0);
-    const end = new Date(day);
-    end.setHours(MAX_TIME.getHours(), MAX_TIME.getMinutes(), 0, 0);
-    return {
-      id: `google-disabled-${toDateKey(day)}`,
-      title: "Test placeholder",
-      start,
-      end,
-      color: "transparent",
-      synced: false,
-      readOnly: true,
-      disabledPlaceholder: true,
-      resourceId: "google" as const,
-    };
-  });
+  // One full-column placeholder event per visible day in the Google
+  // sub-column, shown instead of real events when not connected.
+  const disabledGoogleEvents: CalendarEventItem[] = googleConnected
+    ? []
+    : (
+        isMobile
+          ? [date]
+          : Array.from({ length: 5 }, (_, i) =>
+              addDays(startOfWeek(date, { weekStartsOn: 1 }), i)
+            )
+      ).map((day) => {
+        const start = new Date(day);
+        start.setHours(MIN_TIME.getHours(), MIN_TIME.getMinutes(), 0, 0);
+        const end = new Date(day);
+        end.setHours(MAX_TIME.getHours(), MAX_TIME.getMinutes(), 0, 0);
+        return {
+          id: `google-disabled-${toDateKey(day)}`,
+          title: "Not connected",
+          start,
+          end,
+          color: "transparent",
+          synced: false,
+          readOnly: true,
+          disabledPlaceholder: true,
+          resourceId: "google" as const,
+        };
+      });
 
-  const allEvents = [...events, ...disabledGoogleEvents];
+  const allEvents = [...events, ...(googleConnected ? googleEvents : disabledGoogleEvents)];
 
   return (
     <div className="h-full min-w-0 flex-1 p-3">
@@ -242,9 +247,9 @@ export function TimeCalendar({
           event: ({ event }: { event: CalendarEventItem }) =>
             event.disabledPlaceholder ? (
               <div className="flex h-full items-center justify-center text-center text-[0.7rem] font-semibold uppercase tracking-wide text-nb-ink/40">
-                Google Calendar
+                🚫 Google Calendar
                 <br />
-                test placeholder
+                not connected
               </div>
             ) : (
               <div className="flex items-start gap-1">
