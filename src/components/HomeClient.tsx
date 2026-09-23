@@ -699,6 +699,7 @@ export function HomeClient({ initialTickets }: HomeClientProps) {
         <EventEditorModal
           entry={modalEntry}
           tickets={tickets}
+          autoFocusDescription={Boolean(draftEntry?.ticketId)}
           onClose={() => {
             setEditingEntryId(null);
             setDraftEntry(null);

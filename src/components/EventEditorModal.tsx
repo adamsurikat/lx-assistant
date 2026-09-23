@@ -17,6 +17,7 @@ export interface EditableEntry {
 interface EventEditorModalProps {
   entry: EditableEntry;
   tickets: TicketSummary[];
+  autoFocusDescription?: boolean;
   onClose: () => void;
   onSave: (payload: {
     ticketId: string | null;
@@ -55,6 +56,7 @@ export function formatDuration(startISO: string, endISO: string): string {
 export function EventEditorModal({
   entry,
   tickets,
+  autoFocusDescription = false,
   onClose,
   onSave,
   onDelete,
@@ -80,6 +82,10 @@ export function EventEditorModal({
   const inputRef = useRef<HTMLInputElement>(null);
   const titleInputRef = useRef<HTMLInputElement>(null);
   const commentInputRef = useRef<HTMLTextAreaElement>(null);
+
+  useEffect(() => {
+    if (autoFocusDescription) commentInputRef.current?.focus();
+  }, [autoFocusDescription]);
 
   // Lets the user drag the modal panel around the screen by its header.
   const [dragOffset, setDragOffset] = useState({ x: 0, y: 0 });
