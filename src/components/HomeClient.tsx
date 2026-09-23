@@ -129,6 +129,12 @@ export function HomeClient({ initialTickets, userId }: HomeClientProps) {
   // affected calendar tile until Jira confirms the write.
   const [syncingIds, setSyncingIds] = useState<Set<string>>(new Set());
 
+  useEffect(() => {
+    if (!error) return;
+    const timeoutId = window.setTimeout(() => setError(null), 8000);
+    return () => window.clearTimeout(timeoutId);
+  }, [error]);
+
   const markSyncing = (id: string, value: boolean) => {
     setSyncingIds((prev) => {
       const next = new Set(prev);
@@ -622,8 +628,20 @@ export function HomeClient({ initialTickets, userId }: HomeClientProps) {
       />
 
       {error && (
-        <div className="nb-panel-sm m-3 mb-0 bg-nb-pink px-6 py-2 text-sm font-bold text-white">
-          {error}
+        <div
+          role="alert"
+          aria-live="assertive"
+          className="nb-panel-sm fixed right-4 top-20 z-50 flex w-[calc(100vw-2rem)] max-w-lg items-start gap-4 bg-nb-pink px-4 py-3 text-sm font-bold text-white shadow-lg"
+        >
+          <span className="flex-1">{error}</span>
+          <button
+            type="button"
+            onClick={() => setError(null)}
+            aria-label="Dismiss error"
+            className="shrink-0 text-lg leading-none text-white/80 hover:text-white"
+          >
+            ×
+          </button>
         </div>
       )}
 
