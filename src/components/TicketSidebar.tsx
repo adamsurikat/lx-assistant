@@ -106,7 +106,7 @@ export function TicketSidebar({
               className="mt-1 w-full rounded border border-nb-ink/20 bg-white p-1.5 text-xs font-medium normal-case text-nb-ink"
             >
               <option value="default">Active sprint tickets</option>
-              <option value="recent">Recently viewed — up to 15 tickets</option>
+              <option value="recent">Recently viewed</option>
               <option value="custom">Custom JQL</option>
             </select>
           </label>
