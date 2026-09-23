@@ -264,6 +264,9 @@ export function TimeCalendar({
             ),
         }}
         eventPropGetter={(event: CalendarEventItem) => ({
+          className: event.disabledPlaceholder
+            ? "google-calendar-test-placeholder"
+            : undefined,
           style: event.disabledPlaceholder
             ? {
                 backgroundColor: "#f7f7f7",
