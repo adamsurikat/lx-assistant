@@ -84,6 +84,8 @@ export function TicketSidebar({
       : draftJql.trim() === RECENTLY_VIEWED_TICKETS_JQL
         ? "recent"
         : "custom";
+  const displayedTickets =
+    jql.trim() === RECENTLY_VIEWED_TICKETS_JQL ? [...tickets].reverse() : tickets;
 
   return (
     <div className="absolute inset-y-0 left-0 z-30 flex w-72 max-w-[85vw] shrink-0 flex-col border-r border-nb-ink/10 bg-white md:static md:z-auto md:max-w-none">
@@ -168,7 +170,7 @@ export function TicketSidebar({
           </p>
         )}
         <ul className="space-y-2">
-          {tickets.map((ticket) => (
+          {displayedTickets.map((ticket) => (
             <li
               key={ticket.id}
               draggable
