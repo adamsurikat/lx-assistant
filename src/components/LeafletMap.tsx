@@ -868,13 +868,15 @@ export default function LeafletMap({
   }, [ports, depots, matchedPortIds, matchedDepotIds]);
 
   // Hovering a tenant in the legend (see MapLegend below) highlights all of
-  // that tenant's ports/depots the same way a search match does — but
-  // without panning the map (a mouse hover shouldn't yank the camera
-  // around), so it's kept separate from matchedPoints/FitBoundsToMatches.
-  // Clicking a tenant/flag instead "pins" it into these Sets so the filter
-  // stays active regardless of mouse position, and any number of
-  // tenants/flags can be pinned together — their matches are unioned, not
-  // intersected, so e.g. pinning two tenants shows both at once.
+  // that tenant's ports/depots with a glow, without hiding anything else —
+  // a lightweight preview, and without panning the map (a mouse hover
+  // shouldn't yank the camera around either), so it's kept separate from
+  // matchedPoints/FitBoundsToMatches. Clicking a tenant/flag instead "pins"
+  // it into these Sets, which actually filters the map (non-matches hide
+  // entirely) rather than just glowing — the two are independent so a
+  // hover glow can highlight something even while an unrelated pin filter
+  // is hiding other items, and any number of tenants/flags can be pinned
+  // together (their matches are unioned, not intersected).
   const [hoveredTenant, setHoveredTenant] = useState<string | null>(null);
   const [selectedTenants, setSelectedTenants] = useState<Set<string>>(new Set());
   const toggleTenant = (tenant: string) =>
@@ -884,26 +886,27 @@ export default function LeafletMap({
       else next.add(tenant);
       return next;
     });
-  const activeTenants = useMemo(() => {
-    if (!hoveredTenant) return selectedTenants;
-    const next = new Set(selectedTenants);
-    next.add(hoveredTenant);
-    return next;
-  }, [selectedTenants, hoveredTenant]);
+  const pinnedPortIds = useMemo(() => {
+    if (selectedTenants.size === 0) return new Set<string>();
+    return new Set(ports.filter((p) => p.tenant && selectedTenants.has(p.tenant.toLowerCase())).map((p) => p.id));
+  }, [ports, selectedTenants]);
+  const pinnedDepotIds = useMemo(() => {
+    if (selectedTenants.size === 0) return new Set<string>();
+    return new Set(depots.filter((d) => d.tenant && selectedTenants.has(d.tenant.toLowerCase())).map((d) => d.id));
+  }, [depots, selectedTenants]);
   const hoverPortIds = useMemo(() => {
-    if (activeTenants.size === 0) return new Set<string>();
-    return new Set(ports.filter((p) => p.tenant && activeTenants.has(p.tenant.toLowerCase())).map((p) => p.id));
-  }, [ports, activeTenants]);
+    if (!hoveredTenant) return new Set<string>();
+    return new Set(ports.filter((p) => p.tenant?.toLowerCase() === hoveredTenant).map((p) => p.id));
+  }, [ports, hoveredTenant]);
   const hoverDepotIds = useMemo(() => {
-    if (activeTenants.size === 0) return new Set<string>();
-    return new Set(depots.filter((d) => d.tenant && activeTenants.has(d.tenant.toLowerCase())).map((d) => d.id));
-  }, [depots, activeTenants]);
+    if (!hoveredTenant) return new Set<string>();
+    return new Set(depots.filter((d) => d.tenant?.toLowerCase() === hoveredTenant).map((d) => d.id));
+  }, [depots, hoveredTenant]);
 
   // Hovering a feature flag in the legend highlights every port carrying
-  // that flag, the same way a tenant hover does. Depots don't currently
-  // support feature flags at all, so a flag filter has no depot matches —
-  // meaning every depot fades out along with non-matching ports, same as
-  // "no match" behaves for a search/tenant filter.
+  // that flag with a glow, the same way a tenant hover does. Depots don't
+  // currently support feature flags at all, so a flag filter/hover never
+  // matches any depot.
   const [hoveredFeatureFlag, setHoveredFeatureFlag] = useState<string | null>(null);
   const [selectedFeatureFlags, setSelectedFeatureFlags] = useState<Set<string>>(new Set());
   const toggleFeatureFlag = (flag: string) =>
@@ -913,73 +916,64 @@ export default function LeafletMap({
       else next.add(flag);
       return next;
     });
-  const activeFeatureFlags = useMemo(() => {
-    if (!hoveredFeatureFlag) return selectedFeatureFlags;
-    const next = new Set(selectedFeatureFlags);
-    next.add(hoveredFeatureFlag);
-    return next;
-  }, [selectedFeatureFlags, hoveredFeatureFlag]);
-  const hoverFlagPortIds = useMemo(() => {
-    if (activeFeatureFlags.size === 0) return new Set<string>();
+  const pinnedFlagPortIds = useMemo(() => {
+    if (selectedFeatureFlags.size === 0) return new Set<string>();
     return new Set(
-      ports.filter((p) => p.featureFlags?.some((f) => activeFeatureFlags.has(f.name))).map((p) => p.id),
+      ports.filter((p) => p.featureFlags?.some((f) => selectedFeatureFlags.has(f.name))).map((p) => p.id),
     );
-  }, [ports, activeFeatureFlags]);
+  }, [ports, selectedFeatureFlags]);
+  const hoverFlagPortIds = useMemo(() => {
+    if (!hoveredFeatureFlag) return new Set<string>();
+    return new Set(ports.filter((p) => p.featureFlags?.some((f) => f.name === hoveredFeatureFlag)).map((p) => p.id));
+  }, [ports, hoveredFeatureFlag]);
   const clearLegendFilters = () => {
     setSelectedTenants(new Set());
     setSelectedFeatureFlags(new Set());
   };
 
-  // Search takes priority over a tenant/feature-flag filter if both are
-  // somehow active; `null` means "no filter active" (full opacity, no
-  // pulse) rather than "filter active but nothing matches". A tenant and a
-  // flag filter can be active together (e.g. one pinned, one hovered, or
-  // both pinned) — their matches are unioned so either one showing a port
-  // is enough to keep it visible.
-  const hasLegendFilter = activeTenants.size > 0 || activeFeatureFlags.size > 0;
+  // Search takes priority over a pinned tenant/feature-flag filter if both
+  // are somehow active; `null` means "no filter active" (full opacity, no
+  // pulse) rather than "filter active but nothing matches". Multiple
+  // pinned tenants/flags are unioned so either one showing a port is
+  // enough to keep it visible. A *hover* (as opposed to a pin) never
+  // affects this — it only adds a glow highlight, it doesn't hide
+  // anything (see hoverMatchPortIds/hoverMatchDepotIds below).
+  const hasPinnedFilter = selectedTenants.size > 0 || selectedFeatureFlags.size > 0;
   const activePortIds = useMemo(() => {
     if (query) return matchedPortIds;
-    if (hasLegendFilter) return new Set([...hoverPortIds, ...hoverFlagPortIds]);
+    if (hasPinnedFilter) return new Set([...pinnedPortIds, ...pinnedFlagPortIds]);
     return null;
-  }, [query, matchedPortIds, hasLegendFilter, hoverPortIds, hoverFlagPortIds]);
-  const activeDepotIds = query ? matchedDepotIds : hasLegendFilter ? hoverDepotIds : null;
+  }, [query, matchedPortIds, hasPinnedFilter, pinnedPortIds, pinnedFlagPortIds]);
+  const activeDepotIds = query ? matchedDepotIds : hasPinnedFilter ? pinnedDepotIds : null;
 
-  // When hovering a tenant/feature flag, a route between a matching port
-  // and a *non-matching* one (e.g. a P&O Ferries port connected to a Stena
-  // Line port) still gets highlighted (see the endpointVisible/highlight
-  // logic below) — but without this, the far-end port itself would still
-  // fade out to 0 opacity, making the route look like it goes nowhere.
-  // This expands activePortIds with every port directly connected (via a
-  // route) to an already-matching port, so that far end stays visible too.
-  const connectedPortIds = useMemo(() => {
-    if (!activePortIds) return null;
-    const result = new Set(activePortIds);
-    for (const route of routes) {
-      if (activePortIds.has(route.startPortId)) result.add(route.endPortId);
-      if (activePortIds.has(route.endPortId)) result.add(route.startPortId);
-    }
-    return result;
-  }, [activePortIds, routes]);
+  // The glow-highlight set: whatever's currently hovered in the legend
+  // (transient, not pinned). Independent of activePortIds/activeDepotIds
+  // above, so a hover can highlight ports even while an unrelated pinned
+  // filter is hiding others, and pinned matches themselves don't glow.
+  const hoverMatchPortIds = useMemo(
+    () => new Set([...hoverPortIds, ...hoverFlagPortIds]),
+    [hoverPortIds, hoverFlagPortIds],
+  );
+  const hasHoverMatch = hoveredTenant !== null || hoveredFeatureFlag !== null;
 
-  // Applies the fade/pulse styling directly to marker DOM elements (same
-  // ref+querySelector approach as setPortActive above) rather than
+  // Applies the fade/glow/pulse styling directly to marker DOM elements
+  // (same ref+querySelector approach as setPortActive above) rather than
   // recreating icons per marker, since highlight state changes far more
   // often than marker identity. A search match keeps non-matches faintly
   // visible (0.25 opacity) since the user may be scanning for one among
-  // many; a tenant hover instead hides everything else outright (0
-  // opacity) so only that tenant's markers remain, with a glow highlight
-  // (the same class used for the port's own :hover state) instead of the
-  // search's pulse animation.
+  // many; a *pinned* tenant/flag filter instead hides everything else
+  // outright (0 opacity), showing matches at normal, unhighlighted
+  // opacity — while a *hovered* (not pinned) tenant/flag never hides
+  // anything, it only adds a glow highlight (the same class used for the
+  // port's own :hover state) on top of whatever's already visible.
   useEffect(() => {
     const nonMatchOpacity = query ? 0.25 : 0;
-    const isHovering = hasLegendFilter;
     for (const [id, marker] of portMarkerRefs.current) {
       const isMatch = activePortIds?.has(id) ?? true;
-      const isVisible = isMatch || (isHovering && (connectedPortIds?.has(id) ?? false));
-      marker.setOpacity(activePortIds ? (isVisible ? 1 : nonMatchOpacity) : 1);
+      marker.setOpacity(activePortIds ? (isMatch ? 1 : nonMatchOpacity) : 1);
       const badge = marker.getElement()?.querySelector(".port-marker-badge");
       badge?.classList.toggle("search-match-badge", query !== "" && isMatch);
-      badge?.classList.toggle("port-marker-badge--active", isHovering && isMatch);
+      badge?.classList.toggle("port-marker-badge--active", hoverMatchPortIds.has(id));
       badge?.classList.toggle("port-marker-badge--selected", selectedItem?.type === "port" && selectedItem.id === id);
     }
     for (const [id, marker] of depotMarkerRefs.current) {
@@ -987,23 +981,29 @@ export default function LeafletMap({
       marker.setOpacity(activeDepotIds ? (isMatch ? 1 : nonMatchOpacity) : 1);
       const badge = marker.getElement()?.querySelector(".port-marker-badge");
       badge?.classList.toggle("search-match-badge", query !== "" && isMatch);
-      badge?.classList.toggle("port-marker-badge--active", isHovering && isMatch);
+      badge?.classList.toggle("port-marker-badge--active", hoverDepotIds.has(id));
       badge?.classList.toggle("port-marker-badge--selected", selectedItem?.type === "depot" && selectedItem.id === id);
     }
-    // A route only stays visible while at least one of its two end ports
-    // is visible too — otherwise hovering a tenant/feature flag (or
-    // searching) left every route on screen regardless of whether either
-    // endpoint actually matched, which made the highlight misleading.
-    // Matching routes during a tenant/feature-flag hover (not a search)
-    // also get the same glow + thicker-line + front-of-stack treatment as
-    // a directly-hovered route, rather than just staying at their normal
-    // thin/default styling — a plain 2px dashed line was easy to overlook
-    // against the map tiles, which made it look like connected routes
-    // weren't showing up at all even though they technically were.
+    // A search dims (rather than hides) a route as long as either endpoint
+    // matches, since the user may still be scanning nearby context — but a
+    // *pinned* filter hides a route outright unless both of its endpoints
+    // are in the pinned set, since the other endpoint's port is itself now
+    // fully hidden and a route dangling off into a hidden marker would
+    // look broken. A route gets the glow + thicker-line + front-of-stack
+    // highlight treatment only while one of its endpoints is currently
+    // *hovered* (not merely pinned) — a plain 2px dashed line was easy to
+    // overlook against the map tiles, which made it look like connected
+    // routes weren't showing up at all even though they technically were.
     for (const route of routes) {
-      const endpointVisible =
+      const anyEndpointMatch =
         !activePortIds || activePortIds.has(route.startPortId) || activePortIds.has(route.endPortId);
-      const highlight = isHovering && endpointVisible;
+      const bothEndpointsMatch =
+        !activePortIds || (activePortIds.has(route.startPortId) && activePortIds.has(route.endPortId));
+      const endpointVisible = query ? anyEndpointMatch : bothEndpointsMatch;
+      const highlight =
+        endpointVisible &&
+        hasHoverMatch &&
+        (hoverMatchPortIds.has(route.startPortId) || hoverMatchPortIds.has(route.endPortId));
       const line = routeLineRefs.current.get(route.id);
       const glow = routeGlowRefs.current.get(route.id);
       line?.setStyle({ opacity: endpointVisible ? 1 : nonMatchOpacity, weight: highlight ? 3 : 2 });
@@ -1016,9 +1016,10 @@ export default function LeafletMap({
   }, [
     activePortIds,
     activeDepotIds,
-    connectedPortIds,
     query,
-    hasLegendFilter,
+    hoverMatchPortIds,
+    hoverDepotIds,
+    hasHoverMatch,
     ports,
     depots,
     routes,
@@ -1085,9 +1086,11 @@ export default function LeafletMap({
         // A hidden route (per the legend/search filtering handled in the
         // effect above) shouldn't still react to hover — otherwise its
         // glow highlight could pop in even though the route itself is
-        // faded out.
-        const routeVisible =
-          !activePortIds || activePortIds.has(route.startPortId) || activePortIds.has(route.endPortId);
+        // faded out. Matches the same either-endpoint (search) vs.
+        // both-endpoints (pinned filter) rule used there.
+        const routeVisible = query
+          ? !activePortIds || activePortIds.has(route.startPortId) || activePortIds.has(route.endPortId)
+          : !activePortIds || (activePortIds.has(route.startPortId) && activePortIds.has(route.endPortId));
 
         return (
           <Fragment key={route.id}>
