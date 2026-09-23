@@ -25,5 +25,5 @@ export default async function Page() {
     }));
   }
 
-  return <HomeClient initialTickets={initialTickets} />;
+  return <HomeClient initialTickets={initialTickets} userId={session?.user?.id ?? null} />;
 }

@@ -96,9 +96,10 @@ interface HomeClientProps {
   // showing "Tickets" and then jumping to "Tickets (9)" once the client's
   // own fetch resolves.
   initialTickets: TicketSummary[];
+  userId: string | null;
 }
 
-export function HomeClient({ initialTickets }: HomeClientProps) {
+export function HomeClient({ initialTickets, userId }: HomeClientProps) {
   const [tickets, setTickets] = useState<TicketSummary[]>(initialTickets);
   const [entries, setEntries] = useState<TimeEntryDTO[]>([]);
   const [googleEvents, setGoogleEvents] = useState<GoogleCalendarEventDTO[]>([]);
@@ -690,6 +691,7 @@ export function HomeClient({ initialTickets }: HomeClientProps) {
               />
               <TicketSidebar
                 tickets={tickets}
+                userId={userId}
                 loading={loadingTickets}
                 syncing={syncing}
                 onDragStartTicket={setDraggedTicketId}
