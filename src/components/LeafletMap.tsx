@@ -797,17 +797,6 @@ export default function LeafletMap({
     const el = portMarkerRefs.current.get(portId)?.getElement();
     el?.querySelector(".port-marker-badge")?.classList.toggle("port-marker-badge--active", active);
   };
-  // Maps a port id to every route touching it, so hovering a port marker
-  // can highlight all of its connected routes (the reverse of hovering a
-  // route, which already highlights its two end ports via setPortActive).
-  const routesByPort = useMemo(() => {
-    const map = new Map<string, MapRouteRecord[]>();
-    for (const route of routes) {
-      map.set(route.startPortId, [...(map.get(route.startPortId) ?? []), route]);
-      map.set(route.endPortId, [...(map.get(route.endPortId) ?? []), route]);
-    }
-    return map;
-  }, [routes]);
   const setRouteHighlighted = (routeId: string, active: boolean) => {
     routeLineRefs.current.get(routeId)?.setStyle({ weight: active ? 3 : 2 });
     routeGlowRefs.current.get(routeId)?.setStyle({ opacity: active ? 0.6 : 0 });
@@ -1277,22 +1266,6 @@ export default function LeafletMap({
                 return;
               }
               if (editMode) openItem("port", port.id);
-            },
-            mouseover: () => {
-              for (const route of routesByPort.get(port.id) ?? []) {
-                const otherPortId = route.startPortId === port.id ? route.endPortId : route.startPortId;
-                portMarkerRefs.current.get(otherPortId)?.openTooltip();
-                setPortActive(otherPortId, true);
-                setRouteHighlighted(route.id, true);
-              }
-            },
-            mouseout: () => {
-              for (const route of routesByPort.get(port.id) ?? []) {
-                const otherPortId = route.startPortId === port.id ? route.endPortId : route.startPortId;
-                portMarkerRefs.current.get(otherPortId)?.closeTooltip();
-                setPortActive(otherPortId, false);
-                setRouteHighlighted(route.id, false);
-              }
             },
           }}
         >
