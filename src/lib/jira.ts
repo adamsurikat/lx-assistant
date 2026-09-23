@@ -1,6 +1,10 @@
 import { decryptSecret, encryptSecret } from "@/lib/crypto";
 import { prisma } from "@/lib/prisma";
 import { refreshAccessToken } from "@/lib/atlassian-oauth";
+import {
+  RECENTLY_VIEWED_TICKET_LIMIT,
+  RECENTLY_VIEWED_TICKETS_JQL,
+} from "@/lib/jiraJqlPresets";
 
 export class JiraNotConfiguredError extends Error {
   constructor() {
@@ -138,9 +142,13 @@ export async function fetchAssignedOpenTickets(
   config: JiraUserConfig,
   jql: string = DEFAULT_TICKET_SYNC_JQL
 ): Promise<JiraTicket[]> {
+  const maxResults =
+    jql.trim() === RECENTLY_VIEWED_TICKETS_JQL
+      ? RECENTLY_VIEWED_TICKET_LIMIT
+      : 100;
   const res = await jiraFetch(
     config,
-    `/rest/api/3/search/jql?jql=${encodeURIComponent(jql)}&fields=summary,status&maxResults=100`
+    `/rest/api/3/search/jql?jql=${encodeURIComponent(jql)}&fields=summary,status&maxResults=${maxResults}`
   );
 
   if (!res.ok) {
