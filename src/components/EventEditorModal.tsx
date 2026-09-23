@@ -184,11 +184,12 @@ export function EventEditorModal({
       e.preventDefault();
       if (highlighted === 0) {
         selectTicket(null);
+        titleInputRef.current?.focus();
       } else {
         const picked = comboOptions[highlighted - 1];
         if (picked) selectTicket(picked);
+        commentInputRef.current?.focus();
       }
-      commentInputRef.current?.focus();
     } else if (e.key === "Escape") {
       setComboOpen(false);
       setQuery("");
