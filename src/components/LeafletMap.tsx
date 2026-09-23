@@ -398,7 +398,9 @@ function EditForm({
   const [nameValue, setNameValue] = useState(name);
   const [codeValue, setCodeValue] = useState(code ?? "");
   const [tenantValue, setTenantValue] = useState(tenant ?? "");
-  const [selectedFlags, setSelectedFlags] = useState<string[]>(featureFlagNames ?? []);
+  const [selectedFlags, setSelectedFlags] = useState<string[]>(
+    Array.from(new Set((featureFlagNames ?? []).map((f) => f.toLowerCase()))),
+  );
 
   return (
     <div className="flex w-full flex-col gap-3">
@@ -908,12 +910,16 @@ export default function LeafletMap({
   const pinnedFlagPortIds = useMemo(() => {
     if (selectedFeatureFlags.size === 0) return new Set<string>();
     return new Set(
-      ports.filter((p) => p.featureFlags?.some((f) => selectedFeatureFlags.has(f.name))).map((p) => p.id),
+      ports
+        .filter((p) => p.featureFlags?.some((f) => selectedFeatureFlags.has(f.name.toLowerCase())))
+        .map((p) => p.id),
     );
   }, [ports, selectedFeatureFlags]);
   const hoverFlagPortIds = useMemo(() => {
     if (!hoveredFeatureFlag) return new Set<string>();
-    return new Set(ports.filter((p) => p.featureFlags?.some((f) => f.name === hoveredFeatureFlag)).map((p) => p.id));
+    return new Set(
+      ports.filter((p) => p.featureFlags?.some((f) => f.name.toLowerCase() === hoveredFeatureFlag)).map((p) => p.id),
+    );
   }, [ports, hoveredFeatureFlag]);
   const clearLegendFilters = () => {
     setSelectedTenants(new Set());
@@ -923,17 +929,33 @@ export default function LeafletMap({
   // Search takes priority over a pinned tenant/feature-flag filter if both
   // are somehow active; `null` means "no filter active" (full opacity, no
   // pulse) rather than "filter active but nothing matches". Multiple
-  // pinned tenants/flags are unioned so either one showing a port is
-  // enough to keep it visible. A *hover* (as opposed to a pin) never
-  // affects this — it only adds a glow highlight, it doesn't hide
-  // anything (see hoverMatchPortIds/hoverMatchDepotIds below).
+  // pinned tenants (or multiple pinned flags) are unioned within their own
+  // category — pinning two tenants shows ports from either — but pinning
+  // a tenant *and* a flag together narrows the result via intersection,
+  // since that's how a two-part filter reads ("Scandlines and GOS" means
+  // ports that are both, not everything that's either). A *hover* (as
+  // opposed to a pin) never affects this — it only adds a glow highlight,
+  // it doesn't hide anything (see hoverMatchPortIds/hoverMatchDepotIds
+  // below).
   const hasPinnedFilter = selectedTenants.size > 0 || selectedFeatureFlags.size > 0;
   const activePortIds = useMemo(() => {
     if (query) return matchedPortIds;
-    if (hasPinnedFilter) return new Set([...pinnedPortIds, ...pinnedFlagPortIds]);
+    if (selectedTenants.size > 0 && selectedFeatureFlags.size > 0) {
+      return new Set([...pinnedPortIds].filter((id) => pinnedFlagPortIds.has(id)));
+    }
+    if (selectedTenants.size > 0) return pinnedPortIds;
+    if (selectedFeatureFlags.size > 0) return pinnedFlagPortIds;
     return null;
-  }, [query, matchedPortIds, hasPinnedFilter, pinnedPortIds, pinnedFlagPortIds]);
-  const activeDepotIds = query ? matchedDepotIds : hasPinnedFilter ? pinnedDepotIds : null;
+  }, [query, matchedPortIds, selectedTenants, selectedFeatureFlags, pinnedPortIds, pinnedFlagPortIds]);
+  // Depots don't support feature flags, so a pinned flag (alone or
+  // alongside a pinned tenant) can never match a depot — the tenant-only
+  // match set collapses to empty as soon as any flag is pinned too.
+  const activeDepotIds = useMemo(() => {
+    if (query) return matchedDepotIds;
+    if (selectedFeatureFlags.size > 0) return new Set<string>();
+    if (hasPinnedFilter) return pinnedDepotIds;
+    return null;
+  }, [query, matchedDepotIds, selectedFeatureFlags, hasPinnedFilter, pinnedDepotIds]);
 
   // The glow-highlight set: whatever's currently hovered in the legend
   // (transient, not pinned). Independent of activePortIds/activeDepotIds
