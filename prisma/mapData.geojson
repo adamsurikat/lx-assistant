@@ -78,24 +78,6 @@
       "geometry": {
         "type": "Point",
         "coordinates": [
-          -5.0116,
-          54.9926
-        ]
-      },
-      "properties": {
-        "kind": "port",
-        "name": "Cairnryan (LRP)",
-        "code": "CAIR",
-        "tenant": "stenaline",
-        "country": "United Kingdom",
-        "description": ""
-      }
-    },
-    {
-      "type": "Feature",
-      "geometry": {
-        "type": "Point",
-        "coordinates": [
           -1.6221,
           49.6337
         ]
@@ -798,24 +780,6 @@
       "geometry": {
         "type": "Point",
         "coordinates": [
-          -5.0116,
-          54.9926
-        ]
-      },
-      "properties": {
-        "kind": "port",
-        "name": "Cairnryan",
-        "code": "CYN",
-        "tenant": "pof",
-        "country": "United Kingdom",
-        "description": ""
-      }
-    },
-    {
-      "type": "Feature",
-      "geometry": {
-        "type": "Point",
-        "coordinates": [
           0.358,
           51.467
         ]
@@ -876,26 +840,8 @@
       },
       "properties": {
         "kind": "port",
-        "name": "Teesport",
-        "code": "TEE",
-        "tenant": "pof",
-        "country": "United Kingdom",
-        "description": ""
-      }
-    },
-    {
-      "type": "Feature",
-      "geometry": {
-        "type": "Point",
-        "coordinates": [
-          -5.791,
-          54.858
-        ]
-      },
-      "properties": {
-        "kind": "port",
-        "name": "Larne",
-        "code": "LAR",
+        "name": "Hull",
+        "code": "HUL",
         "tenant": "pof",
         "country": "United Kingdom",
         "description": ""
@@ -1276,6 +1222,78 @@
         "code": "SENYN",
         "tenant": "dg",
         "country": "Sweden",
+        "description": ""
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -5.791,
+          54.858
+        ]
+      },
+      "properties": {
+        "kind": "port",
+        "name": "Larne",
+        "code": "LAR",
+        "tenant": "pof",
+        "country": "United Kingdom",
+        "description": ""
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -1.169,
+          54.586
+        ]
+      },
+      "properties": {
+        "kind": "port",
+        "name": "Teesport",
+        "code": "TEE",
+        "tenant": "pof",
+        "country": "United Kingdom",
+        "description": ""
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -5.013971328735352,
+          54.96214370235127
+        ]
+      },
+      "properties": {
+        "kind": "port",
+        "name": "Cairnryan",
+        "code": "CYN",
+        "tenant": "pof",
+        "country": "United Kingdom",
+        "description": ""
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -5.035943984985352,
+          54.98473081031731
+        ]
+      },
+      "properties": {
+        "kind": "port",
+        "name": "Cairnryan (LRP)",
+        "code": "CAIR",
+        "tenant": "stenaline",
+        "country": "United Kingdom",
         "description": ""
       }
     },
@@ -3895,37 +3913,6 @@
         "type": "LineString",
         "coordinates": [
           [
-            -5.879058837890626,
-            54.63758496935431
-          ],
-          [
-            -2.9,
-            54.0333
-          ]
-        ]
-      },
-      "properties": {
-        "kind": "route",
-        "name": "Belfast ↔ Heysham",
-        "description": "Irish Sea ferry lane linking Belfast and Heysham, drawn as a cubic bezier curve that bows north through the North Channel past Girvan before curving south to Heysham.",
-        "startPort": "BELF",
-        "endPort": "HEYS",
-        "control1": [
-          -5.465698242187501,
-          55.10822970202758
-        ],
-        "control2": [
-          -3.262939453125,
-          53.82983885331911
-        ]
-      }
-    },
-    {
-      "type": "Feature",
-      "geometry": {
-        "type": "LineString",
-        "coordinates": [
-          [
             1.3134,
             51.1279
           ],
@@ -3948,6 +3935,130 @@
         "control2": [
           1.728286743164063,
           51.0400986768664
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            -5.890817642211915,
+            54.62884137081233
+          ],
+          [
+            -2.9,
+            54.0333
+          ]
+        ]
+      },
+      "properties": {
+        "kind": "route",
+        "name": "Belfast ↔ Heysham",
+        "description": "Irish Sea ferry lane linking Belfast and Heysham, drawn as a cubic bezier curve that bows north through the North Channel past Girvan before curving south to Heysham.",
+        "startPort": "BELF1",
+        "endPort": "HEYS",
+        "control1": [
+          -5.255584716796876,
+          55.05005589189804
+        ],
+        "control2": [
+          -3.262939453125,
+          53.82983885331911
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            -5.879058837890626,
+            54.63758496935431
+          ],
+          [
+            -5.035943984985352,
+            54.98473081031731
+          ]
+        ]
+      },
+      "properties": {
+        "kind": "route",
+        "name": "New route",
+        "description": "",
+        "startPort": "BELF",
+        "endPort": "CAIR",
+        "control1": [
+          -5.359954833984375,
+          54.85210585589742
+        ],
+        "control2": [
+          -5.225372314453126,
+          55.18984455476807
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            11.3419,
+            54.6558
+          ],
+          [
+            11.2199,
+            54.5009
+          ]
+        ]
+      },
+      "properties": {
+        "kind": "route",
+        "name": "New route",
+        "description": "",
+        "startPort": "ROF",
+        "endPort": "PUT",
+        "control1": [
+          11.3419,
+          54.6558
+        ],
+        "control2": [
+          11.2199,
+          54.5009
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            11.9273,
+            54.5747
+          ],
+          [
+            12.0964,
+            54.173
+          ]
+        ]
+      },
+      "properties": {
+        "kind": "route",
+        "name": "New route",
+        "description": "",
+        "startPort": "GED",
+        "endPort": "RSK",
+        "control1": [
+          11.9273,
+          54.5747
+        ],
+        "control2": [
+          12.0964,
+          54.173
         ]
       }
     }
