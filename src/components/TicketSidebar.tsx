@@ -13,6 +13,7 @@ export interface TicketSummary {
 
 interface TicketSidebarProps {
   tickets: TicketSummary[];
+  userId: string | null;
   loading: boolean;
   syncing: boolean;
   onDragStartTicket: (ticketId: string) => void;
@@ -34,6 +35,7 @@ interface TicketSidebarProps {
  */
 export function TicketSidebar({
   tickets,
+  userId,
   loading,
   syncing,
   onDragStartTicket,
@@ -45,7 +47,48 @@ export function TicketSidebar({
 }: TicketSidebarProps) {
   const [editingJql, setEditingJql] = useState(false);
   const [draftJql, setDraftJql] = useState(jql);
+  const customJqlStorageKey = userId ? `lx-assistant:custom-ticket-jql:${userId}` : null;
+  const [customJqlState, setCustomJqlState] = useState(() => {
+    const activeQuery = jql.trim();
+    let query = activeQuery &&
+      activeQuery !== defaultJql.trim() &&
+      activeQuery !== RECENTLY_VIEWED_TICKETS_JQL
+      ? jql
+      : "";
+    if (!customJqlStorageKey || typeof window === "undefined") {
+      return { query, error: null as string | null };
+    }
+    try {
+      const storedQuery = window.localStorage.getItem(customJqlStorageKey);
+      if (storedQuery !== null) {
+        query = storedQuery;
+      }
+      return { query, error: null as string | null };
+    } catch (err) {
+      return {
+        query,
+        error:
+          err instanceof Error
+            ? `Could not load custom JQL from local storage: ${err.message}`
+            : "Could not load custom JQL from local storage.",
+      };
+    }
+  });
   const [savingJql, setSavingJql] = useState(false);
+  const customJql = customJqlState.query;
+  const customJqlStorageError = customJqlState.error;
+
+  const persistCustomJql = (query: string): string | null => {
+    if (!customJqlStorageKey) return null;
+    try {
+      window.localStorage.setItem(customJqlStorageKey, query);
+      return null;
+    } catch (err) {
+      return err instanceof Error
+        ? `Could not save custom JQL to local storage: ${err.message}`
+        : "Could not save custom JQL to local storage.";
+    }
+  };
 
   const openEditor = () => {
     setDraftJql(jql || defaultJql);
@@ -98,10 +141,15 @@ export function TicketSidebar({
             <select
               value={selectedJqlPreset}
               onChange={(e) => {
+                setCustomJqlState({
+                  query: customJql,
+                  error: persistCustomJql(customJql),
+                });
                 if (e.target.value === "default") setDraftJql(defaultJql);
                 if (e.target.value === "recent") {
                   setDraftJql(RECENTLY_VIEWED_TICKETS_JQL);
                 }
+                if (e.target.value === "custom") setDraftJql(customJql);
               }}
               className="mt-1 w-full rounded border border-nb-ink/20 bg-white p-1.5 text-xs font-medium normal-case text-nb-ink"
             >
@@ -114,14 +162,27 @@ export function TicketSidebar({
             Custom sync query
             <textarea
               value={draftJql}
-              onChange={(e) => setDraftJql(e.target.value)}
+              onChange={(e) => {
+                const value = e.target.value;
+                setDraftJql(value);
+                setCustomJqlState({
+                  query: value,
+                  error: persistCustomJql(value),
+                });
+              }}
               rows={4}
               spellCheck={false}
               className="mt-1 w-full rounded border border-nb-ink/20 p-1.5 font-mono text-[11px] font-normal normal-case text-nb-ink"
             />
           </label>
+          {customJqlStorageError && (
+            <p className="text-[10px] font-medium normal-case text-nb-pink">
+              {customJqlStorageError}
+            </p>
+          )}
           <p className="text-[10px] font-medium normal-case text-nb-ink/50">
-            Saved queries sync immediately and are also used when the page loads.
+            Custom JQL is saved in this browser as you type. Saving the selected query
+            syncs immediately; it is also used when the page loads.
           </p>
           <div className="flex items-center justify-end gap-2">
             <button
@@ -139,7 +200,7 @@ export function TicketSidebar({
         {loading && <p className="text-sm font-medium text-nb-ink/50">Loading…</p>}
         {!loading && tickets.length === 0 && (
           <p className="text-sm font-medium text-nb-ink/50">
-            No open tickets in an active sprint. Click Sync to pull from Jira.
+            No tickets match the current query.
           </p>
         )}
         <ul className="space-y-2">
