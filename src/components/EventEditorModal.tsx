@@ -79,6 +79,7 @@ export function EventEditorModal({
   const comboRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
   const titleInputRef = useRef<HTMLInputElement>(null);
+  const commentInputRef = useRef<HTMLTextAreaElement>(null);
 
   // Lets the user drag the modal panel around the screen by its header.
   const [dragOffset, setDragOffset] = useState({ x: 0, y: 0 });
@@ -187,6 +188,7 @@ export function EventEditorModal({
         const picked = comboOptions[highlighted - 1];
         if (picked) selectTicket(picked);
       }
+      commentInputRef.current?.focus();
     } else if (e.key === "Escape") {
       setComboOpen(false);
       setQuery("");
@@ -387,6 +389,7 @@ export function EventEditorModal({
             Description{hasTicket && <span className="text-nb-pink"> *</span>}
           </label>
           <textarea
+            ref={commentInputRef}
             value={comment}
             onChange={(e) => setComment(e.target.value)}
             placeholder={
