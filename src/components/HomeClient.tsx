@@ -631,14 +631,14 @@ export function HomeClient({ initialTickets, userId }: HomeClientProps) {
         <div
           role="alert"
           aria-live="assertive"
-          className="nb-panel-sm fixed right-4 top-20 z-50 flex w-[calc(100vw-2rem)] max-w-lg items-start gap-4 bg-nb-pink px-4 py-3 text-sm font-bold text-white shadow-lg"
+          className="nb-panel-sm fixed bottom-4 right-4 z-50 flex w-[calc(100vw-2rem)] max-w-lg items-start gap-4 border border-black/10 bg-gray-100 px-4 py-3 text-sm font-bold text-black shadow-lg"
         >
           <span className="flex-1">{error}</span>
           <button
             type="button"
             onClick={() => setError(null)}
             aria-label="Dismiss error"
-            className="shrink-0 text-lg leading-none text-white/80 hover:text-white"
+            className="shrink-0 text-lg leading-none text-black/60 hover:text-black"
           >
             ×
           </button>
