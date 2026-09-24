@@ -631,7 +631,7 @@ export function HomeClient({ initialTickets, userId }: HomeClientProps) {
         <div
           role="alert"
           aria-live="assertive"
-          className="nb-panel-sm fixed bottom-4 right-4 z-50 flex w-[calc(100vw-2rem)] max-w-lg items-start gap-4 border border-black/10 bg-gray-100 px-4 py-3 text-sm font-bold text-black shadow-lg"
+          className="nb-panel-sm fixed bottom-4 left-1/2 z-50 flex w-[calc(100vw-2rem)] max-w-lg -translate-x-1/2 items-start gap-4 border border-black/10 bg-gray-200 px-4 py-3 text-sm font-bold text-black shadow-lg"
         >
           <span className="flex-1">{error}</span>
           <button
