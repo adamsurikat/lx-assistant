@@ -18,7 +18,7 @@ export interface MapFeatureFlagRecord {
 // The fixed set of feature flag names currently in use — hardcoded rather
 // than user-creatable (see prisma/schema.prisma comments), so this is the
 // source of truth for what's selectable in the UI.
-export const KNOWN_FEATURE_FLAG_NAMES = ["tos", "gos", "booking"] as const;
+export const KNOWN_FEATURE_FLAG_NAMES = ["tos", "gos", "booking", "lmv"] as const;
 
 export interface MapPortRecord {
   id: string;

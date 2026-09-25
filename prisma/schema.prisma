@@ -197,7 +197,7 @@ model MapPort {
   routesAsStart MapRoute[] @relation("RouteStart")
   routesAsEnd   MapRoute[] @relation("RouteEnd")
 
-  // Feature flags tagged on this port (e.g. "tos", "gos", "booking") — a
+  // Feature flags tagged on this port (e.g. "tos", "gos", "booking", "lmv") — a
   // plain many-to-one relation (each row is one item/flag assignment,
   // rather than a shared many-to-many flag entity).
   featureFlags MapPortFeatureFlag[]
@@ -253,7 +253,7 @@ model MapRoute {
   featureFlags MapRouteFeatureFlag[]
 }
 
-// A single feature-flag tag (e.g. "tos", "gos", "booking") assigned to one
+// A single feature-flag tag (e.g. "tos", "gos", "booking", "lmv") assigned to one
 // port. Modeled as a plain many-to-one relation — one row per assignment,
 // each pointing at exactly one MapPort — rather than a shared many-to-many
 // flag entity, since flag names here are just plain strings rather than
