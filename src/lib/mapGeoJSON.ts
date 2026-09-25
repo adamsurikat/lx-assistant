@@ -18,6 +18,7 @@ export interface MapGeoJSONPortProps {
   tenant: string;
   country: string;
   description: string;
+  featureFlags: string[];
 }
 
 export interface MapGeoJSONDepotProps {
@@ -27,12 +28,14 @@ export interface MapGeoJSONDepotProps {
   tenant: string;
   country: string;
   description: string;
+  featureFlags: string[];
 }
 
 export interface MapGeoJSONRouteProps {
   kind: "route";
   name: string;
   description: string;
+  featureFlags: string[];
   // Identifies the start/end port by code (or name, if it has no code) so
   // the reference survives a round trip through a fresh database where ids
   // won't match. Resolved back to a port id at import time.
@@ -65,6 +68,7 @@ interface PortLike {
   description: string;
   lat: number;
   lng: number;
+  featureFlags?: { name: string }[];
 }
 
 interface DepotLike {
@@ -76,6 +80,7 @@ interface DepotLike {
   description: string;
   lat: number;
   lng: number;
+  featureFlags?: { name: string }[];
 }
 
 interface RouteLike {
@@ -87,6 +92,7 @@ interface RouteLike {
   control1Lng: number;
   control2Lat: number;
   control2Lng: number;
+  featureFlags?: { name: string }[];
 }
 
 // A port/depot's "identifier" used to link routes to ports in the exported
@@ -115,6 +121,7 @@ export function mapDataToGeoJSON(
       tenant: port.tenant,
       country: port.country,
       description: port.description,
+      featureFlags: port.featureFlags?.map((flag) => flag.name) ?? [],
     },
   }));
 
@@ -128,6 +135,7 @@ export function mapDataToGeoJSON(
       tenant: depot.tenant,
       country: depot.country,
       description: depot.description,
+      featureFlags: depot.featureFlags?.map((flag) => flag.name) ?? [],
     },
   }));
 
@@ -152,6 +160,7 @@ export function mapDataToGeoJSON(
           kind: "route",
           name: route.name,
           description: route.description,
+          featureFlags: route.featureFlags?.map((flag) => flag.name) ?? [],
           startPort: portIdentifier(startPort),
           endPort: portIdentifier(endPort),
           control1: [route.control1Lng, route.control1Lat],
@@ -168,8 +177,8 @@ export function mapDataToGeoJSON(
 }
 
 export interface ParsedMapGeoJSON {
-  ports: Omit<PortLike, "id">[];
-  depots: Omit<DepotLike, "id">[];
+  ports: ParsedPort[];
+  depots: ParsedDepot[];
   // Routes reference ports by the same code-or-name identifier used on
   // export (see portIdentifier above) — resolve these to real ids against
   // the ports you actually created/matched before writing to the database.
@@ -182,8 +191,12 @@ export interface ParsedMapGeoJSON {
     control1Lng: number;
     control2Lat: number;
     control2Lng: number;
+    featureFlags: string[];
   }[];
 }
+
+type ParsedPort = Omit<PortLike, "id" | "featureFlags"> & { featureFlags: string[] };
+type ParsedDepot = Omit<DepotLike, "id" | "featureFlags"> & { featureFlags: string[] };
 
 // Minimal slice of PrismaClient this module needs — kept as a structural
 // type (rather than importing PrismaClient) so this file has no dependency
@@ -191,16 +204,28 @@ export interface ParsedMapGeoJSON {
 // actually used.
 interface MapPrismaClient {
   mapPort: {
-    findFirst: (args: { where: { code?: string; name?: string } }) => Promise<PortLike | null>;
-    create: (args: { data: Omit<PortLike, "id"> }) => Promise<PortLike>;
+    findFirst: (args: { where: { code?: string; name?: string } }) => Promise<Omit<PortLike, "featureFlags"> | null>;
+    create: (args: {
+      data: Omit<PortLike, "id" | "featureFlags"> & {
+        featureFlags?: { create: { name: string }[] };
+      };
+    }) => Promise<Omit<PortLike, "featureFlags">>;
   };
   mapDepot: {
-    findFirst: (args: { where: { code?: string; name?: string } }) => Promise<DepotLike | null>;
-    create: (args: { data: Omit<DepotLike, "id"> }) => Promise<DepotLike>;
+    findFirst: (args: { where: { code?: string; name?: string } }) => Promise<Omit<DepotLike, "featureFlags"> | null>;
+    create: (args: {
+      data: Omit<DepotLike, "id" | "featureFlags"> & {
+        featureFlags?: { create: { name: string }[] };
+      };
+    }) => Promise<Omit<DepotLike, "featureFlags">>;
   };
   mapRoute: {
     findFirst: (args: { where: { name: string; startPortId: string; endPortId: string } }) => Promise<unknown | null>;
-    create: (args: { data: RouteLike }) => Promise<unknown>;
+    create: (args: {
+      data: Omit<RouteLike, "featureFlags"> & {
+        featureFlags?: { create: { name: string }[] };
+      };
+    }) => Promise<unknown>;
   };
 }
 
@@ -248,7 +273,15 @@ export async function importMapGeoJSON(
       continue;
     }
 
-    const created = await prisma.mapPort.create({ data: port });
+    const { featureFlags, ...portData } = port;
+    const created = await prisma.mapPort.create({
+      data: {
+        ...portData,
+        ...(featureFlags.length > 0
+          ? { featureFlags: { create: featureFlags.map((name) => ({ name })) } }
+          : {}),
+      },
+    });
     portIdByIdentifier.set(identifier, created.id);
     result.portsCreated += 1;
   }
@@ -263,7 +296,15 @@ export async function importMapGeoJSON(
       continue;
     }
 
-    await prisma.mapDepot.create({ data: depot });
+    const { featureFlags, ...depotData } = depot;
+    await prisma.mapDepot.create({
+      data: {
+        ...depotData,
+        ...(featureFlags.length > 0
+          ? { featureFlags: { create: featureFlags.map((name) => ({ name })) } }
+          : {}),
+      },
+    });
     result.depotsCreated += 1;
   }
 
@@ -295,6 +336,9 @@ export async function importMapGeoJSON(
         control1Lng: route.control1Lng,
         control2Lat: route.control2Lat,
         control2Lng: route.control2Lng,
+        ...(route.featureFlags.length > 0
+          ? { featureFlags: { create: route.featureFlags.map((name) => ({ name })) } }
+          : {}),
       },
     });
     result.routesCreated += 1;
@@ -316,8 +360,8 @@ export function parseMapGeoJSON(data: unknown): ParsedMapGeoJSON {
     throw new Error("Not a valid GeoJSON FeatureCollection");
   }
 
-  const ports: Omit<PortLike, "id">[] = [];
-  const depots: Omit<DepotLike, "id">[] = [];
+  const ports: ParsedPort[] = [];
+  const depots: ParsedDepot[] = [];
   const routes: ParsedMapGeoJSON["routes"] = [];
 
   for (const feature of (data as MapGeoJSONCollection).features) {
@@ -333,6 +377,7 @@ export function parseMapGeoJSON(data: unknown): ParsedMapGeoJSON {
         tenant: p.tenant ?? "",
         country: p.country ?? "",
         description: p.description ?? "",
+        featureFlags: Array.isArray(p.featureFlags) ? p.featureFlags : [],
         lat,
         lng,
       });
@@ -345,6 +390,7 @@ export function parseMapGeoJSON(data: unknown): ParsedMapGeoJSON {
         tenant: d.tenant ?? "",
         country: d.country ?? "",
         description: d.description ?? "",
+        featureFlags: Array.isArray(d.featureFlags) ? d.featureFlags : [],
         lat,
         lng,
       });
@@ -359,6 +405,7 @@ export function parseMapGeoJSON(data: unknown): ParsedMapGeoJSON {
         control1Lng: r.control1[0],
         control2Lat: r.control2[1],
         control2Lng: r.control2[0],
+        featureFlags: Array.isArray(r.featureFlags) ? r.featureFlags : [],
       });
     }
   }

@@ -90,12 +90,13 @@ starts with an empty map. To seed it with real data instead:
 
 The GeoJSON is a plain `FeatureCollection`: ports/depots are `Point`
 features (`properties.kind` is `"port"` or `"depot"`, plus `name`, `code`,
-`tenant`, `country`, `description`), and routes are `LineString` features
-(`properties.kind: "route"`) whose `startPort`/`endPort` reference a
-port's `code` (or `name`, if it has no code) and whose `control1`/
-`control2` are the two bezier control points that bow the curve — so it's
-also editable/authorable by hand or from another data source, not just
-round-tripped through the export endpoint.
+`tenant`, `country`, `description`, and a `featureFlags` array), and routes
+are `LineString` features (`properties.kind: "route"`) whose
+`startPort`/`endPort` reference a port's `code` (or `name`, if it has no
+code) and whose `control1`/`control2` are the two bezier control points
+that bow the curve. The `featureFlags` arrays preserve each item's tags
+through an export/import round trip, so the file is also editable/authorable
+by hand or from another data source.
 
 ## Running with Docker
 

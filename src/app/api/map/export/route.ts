@@ -14,9 +14,9 @@ export async function GET() {
   }
 
   const [ports, depots, routes] = await Promise.all([
-    prisma.mapPort.findMany({ orderBy: { createdAt: "asc" } }),
-    prisma.mapDepot.findMany({ orderBy: { createdAt: "asc" } }),
-    prisma.mapRoute.findMany({ orderBy: { createdAt: "asc" } }),
+    prisma.mapPort.findMany({ orderBy: { createdAt: "asc" }, include: { featureFlags: true } }),
+    prisma.mapDepot.findMany({ orderBy: { createdAt: "asc" }, include: { featureFlags: true } }),
+    prisma.mapRoute.findMany({ orderBy: { createdAt: "asc" }, include: { featureFlags: true } }),
   ]);
 
   const geojson = mapDataToGeoJSON(ports, depots, routes);

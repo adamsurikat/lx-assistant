@@ -16,7 +16,10 @@
         "code": "BELF",
         "tenant": "stenaline",
         "country": "United Kingdom",
-        "description": "Northern Ireland's main port, key link on Irish Sea ferry routes."
+        "description": "Northern Ireland's main port, key link on Irish Sea ferry routes.",
+        "featureFlags": [
+          "tos"
+        ]
       }
     },
     {
@@ -34,7 +37,10 @@
         "code": "HEYS",
         "tenant": "stenaline",
         "country": "United Kingdom",
-        "description": "North-west England port serving Irish Sea ferry routes to Belfast and Douglas."
+        "description": "North-west England port serving Irish Sea ferry routes to Belfast and Douglas.",
+        "featureFlags": [
+          "tos"
+        ]
       }
     },
     {
@@ -52,7 +58,10 @@
         "code": "ASH",
         "tenant": "stenaline",
         "country": "Ireland",
-        "description": ""
+        "description": "",
+        "featureFlags": [
+          "tos"
+        ]
       }
     },
     {
@@ -70,7 +79,10 @@
         "code": "BELF1",
         "tenant": "stenaline",
         "country": "United Kingdom",
-        "description": ""
+        "description": "",
+        "featureFlags": [
+          "tos"
+        ]
       }
     },
     {
@@ -88,7 +100,10 @@
         "code": "CHER",
         "tenant": "stenaline",
         "country": "France",
-        "description": ""
+        "description": "",
+        "featureFlags": [
+          "tos"
+        ]
       }
     },
     {
@@ -106,7 +121,10 @@
         "code": "DUBL",
         "tenant": "stenaline",
         "country": "Ireland",
-        "description": ""
+        "description": "",
+        "featureFlags": [
+          "tos"
+        ]
       }
     },
     {
@@ -124,7 +142,10 @@
         "code": "DUBL5",
         "tenant": "stenaline",
         "country": "Ireland",
-        "description": ""
+        "description": "",
+        "featureFlags": [
+          "tos"
+        ]
       }
     },
     {
@@ -142,7 +163,10 @@
         "code": "DUNL",
         "tenant": "stenaline",
         "country": "Ireland",
-        "description": ""
+        "description": "",
+        "featureFlags": [
+          "tos"
+        ]
       }
     },
     {
@@ -160,7 +184,10 @@
         "code": "ESBJ",
         "tenant": "stenaline",
         "country": "Denmark",
-        "description": ""
+        "description": "",
+        "featureFlags": [
+          "tos"
+        ]
       }
     },
     {
@@ -178,7 +205,10 @@
         "code": "EURO",
         "tenant": "stenaline",
         "country": "Netherlands",
-        "description": ""
+        "description": "",
+        "featureFlags": [
+          "tos"
+        ]
       }
     },
     {
@@ -196,7 +226,10 @@
         "code": "FISH",
         "tenant": "stenaline",
         "country": "United Kingdom",
-        "description": ""
+        "description": "",
+        "featureFlags": [
+          "tos"
+        ]
       }
     },
     {
@@ -214,7 +247,10 @@
         "code": "FRED",
         "tenant": "stenaline",
         "country": "Denmark",
-        "description": ""
+        "description": "",
+        "featureFlags": [
+          "tos"
+        ]
       }
     },
     {
@@ -232,7 +268,10 @@
         "code": "GDYN",
         "tenant": "stenaline",
         "country": "Poland",
-        "description": ""
+        "description": "",
+        "featureFlags": [
+          "tos"
+        ]
       }
     },
     {
@@ -250,7 +289,10 @@
         "code": "GDSK",
         "tenant": "stenaline",
         "country": "Poland",
-        "description": ""
+        "description": "",
+        "featureFlags": [
+          "tos"
+        ]
       }
     },
     {
@@ -268,7 +310,10 @@
         "code": "GOT",
         "tenant": "stenaline",
         "country": "Sweden",
-        "description": ""
+        "description": "",
+        "featureFlags": [
+          "tos"
+        ]
       }
     },
     {
@@ -286,7 +331,10 @@
         "code": "GOTKVI",
         "tenant": "stenaline",
         "country": "Sweden",
-        "description": ""
+        "description": "",
+        "featureFlags": [
+          "tos"
+        ]
       }
     },
     {
@@ -304,7 +352,10 @@
         "code": "GOTMAJ",
         "tenant": "stenaline",
         "country": "Sweden",
-        "description": ""
+        "description": "",
+        "featureFlags": [
+          "tos"
+        ]
       }
     },
     {
@@ -322,7 +373,10 @@
         "code": "GOTMHK",
         "tenant": "stenaline",
         "country": "Sweden",
-        "description": ""
+        "description": "",
+        "featureFlags": [
+          "tos"
+        ]
       }
     },
     {
@@ -340,7 +394,10 @@
         "code": "GREN",
         "tenant": "stenaline",
         "country": "Denmark",
-        "description": ""
+        "description": "",
+        "featureFlags": [
+          "tos"
+        ]
       }
     },
     {
@@ -358,7 +415,10 @@
         "code": "HALM",
         "tenant": "stenaline",
         "country": "Sweden",
-        "description": ""
+        "description": "",
+        "featureFlags": [
+          "tos"
+        ]
       }
     },
     {
@@ -376,7 +436,10 @@
         "code": "HARW",
         "tenant": "stenaline",
         "country": "United Kingdom",
-        "description": ""
+        "description": "",
+        "featureFlags": [
+          "tos"
+        ]
       }
     },
     {
@@ -394,7 +457,10 @@
         "code": "HARWDFDS",
         "tenant": "stenaline",
         "country": "United Kingdom",
-        "description": ""
+        "description": "",
+        "featureFlags": [
+          "tos"
+        ]
       }
     },
     {
@@ -412,7 +478,10 @@
         "code": "HELS",
         "tenant": "stenaline",
         "country": "Sweden",
-        "description": ""
+        "description": "",
+        "featureFlags": [
+          "tos"
+        ]
       }
     },
     {
@@ -430,7 +499,10 @@
         "code": "HOEK",
         "tenant": "stenaline",
         "country": "Netherlands",
-        "description": ""
+        "description": "",
+        "featureFlags": [
+          "tos"
+        ]
       }
     },
     {
@@ -448,7 +520,10 @@
         "code": "HOLY",
         "tenant": "stenaline",
         "country": "United Kingdom",
-        "description": ""
+        "description": "",
+        "featureFlags": [
+          "tos"
+        ]
       }
     },
     {
@@ -466,7 +541,10 @@
         "code": "IMMI",
         "tenant": "stenaline",
         "country": "United Kingdom",
-        "description": ""
+        "description": "",
+        "featureFlags": [
+          "tos"
+        ]
       }
     },
     {
@@ -484,7 +562,10 @@
         "code": "KARL",
         "tenant": "stenaline",
         "country": "Sweden",
-        "description": ""
+        "description": "",
+        "featureFlags": [
+          "tos"
+        ]
       }
     },
     {
@@ -502,7 +583,10 @@
         "code": "KIEL",
         "tenant": "stenaline",
         "country": "Germany",
-        "description": ""
+        "description": "",
+        "featureFlags": [
+          "tos"
+        ]
       }
     },
     {
@@ -520,7 +604,10 @@
         "code": "KILL",
         "tenant": "stenaline",
         "country": "United Kingdom",
-        "description": ""
+        "description": "",
+        "featureFlags": [
+          "tos"
+        ]
       }
     },
     {
@@ -538,7 +625,10 @@
         "code": "LIEP",
         "tenant": "stenaline",
         "country": "Latvia",
-        "description": ""
+        "description": "",
+        "featureFlags": [
+          "tos"
+        ]
       }
     },
     {
@@ -556,7 +646,10 @@
         "code": "LIVE",
         "tenant": "stenaline",
         "country": "United Kingdom",
-        "description": ""
+        "description": "",
+        "featureFlags": [
+          "tos"
+        ]
       }
     },
     {
@@ -574,7 +667,10 @@
         "code": "NYNA",
         "tenant": "stenaline",
         "country": "Sweden",
-        "description": ""
+        "description": "",
+        "featureFlags": [
+          "tos"
+        ]
       }
     },
     {
@@ -592,7 +688,10 @@
         "code": "OSLO",
         "tenant": "stenaline",
         "country": "Norway",
-        "description": ""
+        "description": "",
+        "featureFlags": [
+          "tos"
+        ]
       }
     },
     {
@@ -610,7 +709,10 @@
         "code": "ROSS",
         "tenant": "stenaline",
         "country": "Ireland",
-        "description": ""
+        "description": "",
+        "featureFlags": [
+          "tos"
+        ]
       }
     },
     {
@@ -628,7 +730,10 @@
         "code": "ROST",
         "tenant": "stenaline",
         "country": "Germany",
-        "description": ""
+        "description": "",
+        "featureFlags": [
+          "tos"
+        ]
       }
     },
     {
@@ -646,7 +751,10 @@
         "code": "SASS",
         "tenant": "stenaline",
         "country": "Germany",
-        "description": ""
+        "description": "",
+        "featureFlags": [
+          "tos"
+        ]
       }
     },
     {
@@ -664,7 +772,10 @@
         "code": "TRAS",
         "tenant": "stenaline",
         "country": "Germany",
-        "description": ""
+        "description": "",
+        "featureFlags": [
+          "tos"
+        ]
       }
     },
     {
@@ -682,7 +793,10 @@
         "code": "TREL",
         "tenant": "stenaline",
         "country": "Sweden",
-        "description": ""
+        "description": "",
+        "featureFlags": [
+          "tos"
+        ]
       }
     },
     {
@@ -700,7 +814,10 @@
         "code": "VARB",
         "tenant": "stenaline",
         "country": "Sweden",
-        "description": ""
+        "description": "",
+        "featureFlags": [
+          "tos"
+        ]
       }
     },
     {
@@ -718,7 +835,10 @@
         "code": "VENT",
         "tenant": "stenaline",
         "country": "Latvia",
-        "description": ""
+        "description": "",
+        "featureFlags": [
+          "tos"
+        ]
       }
     },
     {
@@ -736,7 +856,10 @@
         "code": "IMMING",
         "tenant": "stenaline",
         "country": "United Kingdom",
-        "description": ""
+        "description": "",
+        "featureFlags": [
+          "tos"
+        ]
       }
     },
     {
@@ -754,7 +877,10 @@
         "code": "ROS",
         "tenant": "pof",
         "country": "Ireland",
-        "description": ""
+        "description": "",
+        "featureFlags": [
+          "tos"
+        ]
       }
     },
     {
@@ -772,7 +898,10 @@
         "code": "CQF",
         "tenant": "pof",
         "country": "France",
-        "description": ""
+        "description": "",
+        "featureFlags": [
+          "tos"
+        ]
       }
     },
     {
@@ -790,7 +919,10 @@
         "code": "TIL",
         "tenant": "pof",
         "country": "United Kingdom",
-        "description": ""
+        "description": "",
+        "featureFlags": [
+          "tos"
+        ]
       }
     },
     {
@@ -808,7 +940,10 @@
         "code": "DVR",
         "tenant": "pof",
         "country": "United Kingdom",
-        "description": ""
+        "description": "",
+        "featureFlags": [
+          "tos"
+        ]
       }
     },
     {
@@ -826,7 +961,10 @@
         "code": "DUB",
         "tenant": "pof",
         "country": "Ireland",
-        "description": ""
+        "description": "",
+        "featureFlags": [
+          "tos"
+        ]
       }
     },
     {
@@ -844,7 +982,10 @@
         "code": "HUL",
         "tenant": "pof",
         "country": "United Kingdom",
-        "description": ""
+        "description": "",
+        "featureFlags": [
+          "tos"
+        ]
       }
     },
     {
@@ -862,7 +1003,10 @@
         "code": "HUL",
         "tenant": "pof",
         "country": "United Kingdom",
-        "description": ""
+        "description": "",
+        "featureFlags": [
+          "tos"
+        ]
       }
     },
     {
@@ -880,7 +1024,10 @@
         "code": "ZEE",
         "tenant": "pof",
         "country": "Belgium",
-        "description": ""
+        "description": "",
+        "featureFlags": [
+          "tos"
+        ]
       }
     },
     {
@@ -898,7 +1045,10 @@
         "code": "EURO",
         "tenant": "pof",
         "country": "Netherlands",
-        "description": ""
+        "description": "",
+        "featureFlags": [
+          "tos"
+        ]
       }
     },
     {
@@ -916,7 +1066,10 @@
         "code": "RSK",
         "tenant": "scandlines",
         "country": "Germany",
-        "description": ""
+        "description": "",
+        "featureFlags": [
+          "tos"
+        ]
       }
     },
     {
@@ -934,7 +1087,11 @@
         "code": "PUT",
         "tenant": "scandlines",
         "country": "Germany",
-        "description": ""
+        "description": "",
+        "featureFlags": [
+          "gos",
+          "tos"
+        ]
       }
     },
     {
@@ -952,7 +1109,10 @@
         "code": "HEL",
         "tenant": "scandlines",
         "country": "Sweden",
-        "description": ""
+        "description": "",
+        "featureFlags": [
+          "tos"
+        ]
       }
     },
     {
@@ -970,7 +1130,11 @@
         "code": "ROF",
         "tenant": "scandlines",
         "country": "Denmark",
-        "description": ""
+        "description": "",
+        "featureFlags": [
+          "gos",
+          "tos"
+        ]
       }
     },
     {
@@ -988,7 +1152,10 @@
         "code": "HLS",
         "tenant": "scandlines",
         "country": "Denmark",
-        "description": ""
+        "description": "",
+        "featureFlags": [
+          "tos"
+        ]
       }
     },
     {
@@ -1006,7 +1173,10 @@
         "code": "GED",
         "tenant": "scandlines",
         "country": "Denmark",
-        "description": ""
+        "description": "",
+        "featureFlags": [
+          "tos"
+        ]
       }
     },
     {
@@ -1024,7 +1194,10 @@
         "code": "HEYS",
         "tenant": "peelports",
         "country": "United Kingdom",
-        "description": ""
+        "description": "",
+        "featureFlags": [
+          "tos"
+        ]
       }
     },
     {
@@ -1042,7 +1215,10 @@
         "code": "WAPT",
         "tenant": "peelports",
         "country": "United Kingdom",
-        "description": ""
+        "description": "",
+        "featureFlags": [
+          "tos"
+        ]
       }
     },
     {
@@ -1060,7 +1236,10 @@
         "code": "BELF",
         "tenant": "peelports",
         "country": "United Kingdom",
-        "description": ""
+        "description": "",
+        "featureFlags": [
+          "tos"
+        ]
       }
     },
     {
@@ -1078,7 +1257,10 @@
         "code": "DUBL",
         "tenant": "peelports",
         "country": "Ireland",
-        "description": ""
+        "description": "",
+        "featureFlags": [
+          "tos"
+        ]
       }
     },
     {
@@ -1096,7 +1278,10 @@
         "code": "DGAS",
         "tenant": "peelports",
         "country": "Isle of Man",
-        "description": ""
+        "description": "",
+        "featureFlags": [
+          "tos"
+        ]
       }
     },
     {
@@ -1114,7 +1299,11 @@
         "code": "GEX",
         "tenant": "sot",
         "country": "",
-        "description": ""
+        "description": "",
+        "featureFlags": [
+          "booking",
+          "tos"
+        ]
       }
     },
     {
@@ -1132,7 +1321,11 @@
         "code": "DEV",
         "tenant": "sot",
         "country": "",
-        "description": ""
+        "description": "",
+        "featureFlags": [
+          "booking",
+          "tos"
+        ]
       }
     },
     {
@@ -1150,7 +1343,10 @@
         "code": "OSL",
         "tenant": "gncl",
         "country": "Norway",
-        "description": ""
+        "description": "",
+        "featureFlags": [
+          "tos"
+        ]
       }
     },
     {
@@ -1168,7 +1364,10 @@
         "code": "CPH",
         "tenant": "gncl",
         "country": "Denmark",
-        "description": ""
+        "description": "",
+        "featureFlags": [
+          "tos"
+        ]
       }
     },
     {
@@ -1186,7 +1385,10 @@
         "code": "SEOSK",
         "tenant": "dg",
         "country": "Sweden",
-        "description": ""
+        "description": "",
+        "featureFlags": [
+          "tos"
+        ]
       }
     },
     {
@@ -1204,7 +1406,10 @@
         "code": "SEVBY",
         "tenant": "dg",
         "country": "Sweden",
-        "description": ""
+        "description": "",
+        "featureFlags": [
+          "tos"
+        ]
       }
     },
     {
@@ -1222,7 +1427,10 @@
         "code": "SENYN",
         "tenant": "dg",
         "country": "Sweden",
-        "description": ""
+        "description": "",
+        "featureFlags": [
+          "tos"
+        ]
       }
     },
     {
@@ -1240,7 +1448,10 @@
         "code": "LAR",
         "tenant": "pof",
         "country": "United Kingdom",
-        "description": ""
+        "description": "",
+        "featureFlags": [
+          "tos"
+        ]
       }
     },
     {
@@ -1258,7 +1469,10 @@
         "code": "TEE",
         "tenant": "pof",
         "country": "United Kingdom",
-        "description": ""
+        "description": "",
+        "featureFlags": [
+          "tos"
+        ]
       }
     },
     {
@@ -1276,7 +1490,10 @@
         "code": "CYN",
         "tenant": "pof",
         "country": "United Kingdom",
-        "description": ""
+        "description": "",
+        "featureFlags": [
+          "tos"
+        ]
       }
     },
     {
@@ -1294,7 +1511,10 @@
         "code": "CAIR",
         "tenant": "stenaline",
         "country": "United Kingdom",
-        "description": ""
+        "description": "",
+        "featureFlags": [
+          "tos"
+        ]
       }
     },
     {
@@ -1312,7 +1532,10 @@
         "code": "FRVSS",
         "tenant": "kn",
         "country": "France",
-        "description": ""
+        "description": "",
+        "featureFlags": [
+          "lmv"
+        ]
       }
     },
     {
@@ -1330,7 +1553,10 @@
         "code": "DEDTM",
         "tenant": "kn",
         "country": "Germany",
-        "description": ""
+        "description": "",
+        "featureFlags": [
+          "lmv"
+        ]
       }
     },
     {
@@ -1348,7 +1574,10 @@
         "code": "ATSTS",
         "tenant": "kn",
         "country": "Austria",
-        "description": ""
+        "description": "",
+        "featureFlags": [
+          "lmv"
+        ]
       }
     },
     {
@@ -1366,7 +1595,10 @@
         "code": "PLWRO",
         "tenant": "kn",
         "country": "Poland",
-        "description": ""
+        "description": "",
+        "featureFlags": [
+          "lmv"
+        ]
       }
     },
     {
@@ -1384,7 +1616,10 @@
         "code": "FIHEL",
         "tenant": "kn",
         "country": "Finland",
-        "description": ""
+        "description": "",
+        "featureFlags": [
+          "lmv"
+        ]
       }
     },
     {
@@ -1402,7 +1637,10 @@
         "code": "FRRDZ",
         "tenant": "kn",
         "country": "France",
-        "description": ""
+        "description": "",
+        "featureFlags": [
+          "lmv"
+        ]
       }
     },
     {
@@ -1420,7 +1658,10 @@
         "code": "FRPIS",
         "tenant": "kn",
         "country": "France",
-        "description": ""
+        "description": "",
+        "featureFlags": [
+          "lmv"
+        ]
       }
     },
     {
@@ -1438,7 +1679,10 @@
         "code": "FRCVM",
         "tenant": "kn",
         "country": "France",
-        "description": ""
+        "description": "",
+        "featureFlags": [
+          "lmv"
+        ]
       }
     },
     {
@@ -1456,7 +1700,10 @@
         "code": "PLKTW",
         "tenant": "kn",
         "country": "Poland",
-        "description": ""
+        "description": "",
+        "featureFlags": [
+          "lmv"
+        ]
       }
     },
     {
@@ -1474,7 +1721,10 @@
         "code": "DESTB",
         "tenant": "kn",
         "country": "Germany",
-        "description": ""
+        "description": "",
+        "featureFlags": [
+          "lmv"
+        ]
       }
     },
     {
@@ -1492,7 +1742,10 @@
         "code": "DEBFE",
         "tenant": "kn",
         "country": "Germany",
-        "description": ""
+        "description": "",
+        "featureFlags": [
+          "lmv"
+        ]
       }
     },
     {
@@ -1510,7 +1763,10 @@
         "code": "DEHAR",
         "tenant": "kn",
         "country": "Germany",
-        "description": ""
+        "description": "",
+        "featureFlags": [
+          "lmv"
+        ]
       }
     },
     {
@@ -1528,7 +1784,10 @@
         "code": "DEHAG",
         "tenant": "kn",
         "country": "Germany",
-        "description": ""
+        "description": "",
+        "featureFlags": [
+          "lmv"
+        ]
       }
     },
     {
@@ -1546,7 +1805,10 @@
         "code": "DEMAI",
         "tenant": "kn",
         "country": "Germany",
-        "description": ""
+        "description": "",
+        "featureFlags": [
+          "lmv"
+        ]
       }
     },
     {
@@ -1564,7 +1826,10 @@
         "code": "CZPRG",
         "tenant": "kn",
         "country": "Czech Republic",
-        "description": ""
+        "description": "",
+        "featureFlags": [
+          "lmv"
+        ]
       }
     },
     {
@@ -1582,7 +1847,10 @@
         "code": "HUBUD",
         "tenant": "kn",
         "country": "Hungary",
-        "description": ""
+        "description": "",
+        "featureFlags": [
+          "lmv"
+        ]
       }
     },
     {
@@ -1600,7 +1868,10 @@
         "code": "ATVIE",
         "tenant": "kn",
         "country": "Austria",
-        "description": ""
+        "description": "",
+        "featureFlags": [
+          "lmv"
+        ]
       }
     },
     {
@@ -1618,7 +1889,10 @@
         "code": "FRASB",
         "tenant": "kn",
         "country": "France",
-        "description": ""
+        "description": "",
+        "featureFlags": [
+          "lmv"
+        ]
       }
     },
     {
@@ -1636,7 +1910,10 @@
         "code": "DEHAM",
         "tenant": "kn",
         "country": "Germany",
-        "description": ""
+        "description": "",
+        "featureFlags": [
+          "lmv"
+        ]
       }
     },
     {
@@ -1654,7 +1931,10 @@
         "code": "DEBRE",
         "tenant": "kn",
         "country": "Germany",
-        "description": ""
+        "description": "",
+        "featureFlags": [
+          "lmv"
+        ]
       }
     },
     {
@@ -1672,7 +1952,10 @@
         "code": "DEBHT",
         "tenant": "kn",
         "country": "Germany",
-        "description": ""
+        "description": "",
+        "featureFlags": [
+          "lmv"
+        ]
       }
     },
     {
@@ -1690,7 +1973,10 @@
         "code": "DELEJ",
         "tenant": "kn",
         "country": "Germany",
-        "description": ""
+        "description": "",
+        "featureFlags": [
+          "lmv"
+        ]
       }
     },
     {
@@ -1708,7 +1994,10 @@
         "code": "DEOLO",
         "tenant": "kn",
         "country": "Germany",
-        "description": ""
+        "description": "",
+        "featureFlags": [
+          "lmv"
+        ]
       }
     },
     {
@@ -1726,7 +2015,10 @@
         "code": "DEMUC",
         "tenant": "kn",
         "country": "Germany",
-        "description": ""
+        "description": "",
+        "featureFlags": [
+          "lmv"
+        ]
       }
     },
     {
@@ -1744,7 +2036,10 @@
         "code": "DESTR",
         "tenant": "kn",
         "country": "Germany",
-        "description": ""
+        "description": "",
+        "featureFlags": [
+          "lmv"
+        ]
       }
     },
     {
@@ -1762,7 +2057,10 @@
         "code": "DENUE",
         "tenant": "kn",
         "country": "Germany",
-        "description": ""
+        "description": "",
+        "featureFlags": [
+          "lmv"
+        ]
       }
     },
     {
@@ -1780,7 +2078,10 @@
         "code": "SKBTS",
         "tenant": "kn",
         "country": "Slovakia",
-        "description": ""
+        "description": "",
+        "featureFlags": [
+          "lmv"
+        ]
       }
     },
     {
@@ -1798,7 +2099,10 @@
         "code": "BGSOF",
         "tenant": "kn",
         "country": "Bulgaria",
-        "description": ""
+        "description": "",
+        "featureFlags": [
+          "lmv"
+        ]
       }
     },
     {
@@ -1816,7 +2120,10 @@
         "code": "ITMIL",
         "tenant": "kn",
         "country": "Italy",
-        "description": ""
+        "description": "",
+        "featureFlags": [
+          "lmv"
+        ]
       }
     },
     {
@@ -1834,7 +2141,10 @@
         "code": "FRBOU",
         "tenant": "kn",
         "country": "France",
-        "description": ""
+        "description": "",
+        "featureFlags": [
+          "lmv"
+        ]
       }
     },
     {
@@ -1852,7 +2162,10 @@
         "code": "FRLME",
         "tenant": "kn",
         "country": "France",
-        "description": ""
+        "description": "",
+        "featureFlags": [
+          "lmv"
+        ]
       }
     },
     {
@@ -1870,7 +2183,10 @@
         "code": "FRCNO",
         "tenant": "kn",
         "country": "France",
-        "description": ""
+        "description": "",
+        "featureFlags": [
+          "lmv"
+        ]
       }
     },
     {
@@ -1888,7 +2204,10 @@
         "code": "FRBSN",
         "tenant": "kn",
         "country": "France",
-        "description": ""
+        "description": "",
+        "featureFlags": [
+          "lmv"
+        ]
       }
     },
     {
@@ -1906,7 +2225,10 @@
         "code": "FROPS",
         "tenant": "kn",
         "country": "France",
-        "description": ""
+        "description": "",
+        "featureFlags": [
+          "lmv"
+        ]
       }
     },
     {
@@ -1924,7 +2246,10 @@
         "code": "FRBAY",
         "tenant": "kn",
         "country": "France",
-        "description": ""
+        "description": "",
+        "featureFlags": [
+          "lmv"
+        ]
       }
     },
     {
@@ -1942,7 +2267,10 @@
         "code": "FREBU",
         "tenant": "kn",
         "country": "France",
-        "description": ""
+        "description": "",
+        "featureFlags": [
+          "lmv"
+        ]
       }
     },
     {
@@ -1960,7 +2288,10 @@
         "code": "FRBEA",
         "tenant": "kn",
         "country": "France",
-        "description": ""
+        "description": "",
+        "featureFlags": [
+          "lmv"
+        ]
       }
     },
     {
@@ -1978,7 +2309,10 @@
         "code": "FRSBK",
         "tenant": "kn",
         "country": "France",
-        "description": ""
+        "description": "",
+        "featureFlags": [
+          "lmv"
+        ]
       }
     },
     {
@@ -1996,7 +2330,10 @@
         "code": "FRNAR",
         "tenant": "kn",
         "country": "France",
-        "description": ""
+        "description": "",
+        "featureFlags": [
+          "lmv"
+        ]
       }
     },
     {
@@ -2014,7 +2351,10 @@
         "code": "FRGAN",
         "tenant": "kn",
         "country": "France",
-        "description": ""
+        "description": "",
+        "featureFlags": [
+          "lmv"
+        ]
       }
     },
     {
@@ -2032,7 +2372,10 @@
         "code": "FRRHE",
         "tenant": "kn",
         "country": "France",
-        "description": ""
+        "description": "",
+        "featureFlags": [
+          "lmv"
+        ]
       }
     },
     {
@@ -2050,7 +2393,10 @@
         "code": "FRVEV",
         "tenant": "kn",
         "country": "France",
-        "description": ""
+        "description": "",
+        "featureFlags": [
+          "lmv"
+        ]
       }
     },
     {
@@ -2068,7 +2414,10 @@
         "code": "PLRZE",
         "tenant": "kn",
         "country": "Poland",
-        "description": ""
+        "description": "",
+        "featureFlags": [
+          "lmv"
+        ]
       }
     },
     {
@@ -2086,7 +2435,10 @@
         "code": "FRNTE",
         "tenant": "kn",
         "country": "France",
-        "description": ""
+        "description": "",
+        "featureFlags": [
+          "lmv"
+        ]
       }
     },
     {
@@ -2104,7 +2456,10 @@
         "code": "FRRNS",
         "tenant": "kn",
         "country": "France",
-        "description": ""
+        "description": "",
+        "featureFlags": [
+          "lmv"
+        ]
       }
     },
     {
@@ -2122,7 +2477,10 @@
         "code": "DECHE",
         "tenant": "kn",
         "country": "Germany",
-        "description": ""
+        "description": "",
+        "featureFlags": [
+          "lmv"
+        ]
       }
     },
     {
@@ -2140,7 +2498,10 @@
         "code": "FRTUF",
         "tenant": "kn",
         "country": "France",
-        "description": ""
+        "description": "",
+        "featureFlags": [
+          "lmv"
+        ]
       }
     },
     {
@@ -2158,7 +2519,10 @@
         "code": "FRORR",
         "tenant": "kn",
         "country": "France",
-        "description": ""
+        "description": "",
+        "featureFlags": [
+          "lmv"
+        ]
       }
     },
     {
@@ -2176,7 +2540,10 @@
         "code": "FRLFP",
         "tenant": "kn",
         "country": "France",
-        "description": ""
+        "description": "",
+        "featureFlags": [
+          "lmv"
+        ]
       }
     },
     {
@@ -2194,7 +2561,10 @@
         "code": "FRPAU",
         "tenant": "kn",
         "country": "France",
-        "description": ""
+        "description": "",
+        "featureFlags": [
+          "lmv"
+        ]
       }
     },
     {
@@ -2212,7 +2582,10 @@
         "code": "FRMPL",
         "tenant": "kn",
         "country": "France",
-        "description": ""
+        "description": "",
+        "featureFlags": [
+          "lmv"
+        ]
       }
     },
     {
@@ -2230,7 +2603,10 @@
         "code": "FRPGF",
         "tenant": "kn",
         "country": "France",
-        "description": ""
+        "description": "",
+        "featureFlags": [
+          "lmv"
+        ]
       }
     },
     {
@@ -2248,7 +2624,10 @@
         "code": "FRNCE",
         "tenant": "kn",
         "country": "France",
-        "description": ""
+        "description": "",
+        "featureFlags": [
+          "lmv"
+        ]
       }
     },
     {
@@ -2266,7 +2645,10 @@
         "code": "FRBRN",
         "tenant": "kn",
         "country": "France",
-        "description": ""
+        "description": "",
+        "featureFlags": [
+          "lmv"
+        ]
       }
     },
     {
@@ -2284,7 +2666,10 @@
         "code": "FRSDP",
         "tenant": "kn",
         "country": "France",
-        "description": ""
+        "description": "",
+        "featureFlags": [
+          "lmv"
+        ]
       }
     },
     {
@@ -2302,7 +2687,10 @@
         "code": "FRLEN",
         "tenant": "kn",
         "country": "France",
-        "description": ""
+        "description": "",
+        "featureFlags": [
+          "lmv"
+        ]
       }
     },
     {
@@ -2320,7 +2708,10 @@
         "code": "FRSXB",
         "tenant": "kn",
         "country": "France",
-        "description": ""
+        "description": "",
+        "featureFlags": [
+          "lmv"
+        ]
       }
     },
     {
@@ -2338,7 +2729,10 @@
         "code": "FRMLH",
         "tenant": "kn",
         "country": "France",
-        "description": ""
+        "description": "",
+        "featureFlags": [
+          "lmv"
+        ]
       }
     },
     {
@@ -2356,7 +2750,10 @@
         "code": "FRLSQ",
         "tenant": "kn",
         "country": "France",
-        "description": ""
+        "description": "",
+        "featureFlags": [
+          "lmv"
+        ]
       }
     },
     {
@@ -2374,7 +2771,10 @@
         "code": "FRAGF",
         "tenant": "kn",
         "country": "France",
-        "description": ""
+        "description": "",
+        "featureFlags": [
+          "lmv"
+        ]
       }
     },
     {
@@ -2392,7 +2792,10 @@
         "code": "DEBHE",
         "tenant": "kn",
         "country": "Germany",
-        "description": ""
+        "description": "",
+        "featureFlags": [
+          "lmv"
+        ]
       }
     },
     {
@@ -2410,7 +2813,10 @@
         "code": "FRSLO",
         "tenant": "kn",
         "country": "France",
-        "description": ""
+        "description": "",
+        "featureFlags": [
+          "lmv"
+        ]
       }
     },
     {
@@ -2428,7 +2834,10 @@
         "code": "FRCTE",
         "tenant": "kn",
         "country": "France",
-        "description": ""
+        "description": "",
+        "featureFlags": [
+          "lmv"
+        ]
       }
     },
     {
@@ -2446,7 +2855,10 @@
         "code": "FRCFR",
         "tenant": "kn",
         "country": "France",
-        "description": ""
+        "description": "",
+        "featureFlags": [
+          "lmv"
+        ]
       }
     },
     {
@@ -2464,7 +2876,10 @@
         "code": "FRENC",
         "tenant": "kn",
         "country": "France",
-        "description": ""
+        "description": "",
+        "featureFlags": [
+          "lmv"
+        ]
       }
     },
     {
@@ -2482,7 +2897,10 @@
         "code": "FRTLS",
         "tenant": "kn",
         "country": "France",
-        "description": ""
+        "description": "",
+        "featureFlags": [
+          "lmv"
+        ]
       }
     },
     {
@@ -2500,7 +2918,10 @@
         "code": "FRVAA",
         "tenant": "kn",
         "country": "France",
-        "description": ""
+        "description": "",
+        "featureFlags": [
+          "lmv"
+        ]
       }
     },
     {
@@ -2518,7 +2939,10 @@
         "code": "FRMZM",
         "tenant": "kn",
         "country": "France",
-        "description": ""
+        "description": "",
+        "featureFlags": [
+          "lmv"
+        ]
       }
     },
     {
@@ -2536,7 +2960,10 @@
         "code": "FRTOU",
         "tenant": "kn",
         "country": "France",
-        "description": ""
+        "description": "",
+        "featureFlags": [
+          "lmv"
+        ]
       }
     },
     {
@@ -2554,7 +2981,10 @@
         "code": "FREPO",
         "tenant": "kn",
         "country": "France",
-        "description": ""
+        "description": "",
+        "featureFlags": [
+          "lmv"
+        ]
       }
     },
     {
@@ -2572,7 +3002,10 @@
         "code": "FRBOD",
         "tenant": "kn",
         "country": "France",
-        "description": ""
+        "description": "",
+        "featureFlags": [
+          "lmv"
+        ]
       }
     },
     {
@@ -2590,7 +3023,10 @@
         "code": "FRAVN",
         "tenant": "kn",
         "country": "France",
-        "description": ""
+        "description": "",
+        "featureFlags": [
+          "lmv"
+        ]
       }
     },
     {
@@ -2608,7 +3044,10 @@
         "code": "FRAUF",
         "tenant": "kn",
         "country": "France",
-        "description": ""
+        "description": "",
+        "featureFlags": [
+          "lmv"
+        ]
       }
     },
     {
@@ -2626,7 +3065,10 @@
         "code": "FRLPM",
         "tenant": "kn",
         "country": "France",
-        "description": ""
+        "description": "",
+        "featureFlags": [
+          "lmv"
+        ]
       }
     },
     {
@@ -2644,7 +3086,10 @@
         "code": "ATSZG",
         "tenant": "kn",
         "country": "Austria",
-        "description": ""
+        "description": "",
+        "featureFlags": [
+          "lmv"
+        ]
       }
     },
     {
@@ -2662,7 +3107,10 @@
         "code": "FRDYR",
         "tenant": "kn",
         "country": "France",
-        "description": ""
+        "description": "",
+        "featureFlags": [
+          "lmv"
+        ]
       }
     },
     {
@@ -2680,7 +3128,10 @@
         "code": "FRURO",
         "tenant": "kn",
         "country": "France",
-        "description": ""
+        "description": "",
+        "featureFlags": [
+          "lmv"
+        ]
       }
     },
     {
@@ -2698,7 +3149,10 @@
         "code": "FRJAG",
         "tenant": "kn",
         "country": "France",
-        "description": ""
+        "description": "",
+        "featureFlags": [
+          "lmv"
+        ]
       }
     },
     {
@@ -2716,7 +3170,10 @@
         "code": "FRGNB",
         "tenant": "kn",
         "country": "France",
-        "description": ""
+        "description": "",
+        "featureFlags": [
+          "lmv"
+        ]
       }
     },
     {
@@ -2734,7 +3191,10 @@
         "code": "FRAMI",
         "tenant": "kn",
         "country": "France",
-        "description": ""
+        "description": "",
+        "featureFlags": [
+          "lmv"
+        ]
       }
     },
     {
@@ -2752,7 +3212,10 @@
         "code": "FRZRP",
         "tenant": "kn",
         "country": "France",
-        "description": ""
+        "description": "",
+        "featureFlags": [
+          "lmv"
+        ]
       }
     },
     {
@@ -2770,7 +3233,10 @@
         "code": "FRSTO",
         "tenant": "kn",
         "country": "France",
-        "description": ""
+        "description": "",
+        "featureFlags": [
+          "lmv"
+        ]
       }
     },
     {
@@ -2788,7 +3254,10 @@
         "code": "FRPGX",
         "tenant": "kn",
         "country": "France",
-        "description": ""
+        "description": "",
+        "featureFlags": [
+          "lmv"
+        ]
       }
     },
     {
@@ -2806,7 +3275,10 @@
         "code": "FRNCY",
         "tenant": "kn",
         "country": "France",
-        "description": ""
+        "description": "",
+        "featureFlags": [
+          "lmv"
+        ]
       }
     },
     {
@@ -2824,7 +3296,10 @@
         "code": "FRAUR",
         "tenant": "kn",
         "country": "France",
-        "description": ""
+        "description": "",
+        "featureFlags": [
+          "lmv"
+        ]
       }
     },
     {
@@ -2842,7 +3317,10 @@
         "code": "FRBES",
         "tenant": "kn",
         "country": "France",
-        "description": ""
+        "description": "",
+        "featureFlags": [
+          "lmv"
+        ]
       }
     },
     {
@@ -2860,7 +3338,10 @@
         "code": "FRLIG",
         "tenant": "kn",
         "country": "France",
-        "description": ""
+        "description": "",
+        "featureFlags": [
+          "lmv"
+        ]
       }
     },
     {
@@ -2878,7 +3359,10 @@
         "code": "FRJTS",
         "tenant": "kn",
         "country": "France",
-        "description": ""
+        "description": "",
+        "featureFlags": [
+          "lmv"
+        ]
       }
     },
     {
@@ -2896,7 +3380,10 @@
         "code": "CZBRQ",
         "tenant": "kn",
         "country": "Czech Republic",
-        "description": ""
+        "description": "",
+        "featureFlags": [
+          "lmv"
+        ]
       }
     },
     {
@@ -2914,7 +3401,10 @@
         "code": "PLOSZ",
         "tenant": "kn",
         "country": "Poland",
-        "description": ""
+        "description": "",
+        "featureFlags": [
+          "lmv"
+        ]
       }
     },
     {
@@ -2932,7 +3422,10 @@
         "code": "PLIEG",
         "tenant": "kn",
         "country": "Poland",
-        "description": ""
+        "description": "",
+        "featureFlags": [
+          "lmv"
+        ]
       }
     },
     {
@@ -2950,7 +3443,10 @@
         "code": "PLSZZ",
         "tenant": "kn",
         "country": "Poland",
-        "description": ""
+        "description": "",
+        "featureFlags": [
+          "lmv"
+        ]
       }
     },
     {
@@ -2968,7 +3464,10 @@
         "code": "FRCPQ",
         "tenant": "kn",
         "country": "France",
-        "description": ""
+        "description": "",
+        "featureFlags": [
+          "lmv"
+        ]
       }
     },
     {
@@ -2986,7 +3485,10 @@
         "code": "ESTLA",
         "tenant": "kn",
         "country": "Spain",
-        "description": ""
+        "description": "",
+        "featureFlags": [
+          "lmv"
+        ]
       }
     },
     {
@@ -3004,7 +3506,10 @@
         "code": "FRLES",
         "tenant": "kn",
         "country": "France",
-        "description": ""
+        "description": "",
+        "featureFlags": [
+          "lmv"
+        ]
       }
     },
     {
@@ -3022,7 +3527,10 @@
         "code": "ATWDU",
         "tenant": "kn",
         "country": "Austria",
-        "description": ""
+        "description": "",
+        "featureFlags": [
+          "lmv"
+        ]
       }
     },
     {
@@ -3040,7 +3548,10 @@
         "code": "FRCTL",
         "tenant": "kn",
         "country": "France",
-        "description": ""
+        "description": "",
+        "featureFlags": [
+          "lmv"
+        ]
       }
     },
     {
@@ -3058,7 +3569,10 @@
         "code": "FRENN",
         "tenant": "kn",
         "country": "France",
-        "description": ""
+        "description": "",
+        "featureFlags": [
+          "lmv"
+        ]
       }
     },
     {
@@ -3076,7 +3590,10 @@
         "code": "CZPLZ",
         "tenant": "kn",
         "country": "Czech Republic",
-        "description": ""
+        "description": "",
+        "featureFlags": [
+          "lmv"
+        ]
       }
     },
     {
@@ -3094,7 +3611,10 @@
         "code": "CZCKB",
         "tenant": "kn",
         "country": "Czech Republic",
-        "description": ""
+        "description": "",
+        "featureFlags": [
+          "lmv"
+        ]
       }
     },
     {
@@ -3112,7 +3632,10 @@
         "code": "FRVQE",
         "tenant": "kn",
         "country": "France",
-        "description": ""
+        "description": "",
+        "featureFlags": [
+          "lmv"
+        ]
       }
     },
     {
@@ -3130,7 +3653,10 @@
         "code": "HRPZG",
         "tenant": "kn",
         "country": "Croatia",
-        "description": ""
+        "description": "",
+        "featureFlags": [
+          "lmv"
+        ]
       }
     },
     {
@@ -3148,7 +3674,10 @@
         "code": "HRZAD",
         "tenant": "kn",
         "country": "Croatia",
-        "description": ""
+        "description": "",
+        "featureFlags": [
+          "lmv"
+        ]
       }
     },
     {
@@ -3166,7 +3695,10 @@
         "code": "HRTRO",
         "tenant": "kn",
         "country": "Croatia",
-        "description": ""
+        "description": "",
+        "featureFlags": [
+          "lmv"
+        ]
       }
     },
     {
@@ -3184,7 +3716,10 @@
         "code": "SKCEL",
         "tenant": "kn",
         "country": "Slovakia",
-        "description": ""
+        "description": "",
+        "featureFlags": [
+          "lmv"
+        ]
       }
     },
     {
@@ -3202,7 +3737,10 @@
         "code": "ZAKEB",
         "tenant": "kn",
         "country": "South Africa",
-        "description": ""
+        "description": "",
+        "featureFlags": [
+          "lmv"
+        ]
       }
     },
     {
@@ -3220,7 +3758,10 @@
         "code": "ZAEKB",
         "tenant": "kn",
         "country": "South Africa",
-        "description": ""
+        "description": "",
+        "featureFlags": [
+          "lmv"
+        ]
       }
     },
     {
@@ -3238,7 +3779,10 @@
         "code": "ITTRN",
         "tenant": "kn",
         "country": "Italy",
-        "description": ""
+        "description": "",
+        "featureFlags": [
+          "lmv"
+        ]
       }
     },
     {
@@ -3256,7 +3800,10 @@
         "code": "CZDIP",
         "tenant": "kn",
         "country": "Czech Republic",
-        "description": ""
+        "description": "",
+        "featureFlags": [
+          "lmv"
+        ]
       }
     },
     {
@@ -3274,7 +3821,10 @@
         "code": "ITROM",
         "tenant": "kn",
         "country": "Italy",
-        "description": ""
+        "description": "",
+        "featureFlags": [
+          "lmv"
+        ]
       }
     },
     {
@@ -3292,7 +3842,10 @@
         "code": "FRXVG",
         "tenant": "kn",
         "country": "France",
-        "description": ""
+        "description": "",
+        "featureFlags": [
+          "lmv"
+        ]
       }
     },
     {
@@ -3310,7 +3863,10 @@
         "code": "ESZAZ",
         "tenant": "kn",
         "country": "Spain",
-        "description": ""
+        "description": "",
+        "featureFlags": [
+          "lmv"
+        ]
       }
     },
     {
@@ -3328,7 +3884,10 @@
         "code": "ITSZI",
         "tenant": "kn",
         "country": "Italy",
-        "description": ""
+        "description": "",
+        "featureFlags": [
+          "lmv"
+        ]
       }
     },
     {
@@ -3346,7 +3905,10 @@
         "code": "ROCRA",
         "tenant": "kn",
         "country": "Romania",
-        "description": ""
+        "description": "",
+        "featureFlags": [
+          "lmv"
+        ]
       }
     },
     {
@@ -3364,7 +3926,10 @@
         "code": "FRBRU",
         "tenant": "kn",
         "country": "France",
-        "description": ""
+        "description": "",
+        "featureFlags": [
+          "lmv"
+        ]
       }
     },
     {
@@ -3382,7 +3947,10 @@
         "code": "ITNEM",
         "tenant": "kn",
         "country": "Italy",
-        "description": ""
+        "description": "",
+        "featureFlags": [
+          "lmv"
+        ]
       }
     },
     {
@@ -3400,7 +3968,10 @@
         "code": "MTATT",
         "tenant": "kn",
         "country": "Malta",
-        "description": ""
+        "description": "",
+        "featureFlags": [
+          "lmv"
+        ]
       }
     },
     {
@@ -3418,7 +3989,10 @@
         "code": "CZXUY",
         "tenant": "kn",
         "country": "Czech Republic",
-        "description": ""
+        "description": "",
+        "featureFlags": [
+          "lmv"
+        ]
       }
     },
     {
@@ -3436,7 +4010,10 @@
         "code": "ITFER",
         "tenant": "kn",
         "country": "Italy",
-        "description": ""
+        "description": "",
+        "featureFlags": [
+          "lmv"
+        ]
       }
     },
     {
@@ -3454,7 +4031,10 @@
         "code": "BABNX",
         "tenant": "kn",
         "country": "Croatia",
-        "description": ""
+        "description": "",
+        "featureFlags": [
+          "lmv"
+        ]
       }
     },
     {
@@ -3472,7 +4052,10 @@
         "code": "HRKAS",
         "tenant": "kn",
         "country": "Croatia",
-        "description": ""
+        "description": "",
+        "featureFlags": [
+          "lmv"
+        ]
       }
     },
     {
@@ -3490,7 +4073,10 @@
         "code": "HRKKC",
         "tenant": "kn",
         "country": "Croatia",
-        "description": ""
+        "description": "",
+        "featureFlags": [
+          "lmv"
+        ]
       }
     },
     {
@@ -3508,7 +4094,10 @@
         "code": "ROBOS",
         "tenant": "kn",
         "country": "Romania",
-        "description": ""
+        "description": "",
+        "featureFlags": [
+          "lmv"
+        ]
       }
     },
     {
@@ -3526,7 +4115,10 @@
         "code": "ITSDE",
         "tenant": "kn",
         "country": "Italy",
-        "description": ""
+        "description": "",
+        "featureFlags": [
+          "lmv"
+        ]
       }
     },
     {
@@ -3544,7 +4136,10 @@
         "code": "ITZOJ",
         "tenant": "kn",
         "country": "Italy",
-        "description": ""
+        "description": "",
+        "featureFlags": [
+          "lmv"
+        ]
       }
     },
     {
@@ -3562,7 +4157,10 @@
         "code": "ROBAY",
         "tenant": "kn",
         "country": "Romania",
-        "description": ""
+        "description": "",
+        "featureFlags": [
+          "lmv"
+        ]
       }
     },
     {
@@ -3580,7 +4178,10 @@
         "code": "ITCIA",
         "tenant": "kn",
         "country": "Italy",
-        "description": ""
+        "description": "",
+        "featureFlags": [
+          "lmv"
+        ]
       }
     },
     {
@@ -3598,7 +4199,10 @@
         "code": "ESRIU",
         "tenant": "kn",
         "country": "Spain",
-        "description": ""
+        "description": "",
+        "featureFlags": [
+          "lmv"
+        ]
       }
     },
     {
@@ -3616,7 +4220,10 @@
         "code": "SKDRC",
         "tenant": "kn",
         "country": "Slovakia",
-        "description": ""
+        "description": "",
+        "featureFlags": [
+          "lmv"
+        ]
       }
     },
     {
@@ -3634,7 +4241,10 @@
         "code": "ITGSO",
         "tenant": "kn",
         "country": "Italy",
-        "description": ""
+        "description": "",
+        "featureFlags": [
+          "lmv"
+        ]
       }
     },
     {
@@ -3652,7 +4262,10 @@
         "code": "ITSRO",
         "tenant": "kn",
         "country": "Italy",
-        "description": ""
+        "description": "",
+        "featureFlags": [
+          "lmv"
+        ]
       }
     },
     {
@@ -3670,7 +4283,10 @@
         "code": "ITNAP",
         "tenant": "kn",
         "country": "Italy",
-        "description": ""
+        "description": "",
+        "featureFlags": [
+          "lmv"
+        ]
       }
     },
     {
@@ -3688,7 +4304,10 @@
         "code": "ITCXR",
         "tenant": "kn",
         "country": "Italy",
-        "description": ""
+        "description": "",
+        "featureFlags": [
+          "lmv"
+        ]
       }
     },
     {
@@ -3706,7 +4325,10 @@
         "code": "ITBEN",
         "tenant": "kn",
         "country": "Italy",
-        "description": ""
+        "description": "",
+        "featureFlags": [
+          "lmv"
+        ]
       }
     },
     {
@@ -3724,7 +4346,10 @@
         "code": "SKSEC",
         "tenant": "kn",
         "country": "Slovakia",
-        "description": ""
+        "description": "",
+        "featureFlags": [
+          "lmv"
+        ]
       }
     },
     {
@@ -3742,7 +4367,10 @@
         "code": "SKBBY",
         "tenant": "kn",
         "country": "Slovakia",
-        "description": ""
+        "description": "",
+        "featureFlags": [
+          "lmv"
+        ]
       }
     },
     {
@@ -3760,7 +4388,10 @@
         "code": "ROIAS",
         "tenant": "kn",
         "country": "Romania",
-        "description": ""
+        "description": "",
+        "featureFlags": [
+          "lmv"
+        ]
       }
     },
     {
@@ -3778,7 +4409,10 @@
         "code": "ITARZ",
         "tenant": "kn",
         "country": "Italy",
-        "description": ""
+        "description": "",
+        "featureFlags": [
+          "lmv"
+        ]
       }
     },
     {
@@ -3796,7 +4430,10 @@
         "code": "ITSC3",
         "tenant": "kn",
         "country": "Italy",
-        "description": ""
+        "description": "",
+        "featureFlags": [
+          "lmv"
+        ]
       }
     },
     {
@@ -3814,7 +4451,10 @@
         "code": "ITNCM",
         "tenant": "kn",
         "country": "Italy",
-        "description": ""
+        "description": "",
+        "featureFlags": [
+          "lmv"
+        ]
       }
     },
     {
@@ -3832,7 +4472,10 @@
         "code": "HRSPU",
         "tenant": "kn",
         "country": "Croatia",
-        "description": ""
+        "description": "",
+        "featureFlags": [
+          "lmv"
+        ]
       }
     },
     {
@@ -3850,7 +4493,10 @@
         "code": "DEFIG",
         "tenant": "kn",
         "country": "Germany",
-        "description": ""
+        "description": "",
+        "featureFlags": [
+          "lmv"
+        ]
       }
     },
     {
@@ -3868,7 +4514,10 @@
         "code": "ITSAL",
         "tenant": "kn",
         "country": "Italy",
-        "description": ""
+        "description": "",
+        "featureFlags": [
+          "lmv"
+        ]
       }
     },
     {
@@ -3886,7 +4535,10 @@
         "code": "ITZXD",
         "tenant": "kn",
         "country": "Italy",
-        "description": ""
+        "description": "",
+        "featureFlags": [
+          "lmv"
+        ]
       }
     },
     {
@@ -3904,7 +4556,10 @@
         "code": "ITPDD",
         "tenant": "kn",
         "country": "Italy",
-        "description": ""
+        "description": "",
+        "featureFlags": [
+          "lmv"
+        ]
       }
     },
     {
@@ -3926,6 +4581,7 @@
         "kind": "route",
         "name": "New route",
         "description": "",
+        "featureFlags": [],
         "startPort": "DVR",
         "endPort": "CQF",
         "control1": [
@@ -3957,6 +4613,7 @@
         "kind": "route",
         "name": "Belfast ↔ Heysham",
         "description": "Irish Sea ferry lane linking Belfast and Heysham, drawn as a cubic bezier curve that bows north through the North Channel past Girvan before curving south to Heysham.",
+        "featureFlags": [],
         "startPort": "BELF1",
         "endPort": "HEYS",
         "control1": [
@@ -3988,6 +4645,7 @@
         "kind": "route",
         "name": "New route",
         "description": "",
+        "featureFlags": [],
         "startPort": "BELF",
         "endPort": "CAIR",
         "control1": [
@@ -4019,6 +4677,7 @@
         "kind": "route",
         "name": "New route",
         "description": "",
+        "featureFlags": [],
         "startPort": "ROF",
         "endPort": "PUT",
         "control1": [
@@ -4050,6 +4709,7 @@
         "kind": "route",
         "name": "New route",
         "description": "",
+        "featureFlags": [],
         "startPort": "GED",
         "endPort": "RSK",
         "control1": [
@@ -4059,6 +4719,38 @@
         "control2": [
           12.0964,
           54.173
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            10.7395,
+            59.9091
+          ],
+          [
+            12.5929,
+            55.6867
+          ]
+        ]
+      },
+      "properties": {
+        "kind": "route",
+        "name": "New route",
+        "description": "",
+        "featureFlags": [],
+        "startPort": "OSL",
+        "endPort": "CPH",
+        "control1": [
+          10.469970703125,
+          58.25750758908161
+        ],
+        "control2": [
+          13.19183349609375,
+          56.30891963174033
         ]
       }
     }
