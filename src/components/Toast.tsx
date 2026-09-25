@@ -27,14 +27,10 @@ export function Toast({ message, onDismiss }: ToastProps) {
     <div
       role="alert"
       aria-live="assertive"
-      className={`site-toast nb-panel-sm fixed bottom-4 left-1/2 z-50 flex w-[calc(100vw-2rem)] max-w-lg items-start gap-4 border px-4 py-3 text-sm font-bold text-black shadow-lg ${
+      className={`site-toast nb-panel-sm fixed bottom-4 left-1/2 z-50 flex w-[calc(100vw-2rem)] max-w-lg items-start gap-4 border border-black/10 px-4 py-3 text-sm font-bold text-nb-pink shadow-lg ${
         isExiting ? "site-toast--exit" : "site-toast--enter"
       }`}
-      style={{
-        backgroundColor: "#e5e7eb",
-        borderColor: "var(--nb-pink)",
-        borderWidth: "1.5px",
-      }}
+      style={{ backgroundColor: "#e5e7eb" }}
       onAnimationEnd={(event) => {
         if (event.animationName === "site-toast-pan-out") {
           setExitingMessage(null);
@@ -47,7 +43,7 @@ export function Toast({ message, onDismiss }: ToastProps) {
         type="button"
         onClick={startExit}
         aria-label="Dismiss notification"
-        className="shrink-0 text-lg leading-none text-black/60 hover:text-black"
+        className="shrink-0 text-lg leading-none text-nb-pink/80 hover:text-nb-pink"
       >
         ×
       </button>
