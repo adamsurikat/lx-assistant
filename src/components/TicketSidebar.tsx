@@ -75,6 +75,7 @@ export function TicketSidebar({
     }
   });
   const [savingJql, setSavingJql] = useState(false);
+  const [pendingJqlPreset, setPendingJqlPreset] = useState<string | null>(null);
   const customJql = customJqlState.query;
   const customJqlStorageError = customJqlState.error;
 
@@ -100,64 +101,93 @@ export function TicketSidebar({
     try {
       const queryToSave =
         draftJql.trim() === defaultJql.trim() ? "" : draftJql;
-      if (await onSaveJql(queryToSave)) setEditingJql(false);
+      if (await onSaveJql(queryToSave)) {
+        setEditingJql(false);
+        setPendingJqlPreset(null);
+      }
     } finally {
       setSavingJql(false);
     }
   };
 
-  const selectedJqlPreset =
-    draftJql.trim() === defaultJql.trim()
+  const activeJqlPreset =
+    pendingJqlPreset ??
+    (jql.trim() === defaultJql.trim()
       ? "default"
-      : draftJql.trim() === RECENTLY_VIEWED_TICKETS_JQL
+      : jql.trim() === RECENTLY_VIEWED_TICKETS_JQL
         ? "recent"
-        : "custom";
+        : "custom");
+
+  const handlePresetChange = async (preset: string) => {
+    if (preset === "custom" && !customJql.trim()) {
+      setDraftJql("");
+      setPendingJqlPreset("custom");
+      setEditingJql(true);
+      return;
+    }
+
+    const query =
+      preset === "default"
+        ? defaultJql
+        : preset === "recent"
+          ? RECENTLY_VIEWED_TICKETS_JQL
+          : customJql;
+    setPendingJqlPreset(preset);
+    setSavingJql(true);
+    try {
+      const queryToSave = query.trim() === defaultJql.trim() ? "" : query;
+      if (await onSaveJql(queryToSave)) {
+        setDraftJql(query);
+        setEditingJql(false);
+      }
+    } finally {
+      setSavingJql(false);
+      setPendingJqlPreset(null);
+    }
+  };
+
   const displayedTickets =
     jql.trim() === RECENTLY_VIEWED_TICKETS_JQL ? [...tickets].reverse() : tickets;
 
   return (
     <div className="absolute inset-y-0 left-0 z-30 flex w-72 max-w-[85vw] shrink-0 flex-col border-r border-nb-ink/10 bg-white md:static md:z-auto md:max-w-none">
-      <div className="flex items-center justify-between border-b border-nb-ink/10 p-3">
-        <div className="flex items-center gap-2">
-          <h2 className="text-sm font-semibold tracking-wide text-nb-ink">Tickets</h2>
-          {syncing && (
-            <span className="text-[10px] font-medium text-nb-ink/50">Syncing…</span>
-          )}
-        </div>
-        <div className="flex items-center gap-1.5">
+      <div className="space-y-2 border-b border-nb-ink/10 p-3">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <h2 className="text-sm font-semibold tracking-wide text-nb-ink">Tickets</h2>
+            {syncing && (
+              <span className="text-[10px] font-medium text-nb-ink/50">Syncing…</span>
+            )}
+          </div>
           <button
-            onClick={editingJql ? () => setEditingJql(false) : openEditor}
+            onClick={
+              editingJql
+                ? () => {
+                    setEditingJql(false);
+                    setPendingJqlPreset(null);
+                  }
+                : openEditor
+            }
             title={jqlIsDefault ? "Using active sprint query — click to customize" : `Custom JQL: ${jql}`}
             className={`nb-btn px-2 py-1 text-xs font-semibold ${editingJql ? "nb-btn-orange" : ""}`}
           >
             JQL{!jqlIsDefault && " •"}
           </button>
         </div>
+        <select
+          aria-label="Jira ticket query preset"
+          value={activeJqlPreset}
+          onChange={(e) => void handlePresetChange(e.target.value)}
+          disabled={savingJql || syncing}
+          className="w-full rounded border border-nb-ink/20 bg-white p-1.5 text-xs font-medium text-nb-ink disabled:opacity-50"
+        >
+          <option value="default">Active sprint tickets</option>
+          <option value="recent">Recently viewed</option>
+          <option value="custom">Custom JQL</option>
+        </select>
       </div>
       {editingJql && (
         <div className="space-y-2 border-b border-nb-ink/10 bg-nb-paper p-3">
-          <label className="block text-[10px] font-semibold uppercase tracking-wide text-nb-ink/50">
-            Query preset
-            <select
-              value={selectedJqlPreset}
-              onChange={(e) => {
-                setCustomJqlState({
-                  query: customJql,
-                  error: persistCustomJql(customJql),
-                });
-                if (e.target.value === "default") setDraftJql(defaultJql);
-                if (e.target.value === "recent") {
-                  setDraftJql(RECENTLY_VIEWED_TICKETS_JQL);
-                }
-                if (e.target.value === "custom") setDraftJql(customJql);
-              }}
-              className="mt-1 w-full rounded border border-nb-ink/20 bg-white p-1.5 text-xs font-medium normal-case text-nb-ink"
-            >
-              <option value="default">Active sprint tickets</option>
-              <option value="recent">Recently viewed</option>
-              <option value="custom">Custom JQL</option>
-            </select>
-          </label>
           <label className="block text-[10px] font-semibold uppercase tracking-wide text-nb-ink/50">
             Custom sync query
             <textarea
