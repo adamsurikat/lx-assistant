@@ -114,7 +114,6 @@ export function HomeClient({ initialTickets, userId }: HomeClientProps) {
   const [jiraSiteUrl, setJiraSiteUrl] = useState<string | null>(null);
   const [googleConnected, setGoogleConnected] = useState<boolean | null>(null);
   const [ticketJql, setTicketJql] = useState("");
-  const [ticketJqlIsDefault, setTicketJqlIsDefault] = useState(true);
   const [ticketDefaultJql, setTicketDefaultJql] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [editingEntryId, setEditingEntryId] = useState<string | null>(null);
@@ -215,7 +214,6 @@ export function HomeClient({ initialTickets, userId }: HomeClientProps) {
     if (res.ok) {
       const data = await res.json();
       setTicketJql(data.jql);
-      setTicketJqlIsDefault(Boolean(data.isDefault));
       setTicketDefaultJql(data.defaultJql);
     }
   }, []);
@@ -296,7 +294,6 @@ export function HomeClient({ initialTickets, userId }: HomeClientProps) {
       }
       const data = await res.json();
       setTicketJql(data.jql);
-      setTicketJqlIsDefault(Boolean(data.isDefault));
       setTicketDefaultJql(data.defaultJql);
       await handleSync();
       return true;
@@ -715,7 +712,6 @@ export function HomeClient({ initialTickets, userId }: HomeClientProps) {
                 onDragStartTicket={setDraggedTicketId}
                 onSelectTicket={handleSelectTicket}
                 jql={ticketJql}
-                jqlIsDefault={ticketJqlIsDefault}
                 defaultJql={ticketDefaultJql}
                 onSaveJql={handleSaveJql}
               />
