@@ -8,6 +8,7 @@ import { TimeCalendar, type CalendarEventItem } from "@/components/TimeCalendar"
 import { EventEditorModal, type EditableEntry, formatDuration } from "@/components/EventEditorModal";
 import { EventPopover, type EventPopoverData } from "@/components/EventPopover";
 import { HoursSummaryModal, formatHours } from "@/components/HoursSummaryModal";
+import { Toast } from "@/components/Toast";
 import { useIsMobile } from "@/lib/useIsMobile";
 
 interface TimeEntryDTO {
@@ -116,6 +117,7 @@ export function HomeClient({ initialTickets, userId }: HomeClientProps) {
   const [ticketJql, setTicketJql] = useState("");
   const [ticketDefaultJql, setTicketDefaultJql] = useState("");
   const [error, setError] = useState<string | null>(null);
+  const dismissErrorToast = useCallback(() => setError(null), []);
   const [editingEntryId, setEditingEntryId] = useState<string | null>(null);
   const [draftEntry, setDraftEntry] = useState<{
     start: Date;
@@ -127,12 +129,6 @@ export function HomeClient({ initialTickets, userId }: HomeClientProps) {
   // Jira worklog sync before responding, so this drives a spinner on the
   // affected calendar tile until Jira confirms the write.
   const [syncingIds, setSyncingIds] = useState<Set<string>>(new Set());
-
-  useEffect(() => {
-    if (!error) return;
-    const timeoutId = window.setTimeout(() => setError(null), 8000);
-    return () => window.clearTimeout(timeoutId);
-  }, [error]);
 
   const markSyncing = (id: string, value: boolean) => {
     setSyncingIds((prev) => {
@@ -624,23 +620,7 @@ export function HomeClient({ initialTickets, userId }: HomeClientProps) {
         }
       />
 
-      {error && (
-        <div
-          role="alert"
-          aria-live="assertive"
-          className="nb-panel-sm fixed bottom-4 left-1/2 z-50 flex w-[calc(100vw-2rem)] max-w-lg -translate-x-1/2 items-start gap-4 border border-black/10 bg-gray-200 px-4 py-3 text-sm font-bold text-black shadow-lg"
-        >
-          <span className="flex-1">{error}</span>
-          <button
-            type="button"
-            onClick={() => setError(null)}
-            aria-label="Dismiss error"
-            className="shrink-0 text-lg leading-none text-black/60 hover:text-black"
-          >
-            ×
-          </button>
-        </div>
-      )}
+      <Toast message={error} onDismiss={dismissErrorToast} />
 
       <div className="nb-panel-sm m-3 flex flex-1 flex-col overflow-hidden bg-nb-paper">
         <div className="flex flex-wrap items-center gap-3 border-b border-nb-ink/10 bg-white px-4 py-3">

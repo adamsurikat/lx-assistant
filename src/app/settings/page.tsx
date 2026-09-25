@@ -1,9 +1,10 @@
 "use client";
 
-import { Suspense, useEffect, useState } from "react";
+import { Suspense, useCallback, useEffect, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import { useSession, signIn } from "next-auth/react";
 import { AppHeader } from "@/components/AppHeader";
+import { Toast } from "@/components/Toast";
 
 const DEFAULT_JIRA_SITE_URL = "https://surikat.atlassian.net";
 const GOOGLE_CALENDAR_SCOPE =
@@ -49,6 +50,7 @@ function JiraConnectionPanel() {
     }
     return null;
   });
+  const dismissMessage = useCallback(() => setMessage(null), []);
 
   const loadStatus = () => {
     fetch("/api/jira/token")
@@ -254,7 +256,7 @@ function JiraConnectionPanel() {
         </p>
       )}
 
-      {message && <p className="text-sm font-bold text-nb-ink">{message}</p>}
+      <Toast message={message} onDismiss={dismissMessage} />
       {connected === false && status === null && (
         <p className="text-sm">Checking connection…</p>
       )}
