@@ -1,6 +1,7 @@
 "use client";
 
 import jwt from "jwt-simple";
+import { formatJwtPayload } from "./jwtPayload";
 import { CodeField } from "./fields/CodeField";
 import { TextField } from "./fields/TextField";
 import { SelectField } from "./fields/SelectField";
@@ -31,7 +32,9 @@ const DEFAULT_STATE: JwtState = {
 
 export function JwtTool() {
   const [state, setState] = useLocalStorageState<JwtState>("tools.jwt", DEFAULT_STATE);
-  const { mode, token, payload, secret, algorithm, valid } = state;
+  const { mode, token, secret, algorithm, valid } = state;
+  // Older saved state can contain the decoded object instead of editor text.
+  const payload = formatJwtPayload(state.payload);
 
   const updatePayload = (payload: string) => {
     try {
@@ -45,12 +48,12 @@ export function JwtTool() {
 
   const updateToken = (token: string) => {
     try {
-      const payload = jwt.decode(token, secret, false, algorithm);
+      const payload = formatJwtPayload(jwt.decode(token, secret, false, algorithm));
       setState({ ...state, token, payload, valid: true });
     } catch (err) {
       console.warn(err);
       try {
-        const payload = jwt.decode(token, secret, true, algorithm);
+        const payload = formatJwtPayload(jwt.decode(token, secret, true, algorithm));
         setState({ ...state, token, payload, valid: false });
       } catch (err2) {
         console.warn(err2);
@@ -72,7 +75,7 @@ export function JwtTool() {
     }
 
     try {
-      const payload = jwt.decode(token, secret, true, algorithm);
+      const payload = formatJwtPayload(jwt.decode(token, secret, true, algorithm));
       try {
         jwt.decode(token, secret, false, algorithm);
         setState({ ...state, secret, payload, valid: true });
