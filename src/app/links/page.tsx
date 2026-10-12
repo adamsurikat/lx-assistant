@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import Image from "next/image";
 import { AppHeader } from "@/components/AppHeader";
 import { LINK_FOLDERS, type BookmarkFolder, type BookmarkLink } from "@/lib/linksData";
 import { buildServiceGrid, type GridCell } from "@/lib/bookmarkGrid";
@@ -118,7 +119,7 @@ function GridCellButton({ env, cell }: { env: string; cell: GridCell }) {
   );
 }
 
-function BookmarkButtons({ links, className = "" }: { links: BookmarkLink[]; className?: string }) {
+function BookmarkButtons({ links, className = "", neutral = false }: { links: BookmarkLink[]; className?: string; neutral?: boolean }) {
   return (
     <ul className={`flex flex-row flex-wrap gap-2 ${className}`}>
       {links.map((link, i) => (
@@ -128,8 +129,11 @@ function BookmarkButtons({ links, className = "" }: { links: BookmarkLink[]; cla
             target="_blank"
             rel="noreferrer"
             title={link.url}
-            className="nb-btn nb-btn-orange block px-3 py-1.5 text-xs font-semibold"
+            className={`nb-btn px-3 py-1.5 text-xs font-semibold ${neutral ? "hover:bg-nb-ink/5 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-nb-ink/50" : "nb-btn-orange"}`}
           >
+            {neutral && link.icon && (
+              <Image src={link.icon} alt="" width={16} height={16} unoptimized className="h-4 w-4 shrink-0 object-contain" />
+            )}
             {link.title}
           </a>
         </li>
@@ -212,7 +216,7 @@ export default function LinksPage() {
         <div className="flex-1 overflow-y-auto p-4">
           {externalLinks.length > 0 && (
             <nav aria-label="External tools" className="mb-4">
-              <BookmarkButtons links={externalLinks} />
+              <BookmarkButtons links={externalLinks} neutral />
             </nav>
           )}
           {folders.length === 0 && externalLinks.length === 0 && (

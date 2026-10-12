@@ -7,6 +7,7 @@ export interface BookmarkLink {
   type: "link";
   title: string;
   url: string;
+  icon?: string;
 }
 
 export interface BookmarkFolder {
@@ -24,23 +25,23 @@ export const LINK_FOLDERS: BookmarkFolder[] = [
     title: "External tools",
     layout: "list",
     children: [
-      { type: "link", title: "Tid", url: "https://tid.surikat.net/" },
-      { type: "link", title: "Jira", url: "https://surikat.atlassian.net/" },
-      { type: "link", title: "Secret share tool", url: "https://share.toolikat.com/" },
-      { type: "link", title: "GitHub", url: "https://github.com/orgs/surikaterna/repositories" },
-      { type: "link", title: "Confluence", url: "https://surikat.atlassian.net/wiki" },
-      { type: "link", title: "npmjs", url: "https://www.npmjs.com/~surikat" },
-      { type: "link", title: "Jenkins", url: "https://jenkins.toolikat.com/job/surikat/" },
-      { type: "link", title: "Rancher", url: "https://rancher.surikat.net" },
-      { type: "link", title: "Deployment Checklist", url: "https://docs.google.com/spreadsheets/d/1qapRAeeXNylNpMizcbmXMnFQTfPqPafRU3pzYj_ZFFI/edit?gid=277846887#gid=277846887" },
-      { type: "link", title: "Kodknuff", url: "https://kodknuff.bylynx.com/" },
-      { type: "link", title: "Azure Portal", url: "https://portal.azure.com/#home" },
-      { type: "link", title: "Docker Hub", url: "https://hub.docker.com/orgs/surikaterna/repositories" },
-      { type: "link", title: "AWS Console", url: "https://128380478568.signin.aws.amazon.com/console" },
-      { type: "link", title: "Kibana", url: "https://af433e45aaf14e83a77a14d47718b6bb.eu-central-1.aws.cloud.es.io:9243/app/kibana" },
-      { type: "link", title: "Grafana", url: "https://grafana.ops.bylynx.com/" },
-      { type: "link", title: "Sentry", url: "https://surikat.sentry.io/projects/" },
-      { type: "link", title: "Elasticsearch", url: "https://logs.kb.europe-west4.gcp.elastic-cloud.com/app/discover" },
+      { type: "link", title: "Tid", url: "https://tid.surikat.net/", icon: "/icons/services/tid.svg" },
+      { type: "link", title: "Jira", url: "https://surikat.atlassian.net/", icon: "/icons/services/jira.png" },
+      { type: "link", title: "Secret share tool", url: "https://share.toolikat.com/", icon: "/icons/services/secret-share.svg" },
+      { type: "link", title: "GitHub", url: "https://github.com/orgs/surikaterna/repositories", icon: "/icons/services/github.png" },
+      { type: "link", title: "Confluence", url: "https://surikat.atlassian.net/wiki", icon: "/icons/services/confluence.png" },
+      { type: "link", title: "npmjs", url: "https://www.npmjs.com/~surikat", icon: "/icons/services/npmjs.png" },
+      { type: "link", title: "Jenkins", url: "https://jenkins.toolikat.com/job/surikat/", icon: "/icons/services/jenkins.png" },
+      { type: "link", title: "Rancher", url: "https://rancher.surikat.net", icon: "/icons/services/rancher.png" },
+      { type: "link", title: "Deployment Checklist", url: "https://docs.google.com/spreadsheets/d/1qapRAeeXNylNpMizcbmXMnFQTfPqPafRU3pzYj_ZFFI/edit?gid=277846887#gid=277846887", icon: "/icons/services/google-sheets.png" },
+      { type: "link", title: "Kodknuff", url: "https://kodknuff.bylynx.com/", icon: "/icons/services/kodknuff.png" },
+      { type: "link", title: "Azure Portal", url: "https://portal.azure.com/#home", icon: "/icons/services/azure.png" },
+      { type: "link", title: "Docker Hub", url: "https://hub.docker.com/orgs/surikaterna/repositories", icon: "/icons/services/docker.png" },
+      { type: "link", title: "AWS Console", url: "https://128380478568.signin.aws.amazon.com/console", icon: "/icons/services/aws.png" },
+      { type: "link", title: "Kibana", url: "https://af433e45aaf14e83a77a14d47718b6bb.eu-central-1.aws.cloud.es.io:9243/app/kibana", icon: "/icons/services/kibana.png" },
+      { type: "link", title: "Grafana", url: "https://grafana.ops.bylynx.com/", icon: "/icons/services/grafana.png" },
+      { type: "link", title: "Sentry", url: "https://surikat.sentry.io/projects/", icon: "/icons/services/sentry.png" },
+      { type: "link", title: "Elasticsearch", url: "https://logs.kb.europe-west4.gcp.elastic-cloud.com/app/discover", icon: "/icons/services/elasticsearch.svg" },
     ],
   },
   {
