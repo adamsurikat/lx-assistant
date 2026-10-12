@@ -40,7 +40,7 @@ export const LINK_FOLDERS: BookmarkFolder[] = [
       { type: "link", title: "Kibana", url: "https://af433e45aaf14e83a77a14d47718b6bb.eu-central-1.aws.cloud.es.io:9243/app/kibana" },
       { type: "link", title: "Grafana", url: "https://grafana.ops.bylynx.com/" },
       { type: "link", title: "Sentry", url: "https://surikat.sentry.io/projects/" },
-      { type: "link", title: "Elastic - Discover", url: "https://logs.kb.europe-west4.gcp.elastic-cloud.com/app/discover#/?_g=(filters:!(),refreshInterval:(pause:!t,value:0),time:(from:now-15m,to:now))&_a=(columns:!(message),filters:!(('$state':(store:appState),meta:(alias:!n,disabled:!f,index:'9f0a88d9-c259-43d4-ae21-1576c13ab844',key:container.labels.io_rancher_stack_service_name,negate:!f,params:(query:lx-tenant-api%2Ftapi-adapter-visy-vision),type:phrase),query:(match_phrase:(container.labels.io_rancher_stack_service_name:lx-tenant-api%2Ftapi-adapter-visy-vision)))),index:'059ecadc-46da-4a3d-a47d-1086634bdab2',interval:auto,query:(language:kuery,query:''),sort:!(!('@timestamp',desc)))" },
+      { type: "link", title: "Elasticsearch", url: "https://logs.kb.europe-west4.gcp.elastic-cloud.com/app/discover" },
       { type: "link", title: "Jenkins » Credentials [Jenkins]", url: "https://jenkins.toolikat.com/credentials/" },
     ],
   },
