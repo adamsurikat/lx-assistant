@@ -118,6 +118,26 @@ function GridCellButton({ env, cell }: { env: string; cell: GridCell }) {
   );
 }
 
+function BookmarkButtons({ links, className = "" }: { links: BookmarkLink[]; className?: string }) {
+  return (
+    <ul className={`flex flex-row flex-wrap gap-2 ${className}`}>
+      {links.map((link, i) => (
+        <li key={`${link.url}-${i}`}>
+          <a
+            href={link.url}
+            target="_blank"
+            rel="noreferrer"
+            title={link.url}
+            className="nb-btn nb-btn-orange block px-3 py-1.5 text-xs font-semibold"
+          >
+            {link.title}
+          </a>
+        </li>
+      ))}
+    </ul>
+  );
+}
+
 function ServiceCard({ folder }: { folder: BookmarkFolder }) {
   const grid = buildServiceGrid(folder);
   const hasGrid = folder.layout !== "list" && grid.environments.length > 0 && grid.tenants.length > 0;
@@ -171,28 +191,16 @@ function ServiceCard({ folder }: { folder: BookmarkFolder }) {
       )}
 
       {links.length > 0 && (
-        <ul className={`flex flex-wrap gap-2${hasGrid ? " mt-3 border-t border-nb-ink/10 pt-3" : ""}`}>
-          {links.map((link, i) => (
-            <li key={`${link.url}-${i}`}>
-              <a
-                href={link.url}
-                target="_blank"
-                rel="noreferrer"
-                title={link.url}
-                className="nb-btn nb-btn-orange block px-3 py-1.5 text-xs font-semibold"
-              >
-                {link.title}
-              </a>
-            </li>
-          ))}
-        </ul>
+        <BookmarkButtons links={links} className={hasGrid ? "mt-3 border-t border-nb-ink/10 pt-3" : ""} />
       )}
     </div>
   );
 }
 
 export default function LinksPage() {
-  const folders: BookmarkFolder[] = LINK_FOLDERS;
+  const externalTools = LINK_FOLDERS.find((folder) => folder.title === "External tools");
+  const externalLinks = externalTools?.children.filter((node): node is BookmarkLink => node.type === "link") ?? [];
+  const folders = LINK_FOLDERS.filter((folder) => folder !== externalTools);
 
   return (
     <div className="flex h-screen flex-col">
@@ -202,7 +210,12 @@ export default function LinksPage() {
           <h2 className="text-sm font-semibold tracking-wide text-nb-ink">Links</h2>
         </div>
         <div className="flex-1 overflow-y-auto p-4">
-          {folders.length === 0 && (
+          {externalLinks.length > 0 && (
+            <nav aria-label="External tools" className="mb-4">
+              <BookmarkButtons links={externalLinks} />
+            </nav>
+          )}
+          {folders.length === 0 && externalLinks.length === 0 && (
             <p className="text-sm font-medium text-nb-ink/50">No links configured.</p>
           )}
           {folders.length > 0 && (
