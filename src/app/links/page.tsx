@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import { AppHeader } from "@/components/AppHeader";
-import { LINK_FOLDERS, type BookmarkFolder } from "@/lib/linksData";
+import { LINK_FOLDERS, type BookmarkFolder, type BookmarkLink } from "@/lib/linksData";
 import { buildServiceGrid, type GridCell } from "@/lib/bookmarkGrid";
 
 function GridCellButton({ env, cell }: { env: string; cell: GridCell }) {
@@ -120,7 +120,10 @@ function GridCellButton({ env, cell }: { env: string; cell: GridCell }) {
 
 function ServiceCard({ folder }: { folder: BookmarkFolder }) {
   const grid = buildServiceGrid(folder);
-  const hasGrid = grid.environments.length > 0 && grid.tenants.length > 0;
+  const hasGrid = folder.layout !== "list" && grid.environments.length > 0 && grid.tenants.length > 0;
+  const links = folder.layout === "list"
+    ? folder.children.filter((node): node is BookmarkLink => node.type === "link")
+    : grid.other;
 
   return (
     <div className="nb-panel-sm bg-white p-4">
@@ -167,9 +170,9 @@ function ServiceCard({ folder }: { folder: BookmarkFolder }) {
         </div>
       )}
 
-      {grid.other.length > 0 && (
+      {links.length > 0 && (
         <ul className={hasGrid ? "mt-3 space-y-1 border-t border-nb-ink/10 pt-3" : "space-y-1"}>
-          {grid.other.map((link, i) => (
+          {links.map((link, i) => (
             <li key={`${link.url}-${i}`}>
               <a
                 href={link.url}

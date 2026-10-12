@@ -12,12 +12,39 @@ export interface BookmarkLink {
 export interface BookmarkFolder {
   type: "folder";
   title: string;
+  layout?: "list";
   children: BookmarkNode[];
 }
 
 export type BookmarkNode = BookmarkLink | BookmarkFolder;
 
 export const LINK_FOLDERS: BookmarkFolder[] = [
+  {
+    type: "folder",
+    title: "External tools",
+    layout: "list",
+    children: [
+      { type: "link", title: "Inbox", url: "https://mail.google.com/mail/u/0/#inbox" },
+      { type: "link", title: "Tid", url: "https://tid.surikat.net/" },
+      { type: "link", title: "Jira", url: "https://surikat.atlassian.net/jira/dashboards/10120" },
+      { type: "link", title: "Secret share tool", url: "https://share.toolikat.com/" },
+      { type: "link", title: "GitHub", url: "https://github.com/orgs/surikaterna/repositories" },
+      { type: "link", title: "Confluence", url: "https://surikat.atlassian.net/wiki/spaces/SURTE/overview" },
+      { type: "link", title: "npm Surikat", url: "https://www.npmjs.com/~surikat" },
+      { type: "link", title: "Jenkins", url: "https://jenkins.toolikat.com/job/surikat/" },
+      { type: "link", title: "Rancher", url: "http://rancher.surikat.net:8080/env/1a147226/apps/stacks" },
+      { type: "link", title: "Lynx Deployment Log - Google Sheets", url: "https://docs.google.com/spreadsheets/d/1qapRAeeXNylNpMizcbmXMnFQTfPqPafRU3pzYj_ZFFI/edit?gid=0#gid=0" },
+      { type: "link", title: "Kodknuff", url: "https://kodknuff.bylynx.com/codepush/" },
+      { type: "link", title: "Home - Microsoft Azure", url: "https://portal.azure.com/#home" },
+      { type: "link", title: "Docker Hub", url: "https://hub.docker.com/orgs/surikaterna/repositories" },
+      { type: "link", title: "Amazon Web Services Sign-In", url: "https://128380478568.signin.aws.amazon.com/console" },
+      { type: "link", title: "Kibana", url: "https://af433e45aaf14e83a77a14d47718b6bb.eu-central-1.aws.cloud.es.io:9243/app/kibana#/home?_g=()" },
+      { type: "link", title: "Grafana", url: "https://grafana.ops.bylynx.com/" },
+      { type: "link", title: "Sentry surikat", url: "https://surikat.sentry.io/projects/" },
+      { type: "link", title: "Elastic - Discover", url: "https://logs.kb.europe-west4.gcp.elastic-cloud.com/app/discover#/?_g=(filters:!(),refreshInterval:(pause:!t,value:0),time:(from:now-15m,to:now))&_a=(columns:!(message),filters:!(('$state':(store:appState),meta:(alias:!n,disabled:!f,index:'9f0a88d9-c259-43d4-ae21-1576c13ab844',key:container.labels.io_rancher_stack_service_name,negate:!f,params:(query:lx-tenant-api%2Ftapi-adapter-visy-vision),type:phrase),query:(match_phrase:(container.labels.io_rancher_stack_service_name:lx-tenant-api%2Ftapi-adapter-visy-vision)))),index:'059ecadc-46da-4a3d-a47d-1086634bdab2',interval:auto,query:(language:kuery,query:''),sort:!(!('@timestamp',desc)))" },
+      { type: "link", title: "Jenkins » Credentials [Jenkins]", url: "https://jenkins.toolikat.com/credentials/" },
+    ],
+  },
   {
     type: "folder",
     title: "lx-booking",
