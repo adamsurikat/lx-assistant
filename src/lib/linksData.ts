@@ -30,7 +30,7 @@ export const LINK_FOLDERS: BookmarkFolder[] = [
       { type: "link", title: "Yopass", url: "https://share.toolikat.com/", icon: "/icons/services/secret-share.svg" },
       { type: "link", title: "GitHub", url: "https://github.com/orgs/surikaterna/repositories", icon: "/icons/services/github.png" },
       { type: "link", title: "Confluence", url: "https://surikat.atlassian.net/wiki", icon: "/icons/services/confluence.png" },
-      { type: "link", title: "npmjs", url: "https://www.npmjs.com/~surikat", icon: "/icons/services/npmjs.png" },
+      { type: "link", title: "npm", url: "https://www.npmjs.com/~surikat", icon: "/icons/services/npmjs.png" },
       { type: "link", title: "Jenkins", url: "https://jenkins.toolikat.com/job/surikat/", icon: "/icons/services/jenkins.png" },
       { type: "link", title: "Rancher", url: "https://rancher.surikat.net", icon: "/icons/services/rancher.png" },
       { type: "link", title: "Rancher 2", url: "https://r2v2.toolikat.com", icon: "/icons/services/rancher.png" },
