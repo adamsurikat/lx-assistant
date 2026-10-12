@@ -41,7 +41,6 @@ export const LINK_FOLDERS: BookmarkFolder[] = [
       { type: "link", title: "Grafana", url: "https://grafana.ops.bylynx.com/" },
       { type: "link", title: "Sentry", url: "https://surikat.sentry.io/projects/" },
       { type: "link", title: "Elasticsearch", url: "https://logs.kb.europe-west4.gcp.elastic-cloud.com/app/discover" },
-      { type: "link", title: "Jenkins » Credentials [Jenkins]", url: "https://jenkins.toolikat.com/credentials/" },
     ],
   },
   {
