@@ -34,7 +34,7 @@ export const LINK_FOLDERS: BookmarkFolder[] = [
       { type: "link", title: "Rancher", url: "https://rancher.surikat.net" },
       { type: "link", title: "Deployment Checklist", url: "https://docs.google.com/spreadsheets/d/1qapRAeeXNylNpMizcbmXMnFQTfPqPafRU3pzYj_ZFFI/edit?gid=277846887#gid=277846887" },
       { type: "link", title: "Kodknuff", url: "https://kodknuff.bylynx.com/" },
-      { type: "link", title: "Home - Microsoft Azure", url: "https://portal.azure.com/#home" },
+      { type: "link", title: "Azure Portal", url: "https://portal.azure.com/#home" },
       { type: "link", title: "Docker Hub", url: "https://hub.docker.com/orgs/surikaterna/repositories" },
       { type: "link", title: "Amazon Web Services Sign-In", url: "https://128380478568.signin.aws.amazon.com/console" },
       { type: "link", title: "Kibana", url: "https://af433e45aaf14e83a77a14d47718b6bb.eu-central-1.aws.cloud.es.io:9243/app/kibana#/home?_g=()" },
