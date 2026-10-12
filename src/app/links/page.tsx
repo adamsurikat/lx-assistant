@@ -171,7 +171,7 @@ function ServiceCard({ folder }: { folder: BookmarkFolder }) {
       )}
 
       {links.length > 0 && (
-        <ul className={hasGrid ? "mt-3 space-y-1 border-t border-nb-ink/10 pt-3" : "space-y-1"}>
+        <ul className={`flex flex-wrap gap-2${hasGrid ? " mt-3 border-t border-nb-ink/10 pt-3" : ""}`}>
           {links.map((link, i) => (
             <li key={`${link.url}-${i}`}>
               <a
@@ -179,9 +179,9 @@ function ServiceCard({ folder }: { folder: BookmarkFolder }) {
                 target="_blank"
                 rel="noreferrer"
                 title={link.url}
-                className="block truncate rounded px-1 py-0.5 text-sm font-medium text-nb-ink/80 hover:bg-nb-orange/10 hover:text-nb-ink"
+                className="nb-btn nb-btn-orange block px-3 py-1.5 text-xs font-semibold"
               >
-                🔗 {link.title}
+                {link.title}
               </a>
             </li>
           ))}
