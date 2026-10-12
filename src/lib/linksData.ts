@@ -28,7 +28,7 @@ export const LINK_FOLDERS: BookmarkFolder[] = [
       { type: "link", title: "Jira", url: "https://surikat.atlassian.net/" },
       { type: "link", title: "Secret share tool", url: "https://share.toolikat.com/" },
       { type: "link", title: "GitHub", url: "https://github.com/orgs/surikaterna/repositories" },
-      { type: "link", title: "Confluence", url: "https://surikat.atlassian.net/wiki/spaces/SURTE/overview" },
+      { type: "link", title: "Confluence", url: "https://surikat.atlassian.net/wiki" },
       { type: "link", title: "npm Surikat", url: "https://www.npmjs.com/~surikat" },
       { type: "link", title: "Jenkins", url: "https://jenkins.toolikat.com/job/surikat/" },
       { type: "link", title: "Rancher", url: "http://rancher.surikat.net:8080/env/1a147226/apps/stacks" },
