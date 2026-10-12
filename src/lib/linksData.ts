@@ -33,7 +33,7 @@ export const LINK_FOLDERS: BookmarkFolder[] = [
       { type: "link", title: "npmjs", url: "https://www.npmjs.com/~surikat", icon: "/icons/services/npmjs.png" },
       { type: "link", title: "Jenkins", url: "https://jenkins.toolikat.com/job/surikat/", icon: "/icons/services/jenkins.png" },
       { type: "link", title: "Rancher", url: "https://rancher.surikat.net", icon: "/icons/services/rancher.png" },
-      { type: "link", title: "Rancher 2", url: "https://r2v2.toolikat.com/dashboard/home", icon: "/icons/services/rancher.png" },
+      { type: "link", title: "Rancher 2", url: "https://r2v2.toolikat.com", icon: "/icons/services/rancher.png" },
       { type: "link", title: "Deployment Checklist", url: "https://docs.google.com/spreadsheets/d/1qapRAeeXNylNpMizcbmXMnFQTfPqPafRU3pzYj_ZFFI/edit?gid=277846887#gid=277846887", icon: "/icons/services/google-sheets.png" },
       { type: "link", title: "Kodknuff", url: "https://kodknuff.bylynx.com/", icon: "/icons/services/kodknuff.png" },
       { type: "link", title: "Azure Portal", url: "https://portal.azure.com/#home", icon: "/icons/services/azure.png" },
