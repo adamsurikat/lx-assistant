@@ -27,7 +27,7 @@ export const LINK_FOLDERS: BookmarkFolder[] = [
     children: [
       { type: "link", title: "Tid", url: "https://tid.surikat.net/", icon: "/icons/services/tid.svg" },
       { type: "link", title: "Jira", url: "https://surikat.atlassian.net/", icon: "/icons/services/jira.png" },
-      { type: "link", title: "Secret share tool", url: "https://share.toolikat.com/", icon: "/icons/services/secret-share.svg" },
+      { type: "link", title: "Yopass", url: "https://share.toolikat.com/", icon: "/icons/services/secret-share.svg" },
       { type: "link", title: "GitHub", url: "https://github.com/orgs/surikaterna/repositories", icon: "/icons/services/github.png" },
       { type: "link", title: "Confluence", url: "https://surikat.atlassian.net/wiki", icon: "/icons/services/confluence.png" },
       { type: "link", title: "npmjs", url: "https://www.npmjs.com/~surikat", icon: "/icons/services/npmjs.png" },
