@@ -667,13 +667,6 @@ export function HomeClient({ initialTickets, userId }: HomeClientProps) {
             )}
           </span>
           <div className="ml-auto flex items-center gap-2">
-            <button
-              type="button"
-              onClick={() => setSummaryOpen(true)}
-              className="nb-btn px-3 py-1.5 text-sm"
-            >
-              📊 Summary
-            </button>
             <a
               href="https://tid.surikat.net/"
               target="_blank"
@@ -693,6 +686,13 @@ export function HomeClient({ initialTickets, userId }: HomeClientProps) {
               </svg>
               <span className="sr-only"> (opens in a new tab)</span>
             </a>
+            <button
+              type="button"
+              onClick={() => setSummaryOpen(true)}
+              className="nb-btn px-3 py-1.5 text-sm"
+            >
+              📊 Summary
+            </button>
           </div>
         </div>
         <div className="relative flex flex-1 overflow-hidden">
