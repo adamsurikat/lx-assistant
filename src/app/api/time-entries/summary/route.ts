@@ -1,25 +1,8 @@
 import { NextResponse } from "next/server";
 import { auth } from "@/auth";
 import { prisma } from "@/lib/prisma";
+import { buildHoursSummary, getHoursSummaryRange } from "@/lib/hoursSummary";
 
-const BASELINE_HOURS_PER_WEEKDAY = 8;
-
-export interface DailyHoursSummary {
-  date: string; // YYYY-MM-DD
-  weekday: number; // 0 (Sun) .. 6 (Sat), matches Date#getDay()
-  workedHours: number;
-  expectedHours: number;
-}
-
-/**
- * Returns per-day worked-vs-expected hours for a given month, so the client
- * can show whether the user is ahead or behind an 8h/weekday baseline.
- * Weekends are never expected to have logged hours, and today/future days
- * don't count toward the expectation either (you can't be behind on hours
- * you haven't finished having the chance to work yet). The "Worked" total
- * (and diff) are likewise restricted to days that are already over, so
- * logging time today/ahead of time doesn't inflate this month's numbers.
- */
 export async function GET(request: Request) {
   const session = await auth();
   if (!session?.user?.id) {
@@ -27,93 +10,44 @@ export async function GET(request: Request) {
   }
 
   const { searchParams } = new URL(request.url);
-  const monthParam = searchParams.get("month"); // "YYYY-MM"
-  const now = new Date();
-  let year = now.getFullYear();
-  let month = now.getMonth(); // 0-indexed
-
-  if (monthParam && /^\d{4}-\d{2}$/.test(monthParam)) {
-    const [y, m] = monthParam.split("-").map(Number);
-    year = y;
-    month = m - 1;
+  const monthParam = searchParams.get("month");
+  const yearParam = searchParams.get("year");
+  if (monthParam !== null && yearParam !== null) {
+    return NextResponse.json({ error: "Choose either a month or a year." }, { status: 400 });
   }
 
-  const rangeStart = new Date(year, month, 1, 0, 0, 0, 0);
-  const rangeEnd = new Date(year, month + 1, 1, 0, 0, 0, 0);
+  const now = new Date();
+  let year = now.getFullYear();
+  let month: number | undefined = now.getMonth() + 1;
 
+  if (yearParam !== null) {
+    if (!/^\d{4}$/.test(yearParam) || Number(yearParam) < 1) {
+      return NextResponse.json({ error: "Year must use YYYY, between 0001 and 9999." }, { status: 400 });
+    }
+    year = Number(yearParam);
+    month = undefined;
+  } else if (monthParam !== null) {
+    if (!/^\d{4}-(0[1-9]|1[0-2])$/.test(monthParam) || Number(monthParam.slice(0, 4)) < 1) {
+      return NextResponse.json({ error: "Month must use YYYY-MM, with a valid year and month." }, { status: 400 });
+    }
+    year = Number(monthParam.slice(0, 4));
+    month = Number(monthParam.slice(5));
+  }
+
+  const { rangeStart, rangeEnd } = getHoursSummaryRange(year, month);
   const entries = await prisma.timeEntry.findMany({
     where: {
       userId: session.user.id,
-      start: { gte: rangeStart },
-      end: { lte: rangeEnd },
+      start: { lt: rangeEnd },
+      end: { gt: rangeStart },
     },
     select: { start: true, end: true },
   });
 
-  const workedMinutesByDay = new Map<string, number>();
-  for (const entry of entries) {
-    const key = toDateKey(entry.start);
-    const minutes = (entry.end.getTime() - entry.start.getTime()) / 60000;
-    workedMinutesByDay.set(key, (workedMinutesByDay.get(key) ?? 0) + minutes);
-  }
-
-  const today = new Date();
-  today.setHours(0, 0, 0, 0);
-
-  const days: DailyHoursSummary[] = [];
-  // Parallel arrays (not returned to the client) used only for the totals
-  // below, so "Worked"/"Expected"/"Diff" only reflect days that are
-  // actually over — hours logged today or scheduled in the future
-  // shouldn't count toward "how am I doing this month so far".
-  const isPast: boolean[] = [];
-  const countsTowardDiff: boolean[] = [];
-  const daysInMonth = new Date(year, month + 1, 0).getDate();
-  for (let day = 1; day <= daysInMonth; day++) {
-    const date = new Date(year, month, day);
-    const weekday = date.getDay();
-    const isWeekend = weekday === 0 || weekday === 6;
-    // Today isn't done yet, so it doesn't count toward the expectation
-    // used for the difference — same reasoning as future days.
-    const isNotYetComplete = date.getTime() >= today.getTime();
-    const key = toDateKey(date);
-    days.push({
-      date: key,
-      weekday,
-      workedHours: (workedMinutesByDay.get(key) ?? 0) / 60,
-      expectedHours: !isWeekend && !isNotYetComplete ? BASELINE_HOURS_PER_WEEKDAY : 0,
-    });
-    isPast.push(!isNotYetComplete);
-    countsTowardDiff.push(!isWeekend && !isNotYetComplete);
-  }
-
-  const totals = days.reduce(
-    (acc, d, i) => ({
-      workedHours: acc.workedHours + (isPast[i] ? d.workedHours : 0),
-      expectedHours: acc.expectedHours + d.expectedHours,
-    }),
-    { workedHours: 0, expectedHours: 0 }
-  );
-
-  // Computed separately from the "Worked" total above so future rounding
-  // never diverges, even though both are now restricted to past days.
-  const diffHours = days.reduce(
-    (sum, d, i) => sum + (countsTowardDiff[i] ? d.workedHours - d.expectedHours : 0),
-    0
-  );
-
-  return NextResponse.json({
-    month: `${year}-${String(month + 1).padStart(2, "0")}`,
-    days,
-    totals: {
-      ...totals,
-      diffHours,
-    },
-  });
-}
-
-function toDateKey(date: Date): string {
-  const y = date.getFullYear();
-  const m = String(date.getMonth() + 1).padStart(2, "0");
-  const d = String(date.getDate()).padStart(2, "0");
-  return `${y}-${m}-${d}`;
+  return NextResponse.json(buildHoursSummary({
+    entries,
+    year,
+    month,
+    now,
+  }));
 }
