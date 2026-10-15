@@ -21,6 +21,11 @@ with a local SQLite copy kept as a backup/report.
    ```bash
    cp .env.local.example .env.local
    ```
+   - `AUTH_TRUST_HOST=true`: included in the example for local production runs
+     (`npm run start`). If you already have `.env.local`, add this setting to
+     prevent Auth.js `UntrustedHost` errors. It trusts request host headers;
+     use it on localhost, a trusted network, or behind a reverse proxy you
+     control. Docker Compose already sets it.
    - `AUTH_SECRET`, `TOKEN_ENCRYPTION_KEY`: generate with `openssl rand -base64 32`
    - `AUTH_GOOGLE_ID` / `AUTH_GOOGLE_SECRET`: create an OAuth 2.0 Client ID in the
      [Google Cloud Console](https://console.cloud.google.com/apis/credentials)
@@ -47,6 +52,14 @@ with a local SQLite copy kept as a backup/report.
    ```bash
    npm run dev
    ```
+
+   To run a production build locally:
+   ```bash
+   npm run build
+   npm run start
+   ```
+   Restart the server after changing `.env.local`; updating
+   `AUTH_TRUST_HOST` does not require rebuilding.
 
 4. Sign in with Google (accept the Calendar read-only permission prompt — this
    is needed to show your meetings on the calendar), then go to **Settings**
