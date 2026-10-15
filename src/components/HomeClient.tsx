@@ -666,13 +666,34 @@ export function HomeClient({ initialTickets, userId }: HomeClientProps) {
               </>
             )}
           </span>
-          <button
-            type="button"
-            onClick={() => setSummaryOpen(true)}
-            className="nb-btn ml-auto px-3 py-1.5 text-sm"
-          >
-            📊 Summary
-          </button>
+          <div className="ml-auto flex items-center gap-2">
+            <button
+              type="button"
+              onClick={() => setSummaryOpen(true)}
+              className="nb-btn px-3 py-1.5 text-sm"
+            >
+              📊 Summary
+            </button>
+            <a
+              href="https://tid.surikat.net/"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="nb-btn px-3 py-1.5 text-sm"
+            >
+              TID
+              <svg
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth={2}
+                className="h-4 w-4"
+                aria-hidden="true"
+              >
+                <path strokeLinecap="round" strokeLinejoin="round" d="M15 3h6v6m0-6L10 14M9 3H5a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-4" />
+              </svg>
+              <span className="sr-only"> (opens in a new tab)</span>
+            </a>
+          </div>
         </div>
         <div className="relative flex flex-1 overflow-hidden">
           {sidebarOpen && (
