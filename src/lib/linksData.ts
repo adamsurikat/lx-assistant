@@ -250,8 +250,15 @@ export const LINK_FOLDERS: BookmarkFolder[] = [
     title: "NodeRed",
     children: [
       { type: "link", title: "NodeRed Local", url: "http://localhost:1880/#flow/f688d225c5e143b3" },
-      { type: "link", title: "NodeRed Scandlines FAT", url: "https://scandlines.nodered.blx.fatikat.com/#flow/f688d225c5e143b3" },
-      { type: "link", title: "NodeRed Scandlines Staging", url: "https://scandlines.nodered.blx.stagikat.com/" },
+      { type: "link", title: "NodeRed Scandlines Hosted FAT", url: "https://scandlines.nodered.blx.fatikat.com/#flow/f688d225c5e143b3" },
+      { type: "link", title: "NodeRed Scandlines Hosted Staging", url: "https://scandlines.nodered.blx.stagikat.com/" },
+      // On-prem editor URLs from OPS-Scandlines-151026-142212.pdf.
+      { type: "link", title: "NodeRed Scandlines ROF FAT", url: "http://10.248.7.11:1880/" },
+      { type: "link", title: "NodeRed Scandlines ROF Staging", url: "http://10.248.7.21:1880/" },
+      { type: "link", title: "NodeRed Scandlines ROF Prod", url: "http://10.248.7.14:1880/" },
+      { type: "link", title: "NodeRed Scandlines PUT FAT", url: "http://10.248.8.11:1880/" },
+      { type: "link", title: "NodeRed Scandlines PUT Staging", url: "http://10.248.7.22:1880/" },
+      { type: "link", title: "NodeRed Scandlines PUT Prod", url: "http://10.248.8.14:1880/" },
       { type: "link", title: "NodeRed Pof FAT", url: "https://pof.nodered.blx.fatikat.com/" },
       { type: "link", title: "NodeRed Pof Staging", url: "https://pof.nodered.blx.stagikat.com/" },
       { type: "link", title: "NodeRed Peelports FAT", url: "https://peelports.nodered.blx.fatikat.com/" },
