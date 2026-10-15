@@ -25,7 +25,6 @@ export const LINK_FOLDERS: BookmarkFolder[] = [
     title: "External tools",
     layout: "list",
     children: [
-      { type: "link", title: "TID", url: "https://tid.surikat.net/", icon: "/icons/services/tid.svg" },
       { type: "link", title: "Jira", url: "https://surikat.atlassian.net/", icon: "/icons/services/jira.png" },
       { type: "link", title: "Yopass", url: "https://share.toolikat.com/", icon: "/icons/services/secret-share.svg" },
       { type: "link", title: "GitHub", url: "https://github.com/orgs/surikaterna/repositories", icon: "/icons/services/github.png" },
@@ -34,8 +33,6 @@ export const LINK_FOLDERS: BookmarkFolder[] = [
       { type: "link", title: "Jenkins", url: "https://jenkins.toolikat.com/job/surikat/", icon: "/icons/services/jenkins.png" },
       { type: "link", title: "Rancher", url: "https://rancher.surikat.net", icon: "/icons/services/rancher.png" },
       { type: "link", title: "Rancher 2", url: "https://r2v2.toolikat.com", icon: "/icons/services/rancher.png" },
-      { type: "link", title: "Deployment Checklist", url: "https://docs.google.com/spreadsheets/d/1qapRAeeXNylNpMizcbmXMnFQTfPqPafRU3pzYj_ZFFI/edit?gid=277846887#gid=277846887", icon: "/icons/services/google-sheets.png" },
-      { type: "link", title: "Kodknuff", url: "https://kodknuff.bylynx.com/", icon: "/icons/services/kodknuff.png" },
       { type: "link", title: "Azure Portal", url: "https://portal.azure.com/#home", icon: "/icons/services/azure.png" },
       { type: "link", title: "Docker Hub", url: "https://hub.docker.com/orgs/surikaterna/repositories", icon: "/icons/services/docker.png" },
       { type: "link", title: "AWS Console", url: "https://128380478568.signin.aws.amazon.com/console", icon: "/icons/services/aws.png" },
@@ -43,6 +40,17 @@ export const LINK_FOLDERS: BookmarkFolder[] = [
       { type: "link", title: "Grafana", url: "https://grafana.ops.bylynx.com/", icon: "/icons/services/grafana.png" },
       { type: "link", title: "Sentry", url: "https://surikat.sentry.io/projects/", icon: "/icons/services/sentry.png" },
       { type: "link", title: "Elasticsearch", url: "https://logs.kb.europe-west4.gcp.elastic-cloud.com/app/discover", icon: "/icons/services/elasticsearch.svg" },
+    ],
+  },
+  {
+    type: "folder",
+    title: "Internal tools",
+    layout: "list",
+    children: [
+      { type: "link", title: "TID", url: "https://tid.surikat.net/", icon: "/icons/services/tid.svg" },
+      { type: "link", title: "Deployment Checklist", url: "https://docs.google.com/spreadsheets/d/1qapRAeeXNylNpMizcbmXMnFQTfPqPafRU3pzYj_ZFFI/edit?gid=277846887#gid=277846887", icon: "/icons/services/google-sheets.png" },
+      { type: "link", title: "Kodknuff", url: "https://kodknuff.bylynx.com/", icon: "/icons/services/kodknuff.png" },
+      { type: "link", title: "Release Readiness", url: "http://192.168.11.179:9889/#/release-readiness", icon: "/icons/services/release-readiness.svg" },
     ],
   },
   {
