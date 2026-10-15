@@ -250,31 +250,44 @@ function ServiceMosaic({ folders }: { folders: BookmarkFolder[] }) {
     const gap = 16;
     const observer = new ResizeObserver(() => {
       const availableWidth = container.getBoundingClientRect().width;
-      const cards: CardPlacement[] = [];
-
-      for (const element of Array.from(container.children)) {
+      const sizes = Array.from(container.children, (element) => {
         const { width, height } = element.getBoundingClientRect();
-        const leftEdges = [0, ...cards.map((card) => card.left + card.width + gap)].sort((a, b) => a - b);
-        const topEdges = [0, ...cards.map((card) => card.top + card.height + gap)].sort((a, b) => a - b);
+        return { width, height };
+      });
+      const arrangeCards = (heightLimit?: number) => {
+        const cards: CardPlacement[] = [];
 
-        // Try the highest available space first, then the leftmost. Candidate
-        // edges let smaller cards fill gaps beside and beneath larger ones.
-        for (const top of topEdges) {
-          const left = leftEdges.find((candidate) =>
-            candidate + width <= availableWidth + 0.01 &&
+        for (const { width, height } of sizes) {
+          const leftEdges = [0, ...cards.map((card) => card.left + card.width + gap)].sort((a, b) => a - b);
+          const topEdges = [0, ...cards.map((card) => card.top + card.height + gap)].sort((a, b) => a - b);
+          const candidates = topEdges.flatMap((top) =>
+            leftEdges.map((left) => ({ left, top, width, height }))
+          ).filter((candidate) =>
+            candidate.left + width <= availableWidth + 0.01 &&
             !cards.some((card) =>
-              candidate < card.left + card.width + gap - 0.01 &&
-              candidate + width + gap > card.left + 0.01 &&
-              top < card.top + card.height + gap - 0.01 &&
-              top + height + gap > card.top + 0.01
+              candidate.left < card.left + card.width + gap - 0.01 &&
+              candidate.left + width + gap > card.left + 0.01 &&
+              candidate.top < card.top + card.height + gap - 0.01 &&
+              candidate.top + height + gap > card.top + 0.01
             )
           );
-          if (left !== undefined) {
-            cards.push({ left, top, width, height });
-            break;
-          }
+
+          // Fill down the left side before moving right. If the height budget
+          // has no space left, use the highest available position as overflow.
+          const preferred = heightLimit === undefined ? undefined : candidates
+            .filter((candidate) => candidate.top + height <= heightLimit + 0.01)
+            .sort((a, b) => a.left - b.left || a.top - b.top)[0];
+          const placement = preferred ?? candidates[0];
+          if (placement) cards.push(placement);
         }
-      }
+        return cards;
+      };
+
+      // Derive a finite height from a top-first pass, then pack toward the
+      // left within it. An unlimited height would stack every card at x=0.
+      const initialCards = arrangeCards();
+      const heightLimit = Math.max(0, ...initialCards.map((card) => card.top + card.height));
+      const cards = arrangeCards(heightLimit);
 
       const height = Math.max(0, ...cards.map((card) => card.top + card.height));
       setLayout((previous) => {
