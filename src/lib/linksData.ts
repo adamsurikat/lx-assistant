@@ -12,6 +12,8 @@ export interface BookmarkLink {
 
 export interface BookmarkFolder {
   type: "folder";
+  // Persistent card identity; keep this unchanged when renaming the title.
+  id: string;
   title: string;
   layout?: "list";
   children: BookmarkNode[];
@@ -22,6 +24,7 @@ export type BookmarkNode = BookmarkLink | BookmarkFolder;
 export const LINK_FOLDERS: BookmarkFolder[] = [
   {
     type: "folder",
+    id: "external-tools",
     title: "External tools",
     layout: "list",
     children: [
@@ -44,6 +47,7 @@ export const LINK_FOLDERS: BookmarkFolder[] = [
   },
   {
     type: "folder",
+    id: "internal-tools",
     title: "Internal tools",
     layout: "list",
     children: [
@@ -56,6 +60,7 @@ export const LINK_FOLDERS: BookmarkFolder[] = [
   },
   {
     type: "folder",
+    id: "lx-booking",
     title: "lx-booking",
     children: [
       { type: "link", title: "lx-booking SOT Local", url: "http://localhost:3001/?tenant=sot&region=apac" },
@@ -86,6 +91,7 @@ export const LINK_FOLDERS: BookmarkFolder[] = [
   },
   {
     type: "folder",
+    id: "lx-react-client",
     title: "lx-react-client",
     children: [
       { type: "link", title: "lx-react-client SOT Local", url: "http://localhost:3000/?api=http://localhost:3091&account=http://localhost:3999&tenant=sot" },
@@ -159,6 +165,7 @@ export const LINK_FOLDERS: BookmarkFolder[] = [
   },
   {
     type: "folder",
+    id: "mc",
     title: "mc",
     children: [
       { type: "link", title: "mc Local", url: "http://localhost:5173/" },
@@ -172,6 +179,7 @@ export const LINK_FOLDERS: BookmarkFolder[] = [
   },
   {
     type: "folder",
+    id: "rabbitmq",
     title: "rabbitMQ",
     children: [
       { type: "link", title: "RabbitMQ Local", url: "http://localhost:15672/" },
@@ -185,6 +193,7 @@ export const LINK_FOLDERS: BookmarkFolder[] = [
   },
   {
     type: "folder",
+    id: "gos",
     title: "gos",
     children: [
       { type: "link", title: "gos Pof Local", url: "http://localhost:8899/admin?tenant=pof" },
@@ -207,6 +216,7 @@ export const LINK_FOLDERS: BookmarkFolder[] = [
   },
   {
     type: "folder",
+    id: "tapi-admin",
     title: "TAPI admin",
     children: [
       { type: "link", title: "TAPI Local", url: "http://localhost:3012/" },
@@ -220,6 +230,7 @@ export const LINK_FOLDERS: BookmarkFolder[] = [
   },
   {
     type: "folder",
+    id: "smart-yard",
     title: "Smart Yard",
     children: [
       { type: "link", title: "TLE BELF1 Local", url: "http://localhost:3002/embed?route=/yard-dashboard&state=port:BELF1&token=REDACTED_SMART_YARD_TOKEN" },
@@ -234,6 +245,7 @@ export const LINK_FOLDERS: BookmarkFolder[] = [
   },
   {
     type: "folder",
+    id: "tle",
     title: "TLE",
     children: [
       { type: "link", title: "TLE Stena Local", url: "http://localhost:3002/login?tenant=stenaline" },
@@ -256,6 +268,7 @@ export const LINK_FOLDERS: BookmarkFolder[] = [
   },
   {
     type: "folder",
+    id: "node-red",
     title: "NodeRed",
     children: [
       { type: "link", title: "NodeRed Local", url: "http://localhost:1880/#flow/f688d225c5e143b3" },
@@ -278,6 +291,7 @@ export const LINK_FOLDERS: BookmarkFolder[] = [
   },
   {
     type: "folder",
+    id: "lx-vms-kiosk-fe",
     title: "lx-vms-kiosk-fe",
     children: [
       { type: "link", title: "kiosk-fe Rødby Local", url: "http://localhost:3672/ROF?tenant=scandlines" },

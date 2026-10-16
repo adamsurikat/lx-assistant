@@ -78,6 +78,13 @@ with a local SQLite copy kept as a backup/report.
    saved locally and pushed to Jira as a worklog immediately. Move/resize an
    entry to update both.
 
+## Personal links layout
+
+On **Links**, choose **Arrange cards**, then drag a card's handle or use its
+earlier/later arrows. **Save order** stores the layout in the database for your
+account, including across browsers and devices. **Cancel** discards the draft;
+**Reset order** restores the default order in the draft until you save it.
+
 ## Bootstrapping map data
 
 The `/map` page's ports, depots, and sea routes live in the database

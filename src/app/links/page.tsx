@@ -1,10 +1,11 @@
 "use client";
 
-import { useEffect, useLayoutEffect, useRef, useState } from "react";
+import { useEffect, useLayoutEffect, useRef, useState, type ReactNode } from "react";
 import Image from "next/image";
 import { AppHeader } from "@/components/AppHeader";
 import { LINK_FOLDERS, type BookmarkFolder, type BookmarkLink } from "@/lib/linksData";
 import { buildServiceGrid, type GridCell } from "@/lib/bookmarkGrid";
+import { DEFAULT_LINK_CARD_ORDER, isValidLinkCardOrder, normalizeLinkCardOrder } from "@/lib/linksLayout";
 
 function GridCellButton({ env, cell }: { env: string; cell: GridCell }) {
   const [anchor, setAnchor] = useState<{ left: number; top: number } | null>(null);
@@ -169,7 +170,7 @@ function BookmarkButtons({ links, className = "", neutral = false }: { links: Bo
   );
 }
 
-function ServiceCard({ folder }: { folder: BookmarkFolder }) {
+function ServiceCard({ folder, controls }: { folder: BookmarkFolder; controls?: ReactNode }) {
   const grid = buildServiceGrid(folder);
   const hasGrid = folder.layout !== "list" && grid.environments.length > 0 && grid.tenants.length > 0;
   const links = folder.layout === "list"
@@ -178,7 +179,10 @@ function ServiceCard({ folder }: { folder: BookmarkFolder }) {
 
   return (
     <div className="nb-panel-sm min-w-0 w-full bg-white p-5">
-      <h3 className="mb-4 text-sm font-bold text-nb-ink">{grid.title}</h3>
+      <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
+        <h3 className="text-sm font-bold text-nb-ink">{grid.title}</h3>
+        {controls}
+      </div>
 
       {hasGrid && (
         <div className="max-w-full overflow-x-auto">
@@ -232,12 +236,105 @@ function ServiceCard({ folder }: { folder: BookmarkFolder }) {
   );
 }
 
-function ServiceMasonry({ folders }: { folders: BookmarkFolder[] }) {
+interface Reordering {
+  disabled: boolean;
+  move: (id: string, direction: -1 | 1) => void;
+  drop: (id: string, targetId: string, after: boolean) => void;
+}
+
+function ServiceMasonry({ folders, reordering }: { folders: BookmarkFolder[]; reordering?: Reordering }) {
+  const [draggedId, setDraggedId] = useState<string | null>(null);
+  const [dropTarget, setDropTarget] = useState<{ id: string; after: boolean } | null>(null);
+  const endDrag = () => {
+    setDraggedId(null);
+    setDropTarget(null);
+  };
+
   return (
     <div className="columns-[36rem] gap-5">
-      {folders.map((folder) => (
-        <div key={folder.title} className="mb-5 inline-block w-full break-inside-avoid align-top">
-          <ServiceCard folder={folder} />
+      {folders.map((folder, index) => (
+        <div
+          key={folder.id}
+          data-card-id={folder.id}
+          className={`relative mb-5 inline-block w-full break-inside-avoid align-top ${draggedId === folder.id ? "opacity-50" : ""} ${dropTarget?.id === folder.id ? "rounded-xl outline-2 outline-offset-2 outline-nb-orange" : ""}`}
+          onDragOver={(event) => {
+            if (!reordering || reordering.disabled || !draggedId || draggedId === folder.id) return;
+            event.preventDefault();
+            event.dataTransfer.dropEffect = "move";
+            const rect = event.currentTarget.getBoundingClientRect();
+            const after = event.clientY > rect.top + rect.height / 2;
+            setDropTarget((previous) => previous?.id === folder.id && previous.after === after ? previous : { id: folder.id, after });
+          }}
+          onDragLeave={(event) => {
+            if (!(event.relatedTarget instanceof Node) || !event.currentTarget.contains(event.relatedTarget)) {
+              setDropTarget((previous) => previous?.id === folder.id ? null : previous);
+            }
+          }}
+          onDrop={(event) => {
+            if (!reordering || reordering.disabled || !draggedId || draggedId === folder.id) return;
+            event.preventDefault();
+            const rect = event.currentTarget.getBoundingClientRect();
+            reordering.drop(draggedId, folder.id, event.clientY > rect.top + rect.height / 2);
+            endDrag();
+          }}
+        >
+          {dropTarget?.id === folder.id && (
+            <div aria-hidden="true" className={`pointer-events-none absolute inset-x-0 h-1 rounded-full bg-nb-orange ${dropTarget.after ? "-bottom-2.5" : "-top-2.5"}`} />
+          )}
+          <ServiceCard
+            folder={folder}
+            controls={reordering && (
+              <div className="flex items-center gap-1">
+                <span className="mr-1 text-xs tabular-nums text-nb-ink/50">{index + 1} / {folders.length}</span>
+                <button
+                  type="button"
+                  draggable={!reordering.disabled}
+                  disabled={reordering.disabled}
+                  aria-label={`Drag ${folder.title} to reorder`}
+                  title="Drag to reorder"
+                  className="nb-btn h-9 w-9 cursor-grab active:cursor-grabbing"
+                  onDragStart={(event) => {
+                    event.dataTransfer.effectAllowed = "move";
+                    event.dataTransfer.setData("application/x-lx-link-card", folder.id);
+                    setDraggedId(folder.id);
+                  }}
+                  onDragEnd={endDrag}
+                >
+                  <svg viewBox="0 0 24 24" fill="currentColor" className="h-4 w-4" aria-hidden="true">
+                    <circle cx="9" cy="5" r="1.5" /><circle cx="15" cy="5" r="1.5" />
+                    <circle cx="9" cy="12" r="1.5" /><circle cx="15" cy="12" r="1.5" />
+                    <circle cx="9" cy="19" r="1.5" /><circle cx="15" cy="19" r="1.5" />
+                  </svg>
+                </button>
+                <button
+                  id={`link-card-${folder.id}-earlier`}
+                  type="button"
+                  disabled={reordering.disabled || index === 0}
+                  aria-label={`Move ${folder.title} earlier`}
+                  title="Move earlier"
+                  className="nb-btn h-9 w-9"
+                  onClick={() => reordering.move(folder.id, -1)}
+                >
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} className="h-4 w-4" aria-hidden="true">
+                    <path strokeLinecap="round" strokeLinejoin="round" d="m6 14 6-6 6 6" />
+                  </svg>
+                </button>
+                <button
+                  id={`link-card-${folder.id}-later`}
+                  type="button"
+                  disabled={reordering.disabled || index === folders.length - 1}
+                  aria-label={`Move ${folder.title} later`}
+                  title="Move later"
+                  className="nb-btn h-9 w-9"
+                  onClick={() => reordering.move(folder.id, 1)}
+                >
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} className="h-4 w-4" aria-hidden="true">
+                    <path strokeLinecap="round" strokeLinejoin="round" d="m6 10 6 6 6-6" />
+                  </svg>
+                </button>
+              </div>
+            )}
+          />
         </div>
       ))}
     </div>
@@ -245,20 +342,135 @@ function ServiceMasonry({ folders }: { folders: BookmarkFolder[] }) {
 }
 
 export default function LinksPage() {
-  const folders = LINK_FOLDERS;
+  const [retry, setRetry] = useState(0);
+  const [result, setResult] = useState<{ attempt: number; order?: string[]; error?: string } | null>(null);
+  const [draftOrder, setDraftOrder] = useState<string[] | null>(null);
+  const [saving, setSaving] = useState(false);
+  const [saveError, setSaveError] = useState<string | null>(null);
+  const [announcement, setAnnouncement] = useState("");
+
+  useEffect(() => {
+    const controller = new AbortController();
+    fetch("/api/links/layout", { signal: controller.signal, cache: "no-store" })
+      .then(async (response) => {
+        if (!response.ok) throw new Error("Could not load your card order. Please try again.");
+        const data = await response.json();
+        if (!isValidLinkCardOrder(data.order)) throw new Error("Could not load your card order. Please try again.");
+        if (!controller.signal.aborted) setResult({ attempt: retry, order: normalizeLinkCardOrder(data.order) });
+      })
+      .catch(() => {
+        if (!controller.signal.aborted) setResult({ attempt: retry, error: "Could not load your card order. Please try again." });
+      });
+    return () => controller.abort();
+  }, [retry]);
+
+  const loading = result?.attempt !== retry;
+  const loadError = loading ? undefined : result?.error;
+  const savedOrder = result?.order;
+  const order = normalizeLinkCardOrder(draftOrder ?? savedOrder);
+  const folders = order.map((id) => LINK_FOLDERS.find((folder) => folder.id === id)!);
+  const editing = draftOrder !== null;
+  const changed = editing && order.some((id, index) => id !== savedOrder?.[index]);
+
+  const announceMove = (id: string, nextOrder: string[]) => {
+    const title = LINK_FOLDERS.find((folder) => folder.id === id)?.title;
+    setAnnouncement(`${title} moved to position ${nextOrder.indexOf(id) + 1} of ${nextOrder.length}.`);
+    setSaveError(null);
+    setDraftOrder(nextOrder);
+  };
+  const moveCard = (id: string, direction: -1 | 1) => {
+    if (!draftOrder || saving) return;
+    const from = draftOrder.indexOf(id);
+    const to = from + direction;
+    if (from < 0 || to < 0 || to >= draftOrder.length) return;
+    const nextOrder = [...draftOrder];
+    nextOrder.splice(from, 1);
+    nextOrder.splice(to, 0, id);
+    announceMove(id, nextOrder);
+    const control = to === 0 ? "later" : to === nextOrder.length - 1 ? "earlier" : direction === -1 ? "earlier" : "later";
+    requestAnimationFrame(() => document.getElementById(`link-card-${id}-${control}`)?.focus());
+  };
+  const dropCard = (id: string, targetId: string, after: boolean) => {
+    if (!draftOrder || saving || id === targetId || !draftOrder.includes(id) || !draftOrder.includes(targetId)) return;
+    const nextOrder = draftOrder.filter((cardId) => cardId !== id);
+    nextOrder.splice(nextOrder.indexOf(targetId) + (after ? 1 : 0), 0, id);
+    announceMove(id, nextOrder);
+  };
+  const finishEditing = () => {
+    setDraftOrder(null);
+    setSaveError(null);
+    requestAnimationFrame(() => document.getElementById("arrange-link-cards")?.focus());
+  };
+  const saveOrder = async () => {
+    if (!draftOrder || saving || !changed) return;
+    setSaving(true);
+    setSaveError(null);
+    try {
+      const response = await fetch("/api/links/layout", {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ order: draftOrder }),
+      });
+      if (!response.ok) throw new Error("Save failed");
+      const data = await response.json();
+      if (!isValidLinkCardOrder(data.order)) throw new Error("Invalid saved order");
+      setResult({ attempt: retry, order: normalizeLinkCardOrder(data.order) });
+      finishEditing();
+      setAnnouncement("Card order saved.");
+    } catch {
+      setSaveError("Could not save your card order. Your changes are still here; please try again.");
+    } finally {
+      setSaving(false);
+    }
+  };
 
   return (
     <div className="flex h-screen flex-col">
       <AppHeader active="links" />
       <div className="nb-panel-sm m-3 flex flex-1 flex-col overflow-hidden bg-nb-paper">
         <div className="border-b border-nb-ink/10 bg-white px-4 py-3">
-          <h2 className="text-sm font-semibold tracking-wide text-nb-ink">Links</h2>
+          <div className="flex flex-wrap items-center justify-between gap-3">
+            <h2 className="text-sm font-semibold tracking-wide text-nb-ink">Links</h2>
+            {editing ? (
+              <div className="flex flex-wrap items-center gap-2">
+                <button type="button" disabled={saving} className="nb-btn px-3 py-1.5 text-xs" onClick={() => {
+                  setDraftOrder([...DEFAULT_LINK_CARD_ORDER]);
+                  setSaveError(null);
+                  setAnnouncement("Default order restored. Save to keep this order.");
+                }}>Reset order</button>
+                <button type="button" disabled={saving} className="nb-btn px-3 py-1.5 text-xs" onClick={() => {
+                  finishEditing();
+                  setAnnouncement("Changes cancelled.");
+                }}>Cancel</button>
+                <button type="button" disabled={saving || !changed} className="nb-btn nb-btn-orange px-3 py-1.5 text-xs" onClick={saveOrder}>
+                  {saving ? "Saving…" : "Save order"}
+                </button>
+              </div>
+            ) : (
+              <button id="arrange-link-cards" type="button" disabled={loading || !!loadError || !savedOrder} className="nb-btn px-3 py-1.5 text-xs" onClick={() => {
+                setDraftOrder([...order]);
+                setAnnouncement("");
+                requestAnimationFrame(() => document.getElementById(`link-card-${order[0]}-later`)?.focus());
+              }}>Arrange cards</button>
+            )}
+          </div>
+          {editing && <p className="mt-3 text-xs text-nb-ink/60">Drag a card’s handle or use the arrows. Order runs down each column, then across.</p>}
+          {saveError && <p role="alert" className="mt-3 text-sm text-red-700">{saveError}</p>}
+          <p role="status" className="sr-only">{announcement}</p>
         </div>
         <div className="flex-1 overflow-y-auto p-4">
-          {folders.length === 0 && (
-            <p className="text-sm font-medium text-nb-ink/50">No links configured.</p>
+          {loading ? <p role="status" className="text-sm text-nb-ink/60">Loading your card order…</p> : (
+            <>
+              {loadError && (
+                <div role="alert" className="mb-5 flex flex-wrap items-center gap-3 text-sm text-red-700">
+                  {loadError}
+                  <button type="button" className="nb-btn px-3 py-1.5 text-xs" onClick={() => setRetry((value) => value + 1)}>Retry</button>
+                </div>
+              )}
+              {folders.length === 0 && <p className="text-sm font-medium text-nb-ink/50">No links configured.</p>}
+              {folders.length > 0 && <ServiceMasonry folders={folders} reordering={editing ? { disabled: saving, move: moveCard, drop: dropCard } : undefined} />}
+            </>
           )}
-          {folders.length > 0 && <ServiceMasonry folders={folders} />}
         </div>
       </div>
     </div>
