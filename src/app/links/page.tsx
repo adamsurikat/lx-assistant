@@ -64,7 +64,7 @@ function GridCellButton({ env, cell }: { env: string; cell: GridCell }) {
     };
   }, [open]);
 
-  if (cell.backendVariants.length === 0) {
+  if (!cell.frontendChoices && cell.backendVariants.length === 0) {
     return (
       <a
         href={cell.primary.url}
@@ -78,16 +78,23 @@ function GridCellButton({ env, cell }: { env: string; cell: GridCell }) {
     );
   }
 
-  // Multiple backends are available for this frontend/tenant/env combo
-  // (e.g. a local frontend that can point at FAT/Staging/Prod) — open a
-  // popover to choose instead of always following `primary`. Positioned
-  // `fixed` (anchored to the button's own rect) rather than `absolute` so it
-  // isn't clipped by the card's horizontally-scrollable table wrapper.
+  const choices = cell.frontendChoices
+    ? cell.frontendChoices.map(({ frontend, link }) => ({ environment: frontend, link }))
+    : [
+      { environment: env, link: cell.primary },
+      ...cell.backendVariants.map(({ backend, link }) => ({ environment: backend, link })),
+    ];
+
+  // Anchor the chooser to its button without clipping it inside the table's
+  // horizontal scrolling area. LX React Client chooses frontends here;
+  // other service cards keep their backend choices.
   return (
     <>
       <button
         ref={buttonRef}
         type="button"
+        aria-expanded={open}
+        title={cell.frontendChoices ? `Choose frontend for ${env} backend` : `Choose backend for ${env} frontend`}
         onClick={() => {
           if (open) {
             setAnchor(null);
@@ -116,29 +123,19 @@ function GridCellButton({ env, cell }: { env: string; cell: GridCell }) {
           style={{ left: anchor.left, top: anchor.top }}
         >
           <p className="mb-1 px-1.5 text-[10px] font-semibold uppercase tracking-wide text-nb-ink/40">
-            Choose backend
+            Choose {cell.frontendChoices ? "frontend" : "backend"}
           </p>
-          <a
-            href={cell.primary.url}
-            target="_blank"
-            rel="noreferrer"
-            title={cell.primary.url}
-            onClick={() => setAnchor(null)}
-            className="block truncate rounded px-2 py-1 text-xs font-semibold text-nb-ink hover:bg-nb-orange/10"
-          >
-            {env} (default)
-          </a>
-          {cell.backendVariants.map((variant) => (
+          {choices.map((choice) => (
             <a
-              key={variant.backend}
-              href={variant.link.url}
+              key={`${choice.environment}-${choice.link.url}`}
+              href={choice.link.url}
               target="_blank"
               rel="noreferrer"
-              title={variant.link.url}
+              title={choice.link.url}
               onClick={() => setAnchor(null)}
-              className="block truncate rounded px-2 py-1 text-xs font-medium text-nb-ink/80 hover:bg-nb-orange/10 hover:text-nb-ink"
+              className={`block truncate rounded px-2 py-1 text-xs hover:bg-nb-orange/10 hover:text-nb-ink ${choice.environment === env ? "font-semibold text-nb-ink" : "font-medium text-nb-ink/80"}`}
             >
-              → {variant.backend}
+              {!cell.frontendChoices && choice.environment !== env ? "→ " : ""}{choice.environment}{choice.environment === env ? " (default)" : ""}
             </a>
           ))}
         </div>
@@ -189,7 +186,9 @@ function ServiceCard({ folder, controls }: { folder: BookmarkFolder; controls?: 
           <table className="w-full border-collapse text-sm">
             <thead>
               <tr>
-                <th className="w-0" />
+                <th className="w-0 pb-3 pr-4 text-left text-xs font-semibold text-nb-ink/50">
+                  {folder.id === "lx-react-client" ? "Backend" : null}
+                </th>
                 {grid.environments.map((env) => (
                   <th
                     key={env}

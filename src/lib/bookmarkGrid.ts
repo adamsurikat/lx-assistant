@@ -8,6 +8,9 @@ export interface GridCell {
   // environment (e.g. "Stena Local to FAT" -> backend "FAT"), offered as a
   // choice instead of always opening `primary`.
   backendVariants: { backend: string; link: BookmarkLink }[];
+  // LX React Client columns represent backends. Every existing frontend
+  // that targets that backend is offered here, including the primary link.
+  frontendChoices?: { frontend: string; link: BookmarkLink }[];
 }
 
 export interface ServiceGrid {
@@ -35,6 +38,20 @@ const DEFAULT_TENANT = "Default";
 // logic below) — used to detect the EU/APAC pairing described above.
 const APAC_TENANT = "APAC";
 const EU_TENANT = "EU";
+
+function defaultBackend(frontend: string, link: BookmarkLink): string {
+  // Docker is a frontend launch option; the current Docker links explicitly
+  // use the local API rather than a separate Docker backend deployment.
+  if (frontend === "Docker") {
+    try {
+      const api = new URL(link.url).searchParams.get("api");
+      if (api && new URL(api).hostname === "localhost") return "Local";
+    } catch {
+      // Preserve links whose URL does not identify a local API.
+    }
+  }
+  return frontend;
+}
 
 // Finds the word most link titles in this folder start with (e.g. "TAPI"
 // for "TAPI Local" / "TAPI FAT" / ...), so it can be stripped before reading
@@ -71,11 +88,13 @@ function findCommonPrefix(links: BookmarkLink[]): string | null {
  * `other` list, EXCEPT "<tenant> <env> to <backendEnv>" links, which are
  * attached as backend-choice variants on the matching <tenant>/<env> cell
  * (e.g. a locally-running frontend that can point at different backend
- * environments) instead of being dropped.
+ * environments) instead of being dropped. LX React Client instead groups
+ * each link under its backend environment, with frontends offered as choices.
  */
 export function buildServiceGrid(folder: BookmarkFolder): ServiceGrid {
   const links = folder.children.filter((n: BookmarkNode): n is BookmarkLink => n.type === "link");
   const prefix = findCommonPrefix(links);
+  const backendFirst = folder.id === "lx-react-client";
 
   const cells: Record<string, Record<string, GridCell>> = {};
   const environments = new Set<string>();
@@ -83,6 +102,18 @@ export function buildServiceGrid(folder: BookmarkFolder): ServiceGrid {
   const other: BookmarkLink[] = [];
   const pendingVariants: { tenant: string; env: string; backend: string; link: BookmarkLink }[] =
     [];
+
+  function addFrontendChoice(tenant: string, backend: string, frontend: string, link: BookmarkLink) {
+    environments.add(backend);
+    tenants.add(tenant);
+    cells[tenant] ??= {};
+    const cell = cells[tenant][backend] ??= {
+      primary: link,
+      backendVariants: [],
+      frontendChoices: [],
+    };
+    cell.frontendChoices!.push({ frontend, link });
+  }
 
   for (const link of links) {
     const words = link.title.trim().split(/\s+/);
@@ -101,7 +132,11 @@ export function buildServiceGrid(folder: BookmarkFolder): ServiceGrid {
       if (frontEnv && backEnv) {
         const tenantWords = words.slice(0, toIndex - 1);
         const tenant = tenantWords.join(" ") || DEFAULT_TENANT;
-        pendingVariants.push({ tenant, env: frontEnv, backend: backEnv, link });
+        if (backendFirst) {
+          addFrontendChoice(tenant, backEnv, frontEnv, link);
+        } else {
+          pendingVariants.push({ tenant, env: frontEnv, backend: backEnv, link });
+        }
         continue;
       }
       // Doesn't match "<tenant> <env> to <backendEnv>" — not a variant we
@@ -126,10 +161,14 @@ export function buildServiceGrid(folder: BookmarkFolder): ServiceGrid {
     const tenantWords = [...words.slice(0, envIndex), ...words.slice(envIndex + 1)];
     const tenant = tenantWords.join(" ") || DEFAULT_TENANT;
 
-    environments.add(env);
-    tenants.add(tenant);
-    cells[tenant] ??= {};
-    cells[tenant][env] = { primary: link, backendVariants: [] };
+    if (backendFirst) {
+      addFrontendChoice(tenant, defaultBackend(env, link), env, link);
+    } else {
+      environments.add(env);
+      tenants.add(tenant);
+      cells[tenant] ??= {};
+      cells[tenant][env] = { primary: link, backendVariants: [] };
+    }
   }
 
   // Attach backend variants to their matching primary cell now that every
@@ -142,6 +181,18 @@ export function buildServiceGrid(folder: BookmarkFolder): ServiceGrid {
       cell.backendVariants.push({ backend: variant.backend, link: variant.link });
     } else {
       other.push(variant.link);
+    }
+  }
+
+  if (backendFirst) {
+    for (const tenantCells of Object.values(cells)) {
+      for (const [backend, cell] of Object.entries(tenantCells)) {
+        cell.frontendChoices!.sort((a, b) => {
+          const rank = (frontend: string) => frontend === backend ? -1 : ENV_ORDER.indexOf(frontend);
+          return rank(a.frontend) - rank(b.frontend);
+        });
+        cell.primary = cell.frontendChoices![0].link;
+      }
     }
   }
 
