@@ -17,7 +17,7 @@ function folder(id: string, links: BookmarkLink[]): BookmarkFolder {
 test("LX React Client groups columns by backend and offers matching frontends first", () => {
   assert.deepEqual(reactGrid.environments, ["Local", "FAT", "Staging", "Prod"]);
   assert.deepEqual(reactGrid.cells.SOT.FAT.frontendChoices?.map((choice) => choice.frontend), [
-    "FAT", "Local",
+    "FAT", "Local", "Docker",
   ]);
   assert.equal(reactGrid.cells.SOT.FAT.primary.title, "lx-react-client SOT FAT");
   assert.equal(
@@ -29,15 +29,16 @@ test("LX React Client groups columns by backend and offers matching frontends fi
 
 test("Stena Prod includes every existing frontend targeting production", () => {
   const choices = reactGrid.cells.Stena.Prod.frontendChoices!;
-  assert.deepEqual(choices.map((choice) => choice.frontend), ["Prod", "Local", "FAT", "Staging"]);
+  assert.deepEqual(choices.map((choice) => choice.frontend), ["Prod", "Local", "Docker", "FAT", "Staging"]);
   assert.deepEqual(choices.map((choice) => choice.link.title), [
     "lx-react-client Stena Prod",
     "lx-react-client Stena Local to Prod",
+    "lx-react-client Stena Docker to Prod",
     "lx-react-client Stena FAT to Prod",
     "lx-react-client Stena Staging to Prod",
   ]);
   assert.deepEqual(reactGrid.cells.Stena.FAT.frontendChoices?.map((choice) => choice.frontend), [
-    "FAT", "Local",
+    "FAT", "Local", "Docker",
   ]);
 });
 
@@ -71,7 +72,9 @@ test("every LX link and its exact URL remains available exactly once", () => {
 });
 
 test("singleton frontends and backend-only variants still produce selectable backend cells", () => {
-  assert.deepEqual(reactGrid.cells.KN.Local.frontendChoices?.map((choice) => choice.frontend), ["Local"]);
+  const local = link("Client Acme Local");
+  const singleton = buildServiceGrid(folder("lx-react-client", [local]));
+  assert.deepEqual(singleton.cells.Acme.Local.frontendChoices, [{ frontend: "Local", link: local }]);
   const variant = link("Client Acme Local to Prod");
   const malformed = link("Client Acme Local to Unknown");
   const grid = buildServiceGrid(folder("lx-react-client", [variant, malformed]));
