@@ -229,6 +229,7 @@ export function AppHeader({ active, extra }: AppHeaderProps) {
           <Link href="/map" className={active === "map" ? NAV_LINK_ACTIVE : NAV_LINK_INACTIVE}>
             Map
           </Link>
+          <span className="whitespace-nowrap text-sm font-semibold">Hello world</span>
         </nav>
       </div>
       {/* Mobile-only nav row, wrapping full-width below the title/icons
@@ -262,6 +263,7 @@ export function AppHeader({ active, extra }: AppHeaderProps) {
         <Link href="/map" className={active === "map" ? NAV_LINK_ACTIVE : NAV_LINK_INACTIVE}>
           Map
         </Link>
+        <span className="whitespace-nowrap text-sm font-semibold">Hello world</span>
       </nav>
       <div className="hidden items-center gap-3 text-lg font-bold md:flex">
         {extra}
