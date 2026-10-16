@@ -50,7 +50,8 @@ export const LINK_FOLDERS: BookmarkFolder[] = [
       { type: "link", title: "TID", url: "https://tid.surikat.net/", icon: "/icons/services/tid.svg" },
       { type: "link", title: "Deployment Checklist", url: "https://docs.google.com/spreadsheets/d/1qapRAeeXNylNpMizcbmXMnFQTfPqPafRU3pzYj_ZFFI/edit?gid=277846887#gid=277846887", icon: "/icons/services/google-sheets.png" },
       { type: "link", title: "Kodknuff", url: "https://kodknuff.bylynx.com/", icon: "/icons/services/kodknuff.png" },
-      { type: "link", title: "Release Readiness", url: "http://192.168.11.179:9889/#/release-readiness", icon: "/icons/services/release-readiness.svg" },
+      { type: "link", title: "tv-display", url: "http://192.168.11.179:9889/", icon: "/icons/services/release-readiness.svg" },
+      { type: "link", title: "tv-display Admin", url: "http://192.168.11.179:9889/#/admin", icon: "/icons/services/release-readiness.svg" },
     ],
   },
   {
