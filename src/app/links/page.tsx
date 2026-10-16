@@ -232,18 +232,20 @@ function ServiceCard({ folder }: { folder: BookmarkFolder }) {
   );
 }
 
-function ServiceCards({ folders }: { folders: BookmarkFolder[] }) {
+function ServiceMasonry({ folders }: { folders: BookmarkFolder[] }) {
   return (
-    <div className="grid grid-cols-[repeat(auto-fit,minmax(min(100%,36rem),1fr))] gap-5">
-      {folders.map((folder) => <ServiceCard key={folder.title} folder={folder} />)}
+    <div className="columns-[36rem] gap-5">
+      {folders.map((folder) => (
+        <div key={folder.title} className="mb-5 inline-block w-full break-inside-avoid align-top">
+          <ServiceCard folder={folder} />
+        </div>
+      ))}
     </div>
   );
 }
 
 export default function LinksPage() {
   const folders = LINK_FOLDERS;
-  const tools = folders.filter((folder) => folder.layout === "list");
-  const services = folders.filter((folder) => folder.layout !== "list");
 
   return (
     <div className="flex h-screen flex-col">
@@ -252,12 +254,11 @@ export default function LinksPage() {
         <div className="border-b border-nb-ink/10 bg-white px-4 py-3">
           <h2 className="text-sm font-semibold tracking-wide text-nb-ink">Links</h2>
         </div>
-        <div className="flex-1 space-y-5 overflow-y-auto p-4">
+        <div className="flex-1 overflow-y-auto p-4">
           {folders.length === 0 && (
             <p className="text-sm font-medium text-nb-ink/50">No links configured.</p>
           )}
-          {tools.length > 0 && <ServiceCards folders={tools} />}
-          {services.length > 0 && <ServiceCards folders={services} />}
+          {folders.length > 0 && <ServiceMasonry folders={folders} />}
         </div>
       </div>
     </div>
