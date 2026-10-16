@@ -51,7 +51,7 @@ function GridCellButton({ env, cell }: { env: string; cell: GridCell }) {
     const handleKey = (e: KeyboardEvent) => {
       if (e.key === "Escape") setAnchor(null);
     };
-    // Resizing repacks the cards, so dismiss any menu attached to their old position.
+    // Resizing reflows the cards, so dismiss any menu attached to their old position.
     const handleResize = () => setAnchor(null);
     document.addEventListener("mousedown", handleClick);
     document.addEventListener("keydown", handleKey);
@@ -177,12 +177,12 @@ function ServiceCard({ folder }: { folder: BookmarkFolder }) {
     : grid.other;
 
   return (
-    <div className="nb-panel-sm w-max max-w-full bg-white p-5">
+    <div className="nb-panel-sm min-w-0 w-full bg-white p-5">
       <h3 className="mb-4 text-sm font-bold text-nb-ink">{grid.title}</h3>
 
       {hasGrid && (
         <div className="max-w-full overflow-x-auto">
-          <table className="w-max border-collapse text-sm">
+          <table className="w-full border-collapse text-sm">
             <thead>
               <tr>
                 <th className="w-0" />
@@ -225,111 +225,25 @@ function ServiceCard({ folder }: { folder: BookmarkFolder }) {
         <BookmarkButtons
           links={links}
           neutral={folder.layout === "list"}
-          className={hasGrid ? "mt-3 border-t border-nb-ink/10 pt-3" : "max-w-sm"}
+          className={hasGrid ? "mt-3 border-t border-nb-ink/10 pt-3" : ""}
         />
       )}
     </div>
   );
 }
 
-interface CardPlacement {
-  left: number;
-  top: number;
-  width: number;
-  height: number;
-}
-
-function ServiceMosaic({ folders }: { folders: BookmarkFolder[] }) {
-  const containerRef = useRef<HTMLDivElement>(null);
-  const [layout, setLayout] = useState<{ cards: CardPlacement[]; height: number } | null>(null);
-
-  useEffect(() => {
-    const container = containerRef.current;
-    if (!container) return;
-
-    const gap = 16;
-    const observer = new ResizeObserver(() => {
-      const availableWidth = container.getBoundingClientRect().width;
-      const sizes = Array.from(container.children, (element) => {
-        const { width, height } = element.getBoundingClientRect();
-        return { width, height };
-      });
-      const arrangeCards = (heightLimit?: number) => {
-        const cards: CardPlacement[] = [];
-
-        for (const { width, height } of sizes) {
-          const leftEdges = [0, ...cards.map((card) => card.left + card.width + gap)].sort((a, b) => a - b);
-          const topEdges = [0, ...cards.map((card) => card.top + card.height + gap)].sort((a, b) => a - b);
-          const candidates = topEdges.flatMap((top) =>
-            leftEdges.map((left) => ({ left, top, width, height }))
-          ).filter((candidate) =>
-            candidate.left + width <= availableWidth + 0.01 &&
-            !cards.some((card) =>
-              candidate.left < card.left + card.width + gap - 0.01 &&
-              candidate.left + width + gap > card.left + 0.01 &&
-              candidate.top < card.top + card.height + gap - 0.01 &&
-              candidate.top + height + gap > card.top + 0.01
-            )
-          );
-
-          // Fill down the left side before moving right. If the height budget
-          // has no space left, use the highest available position as overflow.
-          const preferred = heightLimit === undefined ? undefined : candidates
-            .filter((candidate) => candidate.top + height <= heightLimit + 0.01)
-            .sort((a, b) => a.left - b.left || a.top - b.top)[0];
-          const placement = preferred ?? candidates[0];
-          if (placement) cards.push(placement);
-        }
-        return cards;
-      };
-
-      // Derive a finite height from a top-first pass, then pack toward the
-      // left within it. An unlimited height would stack every card at x=0.
-      const initialCards = arrangeCards();
-      const heightLimit = Math.max(0, ...initialCards.map((card) => card.top + card.height));
-      const cards = arrangeCards(heightLimit);
-
-      const height = Math.max(0, ...cards.map((card) => card.top + card.height));
-      setLayout((previous) => {
-        if (previous?.height === height && previous.cards.length === cards.length && cards.every((card, index) => {
-          const before = previous.cards[index];
-          return card.left === before.left && card.top === before.top && card.width === before.width && card.height === before.height;
-        })) return previous;
-        return { cards, height };
-      });
-    });
-
-    observer.observe(container);
-    for (const card of Array.from(container.children)) observer.observe(card);
-    return () => observer.disconnect();
-  }, [folders]);
-
+function ServiceCards({ folders }: { folders: BookmarkFolder[] }) {
   return (
-    <div
-      ref={containerRef}
-      className="relative flex flex-wrap items-start gap-4"
-      style={layout ? { height: layout.height } : undefined}
-    >
-      {folders.map((folder, index) => {
-        const placement = layout?.cards[index];
-        return (
-          <div
-            key={folder.title}
-            className="w-max max-w-full"
-            // Top/left preserve the viewport positioning of backend popovers;
-            // a transform would make each card their containing block.
-            style={placement ? { position: "absolute", left: placement.left, top: placement.top } : undefined}
-          >
-            <ServiceCard folder={folder} />
-          </div>
-        );
-      })}
+    <div className="grid grid-cols-[repeat(auto-fit,minmax(min(100%,36rem),1fr))] gap-5">
+      {folders.map((folder) => <ServiceCard key={folder.title} folder={folder} />)}
     </div>
   );
 }
 
 export default function LinksPage() {
   const folders = LINK_FOLDERS;
+  const tools = folders.filter((folder) => folder.layout === "list");
+  const services = folders.filter((folder) => folder.layout !== "list");
 
   return (
     <div className="flex h-screen flex-col">
@@ -338,13 +252,12 @@ export default function LinksPage() {
         <div className="border-b border-nb-ink/10 bg-white px-4 py-3">
           <h2 className="text-sm font-semibold tracking-wide text-nb-ink">Links</h2>
         </div>
-        <div className="flex-1 overflow-y-auto p-4">
+        <div className="flex-1 space-y-5 overflow-y-auto p-4">
           {folders.length === 0 && (
             <p className="text-sm font-medium text-nb-ink/50">No links configured.</p>
           )}
-          {folders.length > 0 && (
-            <ServiceMosaic folders={folders} />
-          )}
+          {tools.length > 0 && <ServiceCards folders={tools} />}
+          {services.length > 0 && <ServiceCards folders={services} />}
         </div>
       </div>
     </div>
