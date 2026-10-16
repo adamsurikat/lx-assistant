@@ -79,14 +79,14 @@ function GridCellButton({ env, cell }: { env: string; cell: GridCell }) {
   }
 
   const choices = cell.frontendChoices
-    ? cell.frontendChoices.map(({ frontend, link }) => ({ environment: frontend, link }))
+    ? cell.frontendChoices.map(({ frontend, label, link }) => ({ environment: frontend, label: label ?? frontend, link }))
     : [
-      { environment: env, link: cell.primary },
-      ...cell.backendVariants.map(({ backend, link }) => ({ environment: backend, link })),
+      { environment: env, label: env, link: cell.primary },
+      ...cell.backendVariants.map(({ backend, link }) => ({ environment: backend, label: backend, link })),
     ];
 
   // Anchor the chooser to its button without clipping it inside the table's
-  // horizontal scrolling area. LX React Client chooses frontends here;
+  // horizontal scrolling area. Frontend app cards choose frontends here;
   // other service cards keep their backend choices.
   return (
     <>
@@ -135,7 +135,7 @@ function GridCellButton({ env, cell }: { env: string; cell: GridCell }) {
               onClick={() => setAnchor(null)}
               className={`block truncate rounded px-2 py-1 text-xs hover:bg-nb-orange/10 hover:text-nb-ink ${choice.environment === env ? "font-semibold text-nb-ink" : "font-medium text-nb-ink/80"}`}
             >
-              {!cell.frontendChoices && choice.environment !== env ? "→ " : ""}{choice.environment}{choice.environment === env ? " (default)" : ""}
+              {!cell.frontendChoices && choice.environment !== env ? "→ " : ""}{choice.label}{choice.environment === env ? " (default)" : ""}
             </a>
           ))}
         </div>
@@ -187,7 +187,7 @@ function ServiceCard({ folder, controls }: { folder: BookmarkFolder; controls?: 
             <thead>
               <tr>
                 <th className="w-0 pb-3 pr-4 text-left text-xs font-semibold text-nb-ink/50">
-                  {folder.id === "lx-react-client" ? "Backend" : null}
+                  {grid.backendFirst ? "Backend" : null}
                 </th>
                 {grid.environments.map((env) => (
                   <th

@@ -111,3 +111,89 @@ test("other services keep their existing EU/APAC tenant labels", () => {
   assert.equal(grid.cells.APAC.FAT.primary, apac);
   assert.equal(grid.cells.EU.FAT.frontendChoices, undefined);
 });
+
+test("booking frontend choices keep the selected backend and tenant across frontend hosts", () => {
+  const booking = LINK_FOLDERS.find((folder) => folder.id === "lx-booking")!;
+  const grid = buildServiceGrid(booking);
+  assert.equal(grid.backendFirst, true);
+  assert.deepEqual(grid.environments, ["Local", "FAT", "Staging", "Prod"]);
+  assert.deepEqual(Object.keys(grid.cells.MeerkatFerries), ["Local", "FAT"]);
+  const represented: BookmarkLink[] = [];
+  for (const [tenant, cells] of Object.entries(grid.cells)) {
+    for (const [backend, cell] of Object.entries(cells)) {
+      const choices = cell.frontendChoices!;
+      const expected = backend === "Local" ? ["Local"]
+        : tenant === "MeerkatFerries" ? ["FAT", "Local"]
+          : ["Local", "FAT", "Staging", "Prod"];
+      assert.deepEqual(choices.map((choice) => choice.frontend).sort(), [...expected].sort());
+      for (const { frontend, link: choiceLink } of choices) {
+        represented.push(choiceLink);
+        const url = new URL(choiceLink.url);
+        const selectedEnv = url.searchParams.get("env")
+          ?? (url.hostname.includes("fatikat.com") ? "FAT" : url.hostname.includes("stagikat.com") ? "STAGING" : "PROD");
+        assert.equal(selectedEnv, backend === "Local" ? "DEV" : backend.toUpperCase());
+        if (frontend === "Local") {
+          assert.equal(url.origin, "http://localhost:3001");
+          assert.equal(url.searchParams.get("tenant"), tenant.toLowerCase());
+        } else {
+          assert.ok(url.hostname.startsWith(`${tenant.toLowerCase()}.`));
+          if (tenant === "SOT" && frontend !== "Prod") {
+            assert.ok(url.hostname.includes(".apac."));
+            assert.equal(url.searchParams.has("e2e"), true);
+          }
+        }
+      }
+    }
+  }
+  assert.equal(new Set(represented).size, booking.children.length);
+  assert.deepEqual(grid.other, []);
+});
+
+test("kiosk choices select both GOS backends and preserve the terminal and tenant", () => {
+  const kiosk = LINK_FOLDERS.find((folder) => folder.id === "lx-vms-kiosk-fe")!;
+  const grid = buildServiceGrid(kiosk);
+  assert.equal(grid.backendFirst, true);
+  const terminals = [
+    { name: "Rødby", code: "ROF", tenant: "scandlines", premise: true, environments: ["Local", "FAT", "Staging"] },
+    { name: "Visby", code: "SEVBY", tenant: "dg", premise: false, environments: ["Local"] },
+    { name: "Europoort", code: "EURO", tenant: "pof", premise: true, environments: ["Local", "FAT", "Staging"] },
+    { name: "Zeebrugge", code: "ZEE", tenant: "pof", premise: true, environments: ["Local", "FAT", "Staging"] },
+    { name: "Heysham", code: "HEYS", tenant: "peelports", premise: true, environments: ["Local", "FAT", "Staging"] },
+    { name: "Devonport", code: "DPO", tenant: "sot", premise: false, environments: ["Local"] },
+    { name: "Belfast VT4", code: "BELF", tenant: "stena", premise: false, environments: ["Local", "FAT", "Staging", "Prod"] },
+  ];
+  const represented: BookmarkLink[] = [];
+  for (const terminal of terminals) {
+    const cells = grid.cells[terminal.name];
+    assert.deepEqual(Object.keys(cells), terminal.environments);
+    for (const [backend, cell] of Object.entries(cells)) {
+      const choices = cell.frontendChoices!;
+      assert.deepEqual(choices.map((choice) => choice.frontend), backend === "Local" ? ["Local"] : [backend, "Local"]);
+      for (const choice of choices) {
+        represented.push(choice.link);
+        const url = new URL(choice.link.url);
+        assert.equal(url.pathname, `/${terminal.code}`);
+        assert.equal(url.searchParams.get("tenant"), terminal.tenant);
+        const gsu = backend === "Local" ? "http://localhost:8899"
+          : backend === "Prod" ? "https://gos.bylynx.com"
+            : backend === "Staging" ? "https://gos.lx.stagikat.com"
+              : terminal.tenant === "stena" ? "https://stena.gos.lx.fatikat.com" : "https://gos.lx.fatikat.com";
+        assert.equal(url.searchParams.get("gsu"), gsu);
+        const gpu = !terminal.premise ? null : backend === "Local" ? "http://localhost:1881"
+          : `https://${terminal.tenant}.nodered.blx.${backend === "FAT" ? "fatikat" : "stagikat"}.com:1881`;
+        assert.equal(url.searchParams.get("gpu"), gpu);
+        if (choice.frontend === "Local") {
+          assert.equal(url.origin, "http://localhost:3672");
+          assert.equal(choice.label, "Local / Docker");
+        } else {
+          const tenantHost = terminal.tenant === "scandlines" ? "scandlines-hkrifjae" : terminal.tenant;
+          const origin = backend === "Prod" ? "https://stenalineports.com"
+            : `https://${tenantHost}.lx-vms-kiosk.lx.${backend === "FAT" ? "fatikat" : "stagikat"}.com`;
+          assert.equal(url.origin, origin);
+        }
+      }
+    }
+  }
+  assert.equal(new Set(represented).size, kiosk.children.length);
+  assert.deepEqual(grid.other, []);
+});

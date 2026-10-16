@@ -8,13 +8,14 @@ export interface GridCell {
   // environment (e.g. "Stena Local to FAT" -> backend "FAT"), offered as a
   // choice instead of always opening `primary`.
   backendVariants: { backend: string; link: BookmarkLink }[];
-  // LX React Client columns represent backends. Every existing frontend
+  // Frontend app columns represent backends. Every existing frontend
   // that targets that backend is offered here, including the primary link.
-  frontendChoices?: { frontend: string; link: BookmarkLink }[];
+  frontendChoices?: { frontend: string; label?: string; link: BookmarkLink }[];
 }
 
 export interface ServiceGrid {
   title: string;
+  backendFirst: boolean;
   environments: string[];
   tenants: string[];
   cells: Record<string, Record<string, GridCell>>;
@@ -32,6 +33,7 @@ const ENV_ALIASES: Record<string, string> = {
   production: "Prod",
 };
 const ENV_ORDER = ["Local", "Docker", "FAT", "Staging", "Prod"];
+const BACKEND_FIRST_SERVICES = new Set(["lx-react-client", "lx-booking", "lx-vms-kiosk-fe"]);
 
 const DEFAULT_TENANT = "Default";
 // The tenant label parsed out of an "... APAC" title (see envIndex/tenant
@@ -88,13 +90,13 @@ function findCommonPrefix(links: BookmarkLink[]): string | null {
  * `other` list, EXCEPT "<tenant> <env> to <backendEnv>" links, which are
  * attached as backend-choice variants on the matching <tenant>/<env> cell
  * (e.g. a locally-running frontend that can point at different backend
- * environments) instead of being dropped. LX React Client instead groups
+ * environments) instead of being dropped. Frontend app cards instead group
  * each link under its backend environment, with frontends offered as choices.
  */
 export function buildServiceGrid(folder: BookmarkFolder): ServiceGrid {
   const links = folder.children.filter((n: BookmarkNode): n is BookmarkLink => n.type === "link");
   const prefix = findCommonPrefix(links);
-  const backendFirst = folder.id === "lx-react-client";
+  const backendFirst = BACKEND_FIRST_SERVICES.has(folder.id);
 
   const cells: Record<string, Record<string, GridCell>> = {};
   const environments = new Set<string>();
@@ -112,7 +114,9 @@ export function buildServiceGrid(folder: BookmarkFolder): ServiceGrid {
       backendVariants: [],
       frontendChoices: [],
     };
-    cell.frontendChoices!.push({ frontend, link });
+    // The kiosk dev server and Docker compose publish the same frontend port.
+    const label = folder.id === "lx-vms-kiosk-fe" && frontend === "Local" ? "Local / Docker" : undefined;
+    cell.frontendChoices!.push(label ? { frontend, label, link } : { frontend, link });
   }
 
   for (const link of links) {
@@ -220,6 +224,7 @@ export function buildServiceGrid(folder: BookmarkFolder): ServiceGrid {
 
   return {
     title: folder.title,
+    backendFirst,
     environments: sortedEnvironments,
     tenants: sortedTenants,
     cells,

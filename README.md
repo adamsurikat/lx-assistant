@@ -85,6 +85,14 @@ to the database for your account, including across browsers and devices. Handles
 also support touch dragging and the up/down arrow keys when focused. If a save
 fails, your arrangement stays on screen and **Retry** saves it again.
 
+The LX React Client, booking, and kiosk cards group buttons by backend and let
+you choose a frontend. Booking switches backends with `env`; kiosk uses `gsu`
+for GOS and `gpu` for the terminal service. Kiosk's **Local / Docker** option
+uses port 3672 for both launch methods. Booking has no configured Docker host
+port. Kiosk options cover the backend and authentication configurations verified
+in the sibling repos; production terminal URLs for Rødby, Europoort, Zeebrugge,
+and Heysham still need confirmation.
+
 ## Bootstrapping map data
 
 The `/map` page's ports, depots, and sea routes live in the database
