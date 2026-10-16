@@ -80,10 +80,10 @@ with a local SQLite copy kept as a backup/report.
 
 ## Personal links layout
 
-On **Links**, choose **Arrange cards**, then drag a card's handle or use its
-earlier/later arrows. **Save order** stores the layout in the database for your
-account, including across browsers and devices. **Cancel** discards the draft;
-**Reset order** restores the default order in the draft until you save it.
+On **Links**, drag a card's handle to reorder it. Each change automatically saves
+to the database for your account, including across browsers and devices. Handles
+also support touch dragging and the up/down arrow keys when focused. If a save
+fails, your arrangement stays on screen and **Retry** saves it again.
 
 ## Bootstrapping map data
 
