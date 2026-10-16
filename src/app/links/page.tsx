@@ -300,7 +300,7 @@ function ServiceMasonry({ folders, reordering }: { folders: BookmarkFolder[]; re
                 aria-label={`Drag ${folder.title} to reorder`}
                 aria-describedby="link-card-drag-help"
                 title="Drag to reorder"
-                className="nb-btn h-9 w-9 shrink-0 touch-none cursor-grab active:cursor-grabbing aria-disabled:cursor-default aria-disabled:opacity-50"
+                className="inline-flex h-9 w-9 shrink-0 touch-none items-center justify-center rounded bg-transparent cursor-grab active:cursor-grabbing focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-nb-ink/50 aria-disabled:cursor-default aria-disabled:opacity-50"
                 onDragStart={(event) => {
                   if (reordering.disabled || touchDrag.current) {
                     event.preventDefault();
