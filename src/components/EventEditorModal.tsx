@@ -3,6 +3,22 @@
 import { useEffect, useRef, useState } from "react";
 import type { TicketSummary } from "@/components/TicketSidebar";
 
+const EVENT_PRESETS = [
+  "Vacation",
+  "Team lead",
+  "Sprint demo",
+  "Surikat hours",
+  "Sick",
+  "VAB",
+  "Parental leave",
+  "Monthly meeting",
+  "Conference",
+];
+
+type EventOption =
+  | { kind: "preset"; title: string }
+  | { kind: "ticket"; ticket: TicketSummary };
+
 export interface EditableEntry {
   id: string | null;
   start: string;
@@ -68,10 +84,7 @@ export function EventEditorModal({
   const [saving, setSaving] = useState(false);
   const [deleting, setDeleting] = useState(false);
 
-  // Ticket combobox: a single search box that shows a dropdown of the
-  // tracked/active tickets on focus (auto-suggest style, arrow-key
-  // navigable), and swaps to filtered + remotely-searched results once the
-  // user starts typing.
+  // Presets and tracked tickets share a searchable, keyboard-navigable list.
   const [query, setQuery] = useState("");
   const [comboOpen, setComboOpen] = useState(false);
   const [highlighted, setHighlighted] = useState(0);
@@ -92,16 +105,26 @@ export function EventEditorModal({
 
   const trimmedQuery = query.trim();
   const isSearchingText = trimmedQuery.length > 0;
+  const textQuery = trimmedQuery.toLowerCase();
+  // Keep spaces in preset names; normalize only Jira keys so "proj 123"
+  // still resolves like "proj-123".
+  const ticketQuery = textQuery.replace(/\s+/g, "-");
+  const lookupKey = /^(?:[a-z][a-z0-9_]*-\d+|\d+)$/i.test(ticketQuery)
+    ? ticketQuery
+    : "";
+  const presetMatches = EVENT_PRESETS.filter((preset) =>
+    preset.toLowerCase().includes(textQuery)
+  );
+  const selectedPreset = !ticket ? EVENT_PRESETS.find((preset) => preset === title.trim()) : undefined;
 
-  // While the user is typing, the "suggested" (full) list is replaced by
-  // tracked tickets that match the query text.
   const localMatches = isSearchingText
     ? tickets.filter(
         (t) =>
-          t.key.toLowerCase().includes(trimmedQuery.toLowerCase()) ||
-          t.summary.toLowerCase().includes(trimmedQuery.toLowerCase())
+          t.key.toLowerCase().includes(ticketQuery) ||
+          t.summary.toLowerCase().includes(textQuery)
       )
     : tickets;
+  const hasLocalMatches = localMatches.length > 0;
 
   // Any remote match (an untracked ticket found by exact key) that isn't
   // already present in the local matches gets appended to the list.
@@ -110,30 +133,41 @@ export function EventEditorModal({
       ? [remoteMatch]
       : [];
 
-  const comboOptions = [...localMatches, ...remoteExtra];
+  const comboOptions: EventOption[] = [
+    ...[...localMatches, ...remoteExtra].map((ticket): EventOption => ({ kind: "ticket", ticket })),
+    ...presetMatches.map((title): EventOption => ({ kind: "preset", title })),
+  ];
 
-  // Debounced remote lookup-by-key for tickets not in the tracked list,
-  // e.g. ad hoc tickets not currently assigned to the user. The stale
-  // error/remoteMatch for the *previous* query are cleared synchronously in
-  // handleQueryChange below, not here, so this effect only ever sets state
-  // asynchronously (inside the timeout callback).
+  // Only ticket keys/IDs trigger a remote lookup. Preset searches stay local.
   useEffect(() => {
-    if (!isSearchingText) return;
+    if (!lookupKey) return;
+    let cancelled = false;
     const handle = setTimeout(async () => {
       setSearching(true);
-      const found = await onLookupTicket(trimmedQuery);
+      const found = await onLookupTicket(lookupKey);
+      if (cancelled) return;
       setSearching(false);
       if (found) {
         setRemoteMatch(found);
         setSearchError(null);
       } else {
         setRemoteMatch(null);
-        setSearchError(localMatches.length === 0 ? `No Jira ticket found for "${trimmedQuery}"` : null);
+        setSearchError(hasLocalMatches ? null : `No Jira ticket found for "${lookupKey}"`);
       }
     }, 350);
-    return () => clearTimeout(handle);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [trimmedQuery]);
+    return () => {
+      cancelled = true;
+      clearTimeout(handle);
+    };
+  }, [query, lookupKey, onLookupTicket, hasLocalMatches]);
+
+  useEffect(() => {
+    if (comboOpen) {
+      document.getElementById(`event-combobox-option-${highlighted}`)?.scrollIntoView({
+        block: "nearest",
+      });
+    }
+  }, [comboOpen, highlighted]);
 
   useEffect(() => {
     if (!comboOpen) return;
@@ -147,27 +181,33 @@ export function EventEditorModal({
   }, [comboOpen]);
 
   const handleQueryChange = (value: string) => {
-    // Jira keys use a dash (e.g. PROJ-123), not a space, so auto-convert
-    // spaces as the user types to make "proj 123" resolve like "proj-123".
-    setQuery(value.replace(/ /g, "-"));
+    setQuery(value);
     setHighlighted(0);
     setRemoteMatch(null);
     setSearchError(null);
+    setSearching(false);
   };
 
   const openCombo = () => {
-    setQuery("");
-    setHighlighted(0);
+    handleQueryChange("");
     setComboOpen(true);
   };
 
   const selectTicket = (t: TicketSummary | null) => {
     setTicket(t);
-    setQuery("");
-    setRemoteMatch(null);
-    setSearchError(null);
+    handleQueryChange("");
     setComboOpen(false);
     inputRef.current?.blur();
+  };
+
+  const selectOption = (option: EventOption) => {
+    if (option.kind === "preset") {
+      selectTicket(null);
+      setTitle(option.title);
+    } else {
+      selectTicket(option.ticket);
+    }
+    commentInputRef.current?.focus();
   };
 
   const handleComboKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
@@ -193,8 +233,7 @@ export function EventEditorModal({
         titleInputRef.current?.focus();
       } else {
         const picked = comboOptions[highlighted - 1];
-        if (picked) selectTicket(picked);
-        commentInputRef.current?.focus();
+        if (picked) selectOption(picked);
       }
     } else if (e.key === "Escape") {
       setComboOpen(false);
@@ -285,32 +324,36 @@ export function EventEditorModal({
         </div>
 
 
-        <label className="mb-2 block text-sm font-semibold tracking-wide text-nb-ink">
-          Ticket
+        <label htmlFor="event-option" className="mb-2 block text-sm font-semibold tracking-wide text-nb-ink">
+          Preset or Jira ticket
         </label>
         <div ref={comboRef} className="relative mb-5">
           <input
+            id="event-option"
             ref={inputRef}
             type="text"
             role="combobox"
             aria-expanded={comboOpen}
-            aria-controls="ticket-combobox-listbox"
+            aria-controls="event-combobox-listbox"
+            aria-activedescendant={comboOpen ? `event-combobox-option-${highlighted}` : undefined}
             aria-autocomplete="list"
-            value={comboOpen ? query : ticket ? `${ticket.key} · ${ticket.summary}` : ""}
+            value={comboOpen ? query : ticket ? `${ticket.key} · ${ticket.summary}` : selectedPreset ?? ""}
             onFocus={openCombo}
             onChange={(e) => handleQueryChange(e.target.value)}
             onKeyDown={handleComboKeyDown}
-            placeholder="Search tickets or type a ticket number, e.g. PROJ-123"
+            placeholder="Choose a preset or search Jira tickets…"
             className="nb-input w-full px-3 py-2 text-sm"
             style={searchError ? { borderColor: "var(--nb-pink)", borderWidth: 2 } : undefined}
           />
           {comboOpen && (
             <div
-              id="ticket-combobox-listbox"
+              id="event-combobox-listbox"
               role="listbox"
+              aria-label="Presets and Jira tickets"
               className="nb-panel-sm absolute z-50 mt-1 max-h-60 w-full overflow-y-auto bg-white p-1 text-left"
             >
               <button
+                id="event-combobox-option-0"
                 type="button"
                 role="option"
                 aria-selected={highlighted === 0}
@@ -322,25 +365,35 @@ export function EventEditorModal({
               >
                 No ticket
               </button>
-              {comboOptions.map((t, i) => (
+              {comboOptions.map((option, i) => (
                 <button
-                  key={t.id}
+                  key={option.kind === "preset" ? `preset-${option.title}` : option.ticket.id}
+                  id={`event-combobox-option-${i + 1}`}
                   type="button"
                   role="option"
                   aria-selected={highlighted === i + 1}
                   onMouseDown={(e) => e.preventDefault()}
-                  onClick={() => selectTicket(t)}
+                  onClick={() => selectOption(option)}
                   className={`flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-left text-sm ${
                     highlighted === i + 1 ? "bg-nb-orange/10 text-nb-ink" : "text-nb-ink hover:bg-nb-orange/10"
                   }`}
                 >
-                  <span
-                    className="h-2 w-2 shrink-0 rounded-full"
-                    style={{ backgroundColor: t.color ?? "#9ca3af" }}
-                  />
-                  <span className="truncate">
-                    <span className="font-semibold">{t.key}</span> · {t.summary}
-                  </span>
+                  {option.kind === "preset" ? (
+                    <>
+                      <span className="flex-1 font-medium">{option.title}</span>
+                      <span className="text-xs text-nb-ink/50">Preset</span>
+                    </>
+                  ) : (
+                    <>
+                      <span
+                        className="h-2 w-2 shrink-0 rounded-full"
+                        style={{ backgroundColor: option.ticket.color ?? "#9ca3af" }}
+                      />
+                      <span className="truncate">
+                        <span className="font-semibold">{option.ticket.key}</span> · {option.ticket.summary}
+                      </span>
+                    </>
+                  )}
                 </button>
               ))}
               {isSearchingText && searching && (
@@ -348,7 +401,7 @@ export function EventEditorModal({
               )}
               {isSearchingText && !searching && comboOptions.length === 0 && (
                 <p className="px-2 py-1.5 text-xs font-medium text-nb-ink/50">
-                  {searchError ?? "No matching tickets"}
+                  {searchError ?? "No matching presets or tickets"}
                 </p>
               )}
             </div>
