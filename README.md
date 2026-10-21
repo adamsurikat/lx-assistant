@@ -2,7 +2,37 @@
 
 ## Environment
 
-Copy `.env.local.example` to `.env.local`. `AUTH_SECRET` secures sessions; `TOKEN_ENCRYPTION_KEY` encrypts Jira credentials—generate each separately with `openssl rand -base64 32`. `AUTH_GOOGLE_ID` and `AUTH_GOOGLE_SECRET` are your Google OAuth client ID and secret; register `<origin>/api/auth/callback/google`. `AUTH_TRUST_HOST=true` allows localhost or a trusted reverse proxy. `DATABASE_URL` selects the database: the committed `.env` uses `file:./dev.db` locally; containers use `file:/app/data/dev.db` or a Postgres URL. Container-only `DATABASE_PROVIDER` defaults to `sqlite`; set `postgresql` for Postgres. Optional `JIRA_OAUTH_CLIENT_ID` and `JIRA_OAUTH_CLIENT_SECRET` enable Atlassian OAuth with callback `<origin>/api/jira/callback`; omit both to use a Jira API token in Settings.
+Copy `.env.local.example` to `.env.local` and fill in your credentials. Generate each secret separately with `openssl rand -base64 32`. Register the OAuth callbacks below, replacing `<origin>` with your app URL.
+
+```dotenv
+# .env.local
+AUTH_SECRET="..."          # Session signing secret
+TOKEN_ENCRYPTION_KEY="..." # Jira credential encryption: 32 bytes, base64
+AUTH_TRUST_HOST=true       # Localhost or a trusted reverse proxy
+
+# Google OAuth: <origin>/api/auth/callback/google
+AUTH_GOOGLE_ID="..."       # Client ID
+AUTH_GOOGLE_SECRET="..."   # Client secret
+
+# Optional Atlassian OAuth: <origin>/api/jira/callback
+# Omit both to use a Jira API token in Settings.
+# JIRA_OAUTH_CLIENT_ID="..."
+# JIRA_OAUTH_CLIENT_SECRET="..."
+```
+
+```dotenv
+# .env — already configured for local SQLite
+DATABASE_URL="file:./dev.db"
+```
+
+```dotenv
+# .env.docker — container database settings only
+DATABASE_URL="file:/app/data/dev.db" # Persistent SQLite database
+
+# DATABASE_PROVIDER defaults to sqlite. For Postgres, replace the above with:
+# DATABASE_URL="postgresql://user:password@host:5432/database"
+# DATABASE_PROVIDER="postgresql"
+```
 
 ## Run locally
 
