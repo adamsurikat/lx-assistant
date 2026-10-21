@@ -6,7 +6,7 @@ import { useEffect, useSyncExternalStore, type ReactNode } from "react";
 import { POSTITS_CHANGED_EVENT } from "@/lib/postits";
 
 interface AppHeaderProps {
-  active: "calendar" | "tools" | "links" | "board" | "map" | "settings";
+  active: "calendar" | "jira" | "tools" | "links" | "board" | "map" | "settings";
   extra?: ReactNode;
 }
 
@@ -173,18 +173,18 @@ export function AppHeader({ active, extra }: AppHeaderProps) {
   }, []);
 
   return (
-    <header className="nb-panel-sm sticky top-0 z-20 m-3 mb-0 flex flex-col gap-2 bg-nb-orange px-4 py-3 md:flex-row md:flex-nowrap md:items-center md:justify-between md:gap-3 md:px-8 md:py-4">
-      <div className="flex w-full items-center justify-between gap-2 md:w-auto md:justify-start md:gap-8">
+    <header className="nb-panel-sm sticky top-0 z-20 m-3 mb-0 flex flex-col gap-2 bg-nb-orange px-4 py-3 lg:flex-row lg:flex-nowrap lg:items-center lg:justify-between lg:gap-3 lg:px-8 lg:py-4">
+      <div className="flex w-full items-center justify-between gap-2 lg:w-auto lg:justify-start lg:gap-8">
         <h1 className="nb-display flex items-center gap-2 text-lg md:text-2xl">
           <BrandIcon className="h-6 w-6 shrink-0 md:h-8 md:w-8" />
           {appTitle}
         </h1>
         {/* Settings/logout (and any `extra` action) pinned to the top-right
             corner on mobile, alongside the title, instead of wrapping onto
-            their own row below the nav links. Hidden at md: and up, where
+            their own row below the nav links. Hidden at lg: and up, where
             the equivalent desktop-only block further down (unchanged from
             before) already renders them at the far right of the header. */}
-        <div className="flex items-center gap-1 md:hidden">
+        <div className="flex items-center gap-1 lg:hidden">
           {extra}
           <Link
             href="/settings"
@@ -203,9 +203,12 @@ export function AppHeader({ active, extra }: AppHeaderProps) {
             <LogoutIcon />
           </button>
         </div>
-        <nav className="hidden items-center gap-3 text-lg font-bold md:flex">
+        <nav className="hidden items-center gap-3 text-lg font-bold lg:flex">
           <Link href="/" className={active === "calendar" ? NAV_LINK_ACTIVE : NAV_LINK_INACTIVE}>
             Calendar
+          </Link>
+          <Link href="/jira" className={active === "jira" ? NAV_LINK_ACTIVE : NAV_LINK_INACTIVE}>
+            Jira
           </Link>
           <Link href="/tools" className={active === "tools" ? NAV_LINK_ACTIVE : NAV_LINK_INACTIVE}>
             Tools
@@ -232,13 +235,16 @@ export function AppHeader({ active, extra }: AppHeaderProps) {
         </nav>
       </div>
       {/* Mobile-only nav row, wrapping full-width below the title/icons
-          row above. Desktop uses the `md:flex` nav rendered inline next to
+          row above. Desktop uses the `lg:flex` nav rendered inline next to
           the title instead (identical links, kept as a separate block so
           the icons can sit beside the title only on mobile without
           disturbing the unchanged desktop layout). */}
-      <nav className="flex flex-wrap items-center gap-2 text-sm font-bold md:hidden">
+      <nav className="flex flex-wrap items-center gap-2 text-sm font-bold lg:hidden">
         <Link href="/" className={active === "calendar" ? NAV_LINK_ACTIVE : NAV_LINK_INACTIVE}>
           Calendar
+        </Link>
+        <Link href="/jira" className={active === "jira" ? NAV_LINK_ACTIVE : NAV_LINK_INACTIVE}>
+          Jira
         </Link>
         <Link href="/tools" className={active === "tools" ? NAV_LINK_ACTIVE : NAV_LINK_INACTIVE}>
           Tools
@@ -263,7 +269,7 @@ export function AppHeader({ active, extra }: AppHeaderProps) {
           Map
         </Link>
       </nav>
-      <div className="hidden items-center gap-3 text-lg font-bold md:flex">
+      <div className="hidden items-center gap-3 text-lg font-bold lg:flex">
         {extra}
         <span>{session?.user?.name}</span>
         <Link
