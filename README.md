@@ -6,7 +6,7 @@ Copy `.env.local.example` to `.env.local`. `AUTH_SECRET` secures sessions; `TOKE
 
 ## Run locally
 
-Use Node.js 22 and configure `.env.local`, then run the commands below. Open `http://localhost:3456`, sign in with Google, and connect Jira in Settings.
+Use Node.js 26 and configure `.env.local`, then run the commands below. Open `http://localhost:3456`, sign in with Google, and connect Jira in Settings.
 
 ```sh
 npm ci --legacy-peer-deps

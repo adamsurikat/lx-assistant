@@ -4,7 +4,7 @@
 # Prisma CLI is needed at container startup to run migrations against the
 # mounted SQLite file — see docker-entrypoint.sh).
 
-FROM node:22-alpine AS base
+FROM node:26-alpine AS base
 # Prisma's query engine needs OpenSSL; libc6-compat helps some native
 # addons that expect glibc-style symbols run correctly on musl (alpine).
 RUN apk add --no-cache openssl libc6-compat
