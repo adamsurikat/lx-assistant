@@ -59,6 +59,7 @@ function makeDragPreviewItem(): CalendarEventItem {
 export interface CalendarEventItem {
   id: string;
   title: string;
+  description?: string | null;
   start: Date;
   end: Date;
   color: string;
@@ -78,6 +79,7 @@ export interface CalendarEventItem {
   disabledPlaceholder?: boolean;
   googleLink?: string;
   ticketKey?: string;
+  ticketSummary?: string;
   ticketStatus?: string;
   // Duration label (e.g. "1h 30m"), rendered on its own line below the
   // title in the event tile.

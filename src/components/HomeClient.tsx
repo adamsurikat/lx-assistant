@@ -489,10 +489,12 @@ export function HomeClient({ initialTickets, userId }: HomeClientProps) {
     const anchor = { x: mouseEvent.clientX, y: mouseEvent.clientY };
     const data: EventPopoverData = {
       title: event.title,
+      description: event.description,
       start: event.start,
       end: event.end,
       readOnly: Boolean(event.readOnly),
       ticketKey: event.ticketKey,
+      ticketSummary: event.ticketSummary,
       ticketStatus: event.ticketStatus,
       unassigned: event.unassigned,
       synced: event.synced,
@@ -545,6 +547,7 @@ export function HomeClient({ initialTickets, userId }: HomeClientProps) {
   const calendarEvents: CalendarEventItem[] = entries.map((entry) => ({
     id: entry.id,
     title: entry.ticket ? entry.ticket.key : entry.title?.trim() || "Unassigned",
+    description: entry.comment,
     duration: formatDuration(entry.start, entry.end),
     start: new Date(entry.start),
     end: new Date(entry.end),
@@ -553,6 +556,7 @@ export function HomeClient({ initialTickets, userId }: HomeClientProps) {
     synced: entry.syncedToJira,
     syncError: entry.lastSyncError,
     ticketKey: entry.ticket?.key,
+    ticketSummary: entry.ticket?.summary,
     ticketStatus: entry.ticket?.status,
     syncing: syncingIds.has(entry.id),
     resourceId: "time",

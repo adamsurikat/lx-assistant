@@ -1,13 +1,15 @@
 "use client";
 
-import { useEffect, useRef } from "react";
+import { useEffect, useLayoutEffect, useRef } from "react";
 
 export interface EventPopoverData {
   title: string;
+  description?: string | null;
   start?: Date;
   end?: Date;
   readOnly: boolean;
   ticketKey?: string;
+  ticketSummary?: string;
   ticketStatus?: string;
   unassigned?: boolean;
   synced?: boolean;
@@ -62,17 +64,27 @@ export function EventPopover({ data, anchor, onClose, onEdit, onDelete, onResync
     };
   }, [onClose]);
 
-  // Keep the popover roughly on-screen — clamp so it doesn't render past
-  // the right/bottom edge of the viewport.
-  const width = 288;
-  const left = Math.min(anchor.x, (typeof window !== "undefined" ? window.innerWidth : 1200) - width - 16);
-  const top = Math.min(anchor.y, (typeof window !== "undefined" ? window.innerHeight : 800) - 220);
+  // Descriptions vary in length, so position using the rendered card's size.
+  useLayoutEffect(() => {
+    const element = ref.current;
+    if (!element) return;
+
+    const positionPopover = () => {
+      const { width, height } = element.getBoundingClientRect();
+      element.style.left = `${Math.max(8, Math.min(anchor.x, window.innerWidth - width - 16))}px`;
+      element.style.top = `${Math.max(8, Math.min(anchor.y, window.innerHeight - height - 16))}px`;
+    };
+
+    positionPopover();
+    window.addEventListener("resize", positionPopover);
+    return () => window.removeEventListener("resize", positionPopover);
+  }, [anchor.x, anchor.y, data]);
 
   return (
     <div
       ref={ref}
-      className="nb-panel-sm fixed z-50 w-72 bg-white p-4"
-      style={{ left: Math.max(left, 8), top: Math.max(top, 8) }}
+      className="nb-panel-sm fixed z-50 max-h-[calc(100dvh-1rem)] w-72 max-w-[calc(100vw-1rem)] overflow-y-auto break-words bg-white p-4"
+      style={{ left: anchor.x, top: anchor.y }}
     >
       <p className="pr-4 text-sm font-bold text-nb-ink">{data.title}</p>
       {data.start && data.end && (
@@ -85,6 +97,20 @@ export function EventPopover({ data, anchor, onClose, onEdit, onDelete, onResync
         <span className="mt-2 nb-badge">
           {data.ticketStatus}
         </span>
+      )}
+
+      {data.ticketSummary?.trim() && (
+        <div className="mt-3">
+          <p className="text-xs font-bold text-nb-ink/60">Jira ticket summary</p>
+          <p className="mt-1 whitespace-pre-wrap text-sm text-nb-ink">{data.ticketSummary}</p>
+        </div>
+      )}
+
+      {data.description?.trim() && (
+        <div className="mt-3">
+          <p className="text-xs font-bold text-nb-ink/60">Description</p>
+          <p className="mt-1 whitespace-pre-wrap text-sm text-nb-ink">{data.description}</p>
+        </div>
       )}
 
       {!data.readOnly && (
