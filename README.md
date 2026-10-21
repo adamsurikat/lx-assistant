@@ -36,7 +36,7 @@ DATABASE_URL="file:/app/data/dev.db" # Persistent SQLite database
 
 ## Run locally
 
-Use Node.js 26 and configure `.env.local`, then run the commands below. Open `http://localhost:3456`, sign in with Google, and connect Jira in Settings.
+Use Node.js 26 and configure `.env.local`, then run the commands below. Startup imports `prisma/mapData.geojson` when all map tables are empty; existing maps stay unchanged. Open `http://localhost:3456`, sign in with Google, and connect Jira in Settings.
 
 ```sh
 npm ci --legacy-peer-deps
@@ -46,7 +46,7 @@ npm run dev
 
 ## Run in Docker
 
-Configure `.env.local` and copy `.env.docker.example` to `.env.docker` for database settings, then start Compose. Open `http://localhost:3456`. Startup applies the schema automatically; SQLite persists in the `app_data` volume, initially copying `prisma/dev.db` if available.
+Configure `.env.local` and copy `.env.docker.example` to `.env.docker` for database settings, then start Compose. Open `http://localhost:3456`. Startup applies the schema and seeds empty maps from `prisma/mapData.geojson`; SQLite persists in the `app_data` volume, initially copying `prisma/dev.db` if available.
 
 ```sh
 docker compose up --build -d
@@ -54,7 +54,7 @@ docker compose up --build -d
 
 ## Deploy to Rancher or another Docker host
 
-Build and push to your registry, then deploy that image with the environment variables above supplied through your host's settings/secrets. Route HTTPS traffic to container port `3456` and register OAuth callbacks using your public origin. For SQLite, mount persistent storage at `/app/data` and run one replica; alternatively, configure Postgres. Startup applies the schema automatically.
+Build and push to your registry, then deploy that image with the environment variables above supplied through your host's settings/secrets. Route HTTPS traffic to container port `3456` and register OAuth callbacks using your public origin. For SQLite, mount persistent storage at `/app/data` and run one replica; alternatively, configure Postgres. Startup applies the schema and seeds empty maps from `prisma/mapData.geojson`.
 
 ```sh
 docker build -t registry.example.com/lx-assistant:latest .

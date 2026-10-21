@@ -1,8 +1,6 @@
-// Bootstraps the MapPort/MapDepot/MapRoute tables from a GeoJSON export
-// (see GET /api/map/export and README "Bootstrapping map data"). This is
-// the recommended way for a new deployment to get real map data instead of
-// starting from an empty map: export from an existing instance, commit/
-// share the .geojson file, then run this script against the new database.
+// Manually imports a GeoJSON export into the MapPort/MapDepot/MapRoute tables.
+// Empty maps are seeded automatically at server startup; this command also
+// adds missing records to maps that already contain data.
 //
 // Safe to re-run: ports/depots/routes that already exist (matched by code,
 // or name if codeless — see lib/mapGeoJSON.ts) are skipped rather than
