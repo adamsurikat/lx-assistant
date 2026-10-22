@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import type { JiraTicket, JiraFixVersionUpdateResult } from "@/lib/jira";
 import { FixVersionSelect } from "./FixVersionSelect";
 
@@ -9,29 +9,26 @@ export function FixVersionTool({ initialFixVersions, updating, onUpdatingChange 
   updating: boolean;
   onUpdatingChange: (updating: boolean) => void;
 }) {
-  const [fixVersion, setFixVersion] = useState("");
   const [refresh, setRefresh] = useState(0);
 
   return (
     <div>
-      <div className="mb-6 flex flex-wrap items-end justify-between gap-4">
-        <div className="w-full sm:w-72">
-          <label htmlFor="expected-fix-version" className="mb-2 block text-sm font-semibold">Fix version</label>
-          <FixVersionSelect value={fixVersion} onChange={setFixVersion} initialVersions={initialFixVersions} disabled={updating} />
+      <div className="mb-4 flex flex-wrap items-start justify-between gap-4">
+        <div>
+          <h2 className="nb-display text-base">Open tickets without a fix version</h2>
+          <p className="mt-1 text-sm text-nb-ink/60">Assigned to you</p>
         </div>
         <button type="button" disabled={updating} className="nb-btn px-3 py-2 text-sm" onClick={() => setRefresh((value) => value + 1)}>
           Refresh
         </button>
       </div>
-      <h2 className="nb-display text-base">Open tickets without a fix version</h2>
-      <p className="mb-4 mt-1 text-sm text-nb-ink/60">Assigned to you</p>
-      <UnversionedTickets key={refresh} fixVersion={fixVersion} updating={updating} onUpdatingChange={onUpdatingChange} />
+      <UnversionedTickets key={refresh} initialFixVersions={initialFixVersions} updating={updating} onUpdatingChange={onUpdatingChange} />
     </div>
   );
 }
 
-function UnversionedTickets({ fixVersion, updating, onUpdatingChange }: {
-  fixVersion: string;
+function UnversionedTickets({ initialFixVersions, updating, onUpdatingChange }: {
+  initialFixVersions: string[] | null;
   updating: boolean;
   onUpdatingChange: (updating: boolean) => void;
 }) {
@@ -40,6 +37,7 @@ function UnversionedTickets({ fixVersion, updating, onUpdatingChange }: {
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
   const [outcome, setOutcome] = useState<(JiraFixVersionUpdateResult & { version: string }) | null>(null);
   const [updateError, setUpdateError] = useState<string | null>(null);
+  const [modalOpen, setModalOpen] = useState(false);
 
   useEffect(() => {
     const controller = new AbortController();
@@ -58,7 +56,7 @@ function UnversionedTickets({ fixVersion, updating, onUpdatingChange }: {
     return () => controller.abort();
   }, []);
 
-  async function setSelectedFixVersions() {
+  async function setSelectedFixVersions(fixVersion: string) {
     if (updating || !fixVersion || !selectedIds.length) return;
     onUpdatingChange(true);
     setOutcome(null);
@@ -77,6 +75,7 @@ function UnversionedTickets({ fixVersion, updating, onUpdatingChange }: {
       setResult((previous) => previous && { ...previous, tickets: previous.tickets.filter((ticket) => !updatedIds.has(ticket.id)) });
       setSelectedIds((previous) => previous.filter((id) => !updatedIds.has(id)));
       setOutcome({ ...update, version: fixVersion });
+      setModalOpen(false);
     } catch (error) {
       setUpdateError(error instanceof Error ? error.message : "Could not confirm the update. Refresh before retrying.");
     } finally {
@@ -90,7 +89,7 @@ function UnversionedTickets({ fixVersion, updating, onUpdatingChange }: {
 
   return (
     <>
-      {updateError && <p role="alert" className="mb-4 text-sm text-red-700">{updateError}</p>}
+      {!modalOpen && updateError && <p role="alert" className="mb-4 text-sm text-red-700">{updateError}</p>}
       {outcome && (
         <div className="mb-4 space-y-2 text-sm">
           {outcome.updated.length > 0 && <p role="status">Set {outcome.version} on {outcome.updated.length} {outcome.updated.length === 1 ? "ticket" : "tickets"}.</p>}
@@ -120,7 +119,7 @@ function UnversionedTickets({ fixVersion, updating, onUpdatingChange }: {
               Select all
             </label>
             <span className="text-nb-ink/60">{selectedIds.length} of {result.tickets.length} selected</span>
-            <button type="button" disabled={updating || !fixVersion || !selectedIds.length} onClick={() => void setSelectedFixVersions()} className="nb-btn nb-btn-green px-4 py-2 text-sm">
+            <button type="button" disabled={updating || !selectedIds.length} onClick={() => { setUpdateError(null); setModalOpen(true); }} className="nb-btn nb-btn-green px-4 py-2 text-sm">
               {updating ? "Updating…" : "Set fix version"}
             </button>
           </div>
@@ -148,6 +147,66 @@ function UnversionedTickets({ fixVersion, updating, onUpdatingChange }: {
           </ul>
         </>
       )}
+      {modalOpen && (
+        <FixVersionModal
+          initialFixVersions={initialFixVersions}
+          selectedCount={selectedIds.length}
+          updating={updating}
+          error={updateError}
+          onClose={() => setModalOpen(false)}
+          onSubmit={setSelectedFixVersions}
+        />
+      )}
     </>
+  );
+}
+
+function FixVersionModal({ initialFixVersions, selectedCount, updating, error, onClose, onSubmit }: {
+  initialFixVersions: string[] | null;
+  selectedCount: number;
+  updating: boolean;
+  error: string | null;
+  onClose: () => void;
+  onSubmit: (fixVersion: string) => Promise<void>;
+}) {
+  const dialogRef = useRef<HTMLDialogElement>(null);
+  const [fixVersion, setFixVersion] = useState("");
+
+  useEffect(() => {
+    const dialog = dialogRef.current;
+    const previousFocus = document.activeElement;
+    dialog?.showModal();
+    return () => {
+      dialog?.close();
+      if (previousFocus instanceof HTMLElement && previousFocus.isConnected) previousFocus.focus();
+    };
+  }, []);
+
+  return (
+    <dialog
+      ref={dialogRef}
+      aria-labelledby="fix-version-modal-title"
+      aria-describedby="fix-version-modal-description"
+      aria-busy={updating}
+      onCancel={(event) => { event.preventDefault(); if (!updating) onClose(); }}
+      onClick={(event) => { if (event.target === event.currentTarget && !updating) onClose(); }}
+      className="nb-panel m-auto max-h-[calc(100dvh-2rem)] w-[calc(100%-2rem)] max-w-md overflow-y-auto p-0 text-nb-ink backdrop:bg-black/40"
+    >
+      <form className="p-6" onSubmit={(event) => { event.preventDefault(); void onSubmit(fixVersion); }}>
+        <h2 id="fix-version-modal-title" className="nb-display text-lg">Set fix version</h2>
+        <p id="fix-version-modal-description" className="mb-5 mt-2 text-sm text-nb-ink/60">
+          Choose a fix version for {selectedCount} selected {selectedCount === 1 ? "ticket" : "tickets"}.
+        </p>
+        <label htmlFor="expected-fix-version" className="mb-2 block text-sm font-semibold">Fix version</label>
+        <FixVersionSelect value={fixVersion} onChange={setFixVersion} initialVersions={initialFixVersions} disabled={updating} />
+        {error && <p role="alert" className="mt-4 text-sm text-red-700">{error}</p>}
+        <div className="mt-6 flex flex-wrap justify-end gap-3">
+          <button type="button" disabled={updating} onClick={onClose} className="nb-btn px-4 py-2 text-sm">Cancel</button>
+          <button type="submit" disabled={updating || !fixVersion} className="nb-btn nb-btn-green px-4 py-2 text-sm">
+            {updating ? "Updating…" : "Set fix version"}
+          </button>
+        </div>
+      </form>
+    </dialog>
   );
 }
