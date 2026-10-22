@@ -15,6 +15,7 @@ const BOARD_COLUMNS: { id: JiraBoardColumn; title: string }[] = [
 
 const BOARD_ACTIONS = {
   before: { endpoint: "/api/jira/staging-tickets", targetLabel: "Ready for Acceptance" },
+  acceptance: { endpoint: "/api/jira/acceptance-tickets", targetLabel: "Resolved/Ready for Release" },
   release: { endpoint: "/api/jira/production-tickets", targetLabel: "Done/Closed" },
 };
 
@@ -110,7 +111,7 @@ function JiraTicketBoard({ fixVersion, updating, onUpdatingChange }: {
       )}
       <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-4">
         {BOARD_COLUMNS.map(({ id, title }) => {
-          const actionColumn = id === "before" || id === "release" ? id : null;
+          const actionColumn = id !== "done" ? id : null;
           const selectedCount = columns[id].filter((ticket) => selectedIds.includes(ticket.id)).length;
           const allSelected = columns[id].length > 0 && selectedCount === columns[id].length;
           return (

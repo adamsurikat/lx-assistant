@@ -1,7 +1,7 @@
 import { decryptSecret, encryptSecret } from "@/lib/crypto";
 import { prisma } from "@/lib/prisma";
 import { refreshAccessToken } from "@/lib/atlassian-oauth";
-import { groupStagingTickets, groupProductionDeploymentTickets, type StagingUpdateResult } from "./jiraStaging";
+import { groupStagingTickets, groupUserAcceptanceTickets, groupProductionDeploymentTickets, type StagingUpdateResult } from "./jiraStaging";
 import {
   RECENTLY_VIEWED_TICKET_LIMIT,
   RECENTLY_VIEWED_TICKETS_JQL,
@@ -367,11 +367,19 @@ export async function moveProductionTicketsToDone(
   return moveDeploymentTickets(config, fixVersion, ticketIds, "production");
 }
 
+export async function moveAcceptanceTicketsToRelease(
+  config: JiraUserConfig,
+  fixVersion: string,
+  ticketIds: string[]
+): Promise<StagingUpdateResult> {
+  return moveDeploymentTickets(config, fixVersion, ticketIds, "acceptance");
+}
+
 async function moveDeploymentTickets(
   config: JiraUserConfig,
   fixVersion: string,
   ticketIds: string[],
-  deployment: "staging" | "production"
+  deployment: "staging" | "acceptance" | "production"
 ): Promise<StagingUpdateResult> {
   const version = fixVersion.trim();
   if (!version || !ticketIds.length || ticketIds.some((id) => !/^\d+$/.test(id))) {
@@ -413,14 +421,17 @@ async function moveDeploymentTickets(
           id: issue.id, key: issue.key, summary: issue.fields.summary,
           status: issue.fields.status.name, statusCategory: issue.fields.status.statusCategory?.key,
         };
-        const targetStatus = deployment === "production"
-          ? (ticket.key.split("-")[0].toUpperCase() === "SURHD" ? "Closed" : "Done")
-          : "Ready for Acceptance";
-        const columns = deployment === "production" ? groupProductionDeploymentTickets([ticket]) : groupStagingTickets([ticket]);
+        const targetStatuses = deployment === "production"
+          ? [ticket.key.split("-")[0].toUpperCase() === "SURHD" ? "Closed" : "Done"]
+          : deployment === "acceptance" ? ["Resolved", "Ready for Release"] : ["Ready for Acceptance"];
+        const normalizedTargets = targetStatuses.map((status) => status.toLowerCase());
+        const columns = deployment === "production" ? groupProductionDeploymentTickets([ticket])
+          : deployment === "acceptance" ? groupUserAcceptanceTickets([ticket]) : groupStagingTickets([ticket]);
         // A retry after an interrupted response must not transition it again.
-        if (ticket.status.trim().toLowerCase() === targetStatus.toLowerCase()) return { ticket };
+        if (normalizedTargets.includes(ticket.status.trim().toLowerCase())) return { ticket };
         if (!columns.before.length) throw new Error(deployment === "production"
           ? "This ticket is no longer Ready for Release or Resolved. Refresh the list."
+          : deployment === "acceptance" ? "This ticket is no longer Ready for Acceptance. Refresh the list."
           : "This ticket is no longer before acceptance. Refresh the list.");
 
         const transitionsResponse = await jiraFetch(config, `${path}/transitions`, { cache: "no-store", signal });
@@ -428,8 +439,8 @@ async function moveDeploymentTickets(
         const { transitions } = await transitionsResponse.json() as {
           transitions: Array<{ id: string; to: { name: string; statusCategory?: { key: string } } }>;
         };
-        const transition = transitions.find((item) => item.to.name.trim().toLowerCase() === targetStatus.toLowerCase());
-        if (!transition) throw new Error(`No transition to ${targetStatus} is available from this status.`);
+        const transition = transitions.find((item) => normalizedTargets.includes(item.to.name.trim().toLowerCase()));
+        if (!transition) throw new Error(`No transition to ${targetStatuses.join(" or ")} is available from this status.`);
 
         const update = await jiraFetch(config, `${path}/transitions`, {
           method: "POST", signal, body: JSON.stringify({ transition: { id: transition.id } }),

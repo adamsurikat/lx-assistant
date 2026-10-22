@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
-import { moveStagingTicketsToAcceptance, moveProductionTicketsToDone, type JiraUserConfig } from "./jira";
+import { moveStagingTicketsToAcceptance, moveAcceptanceTicketsToRelease, moveProductionTicketsToDone, type JiraUserConfig } from "./jira";
 
 const config: JiraUserConfig = {
   mode: "oauth", accessToken: "test-token", cloudId: "test-cloud", siteUrl: "https://jira.example.test",
@@ -109,12 +109,94 @@ test("invalid selections and unknown Jira identity never modify tickets", async 
     assert.ok(input.endsWith("/myself"));
     return Response.json({});
   });
-  for (const [fixVersion, ids] of [["", ["1"]], [version, []], [version, ["../1"]]] as const) {
-    await assert.rejects(moveStagingTicketsToAcceptance(config, fixVersion, [...ids]), /required/);
+  const actions = [moveStagingTicketsToAcceptance, moveAcceptanceTicketsToRelease, moveProductionTicketsToDone];
+  for (const action of actions) {
+    for (const [fixVersion, ids] of [["", ["1"]], [version, []], [version, ["../1"]]] as const) {
+      await assert.rejects(action(config, fixVersion, [...ids]), /required/);
+    }
   }
   assert.equal(fetch.mock.callCount(), 0);
-  await assert.rejects(moveStagingTicketsToAcceptance(config, version, ["1"]), /verify the Jira user/);
-  assert.equal(fetch.mock.callCount(), 1);
+  for (const action of actions) {
+    await assert.rejects(action(config, version, ["1"]), /verify the Jira user/);
+  }
+  assert.equal(fetch.mock.callCount(), actions.length);
+});
+
+test("acceptance moves selected tickets to either release status using their available destination, not transition name", async (t) => {
+  const destinations: Record<string, string> = { "1": "Resolved", "2": "Ready for Release", "3": " resolved " };
+  const writes: string[] = [];
+  t.mock.method(globalThis, "fetch", async (input: string, init: RequestInit) => {
+    if (input.endsWith("/myself")) return Response.json({ accountId: "current-user" });
+    const id = /\/issue\/(\d+)/.exec(input)![1];
+    assert.ok(destinations[id], "Unselected tickets must not be requested");
+    if (init.method === "POST") {
+      assert.deepEqual(JSON.parse(init.body as string), { transition: { id: `accept-${id}` } });
+      writes.push(id);
+      return new Response(null, { status: 204 });
+    }
+    assert.equal(init.cache, "no-store");
+    if (input.endsWith("/transitions")) return Response.json({ transitions: [
+      { id: "wrong", name: "Resolved", to: { name: "Done" } },
+      { id: `accept-${id}`, name: "Accept", to: { name: destinations[id], statusCategory: { key: "done" } } },
+    ] });
+    return Response.json(issue(id, id === "3" ? " READY FOR ACCEPTANCE " : "Ready for Acceptance"));
+  });
+  const result = await moveAcceptanceTicketsToRelease(config, ` ${version} `, ["1", "2", "3", "1"]);
+  assert.deepEqual(writes, ["1", "2", "3"]);
+  assert.deepEqual(result.failed, []);
+  assert.deepEqual(result.updated.map(({ id, status, statusCategory }) => ({ id, status, statusCategory })), [
+    { id: "1", status: "Resolved", statusCategory: "done" },
+    { id: "2", status: "Ready for Release", statusCategory: "done" },
+    { id: "3", status: " resolved ", statusCategory: "done" },
+  ]);
+});
+
+test("acceptance rechecks scope and source status, and retries either release status without another transition", async (t) => {
+  t.mock.method(globalThis, "fetch", async (input: string, init: RequestInit) => {
+    assert.notEqual(init.method, "POST");
+    assert.ok(!input.endsWith("/transitions"));
+    if (input.endsWith("/myself")) return Response.json({ accountId: "current-user" });
+    const id = /\/issue\/(\d+)/.exec(input)![1];
+    const data = issue(id, "Ready for Acceptance");
+    if (id === "1") data.fields.assignee = { accountId: "other-user" };
+    if (id === "2") data.fields.assignee = null;
+    if (id === "3") data.fields.fixVersions = [{ name: "other-version" }];
+    const statuses: Record<string, string> = {
+      "4": "In Progress", "5": "Done", "6": "Closed", "7": "Canceled", "8": "Resolved", "9": "Ready for Release",
+    };
+    if (statuses[id]) data.fields.status = { name: statuses[id], statusCategory: { key: "done" } };
+    return Response.json(data);
+  });
+  const result = await moveAcceptanceTicketsToRelease(config, version, ["1", "2", "3", "4", "5", "6", "7", "8", "9"]);
+  assert.deepEqual(result.updated.map(({ id }) => id), ["8", "9"]);
+  assert.deepEqual(result.failed.map(({ id }) => id), ["1", "2", "3", "4", "5", "6", "7"]);
+  assert.ok(result.failed.slice(0, 3).every(({ error }) => error.includes("no longer assigned")));
+  assert.ok(result.failed.slice(3).every(({ error }) => error.includes("no longer Ready for Acceptance")));
+});
+
+test("acceptance retains successes alongside missing transitions, rejected writes, and uncertain responses", async (t) => {
+  const writes: string[] = [];
+  t.mock.method(globalThis, "fetch", async (input: string, init: RequestInit) => {
+    if (input.endsWith("/myself")) return Response.json({ accountId: "current-user" });
+    const id = /\/issue\/(\d+)/.exec(input)![1];
+    if (init.method === "POST") {
+      writes.push(id);
+      if (id === "2") return new Response(null, { status: 403 });
+      if (id === "3") throw new TypeError("fetch failed");
+      return new Response(null, { status: 204 });
+    }
+    if (input.endsWith("/transitions")) return Response.json({ transitions: [
+      { id: "31", to: { name: id === "1" ? "Closed" : "Ready for Release" } },
+    ] });
+    return Response.json(issue(id, "Ready for Acceptance"));
+  });
+  const result = await moveAcceptanceTicketsToRelease(config, version, ["1", "2", "3", "4"]);
+  assert.deepEqual(writes, ["2", "3", "4"]);
+  assert.deepEqual(result.updated.map(({ id }) => id), ["4"]);
+  assert.deepEqual(result.failed.map(({ id }) => id), ["1", "2", "3"]);
+  assert.match(result.failed[0].error, /No transition to Resolved or Ready for Release/);
+  assert.match(result.failed[1].error, /rejected the transition \(403\)/);
+  assert.match(result.failed[2].error, /Could not confirm/);
 });
 
 test("production closes SURHD tickets and moves every other project to Done using the current Jira key", async (t) => {
