@@ -1,9 +1,26 @@
 import { prisma } from "@/lib/prisma";
 import { fetchJiraFixVersions, getJiraConfigForUser } from "@/lib/jira";
 
+function selectableVersions(versions: string[]): string[] {
+  const today = new Date();
+  const cutoff = new Date(Date.UTC(today.getUTCFullYear(), today.getUTCMonth() - 3, 1));
+  const lastDay = new Date(Date.UTC(cutoff.getUTCFullYear(), cutoff.getUTCMonth() + 1, 0)).getUTCDate();
+  // Three calendar months, clamped to the last day of shorter months.
+  cutoff.setUTCDate(Math.min(today.getUTCDate(), lastDay));
+
+  return versions.filter((version) => {
+    const match = /^(\d{4})\.(\d{1,2})\.(\d{1,2})-\d+$/.exec(version);
+    if (!match) return false;
+    const [, year, month, day] = match.map(Number);
+    const date = new Date(Date.UTC(year, month - 1, day));
+    return date.getUTCFullYear() === year && date.getUTCMonth() === month - 1 && date.getUTCDate() === day
+      && date >= cutoff;
+  });
+}
+
 export async function getCachedJiraFixVersions(userId: string): Promise<string[] | null> {
   const cached = await prisma.jiraFixVersionCache.findUnique({ where: { userId } });
-  return cached ? JSON.parse(cached.versionsJson) as string[] : null;
+  return cached ? selectableVersions(JSON.parse(cached.versionsJson) as string[]) : null;
 }
 
 type PendingRefresh = { promise: Promise<string[]>; controller: AbortController };
@@ -28,7 +45,7 @@ export function refreshJiraFixVersions(userId: string): Promise<string[]> {
       create: { userId, versionsJson: JSON.stringify(versions) },
       update: { versionsJson: JSON.stringify(versions) },
     });
-    return versions;
+    return selectableVersions(versions);
   })().finally(() => {
     if (refreshes.get(userId)?.promise === refresh) refreshes.delete(userId);
   });
