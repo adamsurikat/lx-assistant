@@ -10,7 +10,7 @@ export default async function JiraPage() {
   const versions = await getCachedJiraFixVersions(session.user.id);
 
   return (
-    <div className="flex min-h-screen flex-col">
+    <div className="flex h-screen flex-col">
       <AppHeader active="jira" />
       <JiraWorkspace initialFixVersions={versions} />
     </div>
