@@ -17,7 +17,7 @@ const STAGING_COLUMNS: { id: StagingColumn; title: string }[] = [
 ];
 
 const USER_ACCEPTANCE_COLUMNS: { id: StagingColumn; title: string }[] = [
-  { id: "before", title: "Before user acceptance" },
+  { id: "before", title: "Ready for Acceptance" },
   { id: "ready", title: "Resolved / Ready for Release" },
   { id: "after", title: "After user acceptance" },
 ];
@@ -184,7 +184,7 @@ function JiraDeploymentTickets({ action, fixVersion, updating, onUpdatingChange 
           )}
         </div>
       )}
-      {result.tickets.length === 0 && (
+      {Object.values(columns).every((tickets) => tickets.length === 0) && (
         <p role="status" className="mb-4 text-sm text-nb-ink/60">No matching tickets.</p>
       )}
       <div className="grid grid-cols-1 gap-4 lg:grid-cols-3">
