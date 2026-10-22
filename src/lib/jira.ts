@@ -192,6 +192,24 @@ export async function fetchStagingDeploymentTickets(
 
   // Quote user input as a JQL string, including embedded quotes/backslashes.
   const jql = `assignee = currentUser() AND fixVersion = ${JSON.stringify(version)} ORDER BY key ASC`;
+  return fetchAllJiraTickets(config, jql, signal);
+}
+
+const FIX_VERSION_EXCLUDED_STATUSES = new Set([
+  "to do", "on hold", "requirements pending", "waiting for support", "waiting for customer",
+]);
+
+function isFixVersionStatusExcluded(status: string): boolean {
+  return FIX_VERSION_EXCLUDED_STATUSES.has(status.trim().toLowerCase());
+}
+
+export async function fetchUnversionedTickets(config: JiraUserConfig, signal?: AbortSignal): Promise<JiraTicket[]> {
+  const tickets = await fetchAllJiraTickets(config,
+    "assignee = currentUser() AND statusCategory != Done AND fixVersion IS EMPTY ORDER BY key ASC", signal);
+  return tickets.filter((ticket) => !isFixVersionStatusExcluded(ticket.status));
+}
+
+async function fetchAllJiraTickets(config: JiraUserConfig, jql: string, signal?: AbortSignal): Promise<JiraTicket[]> {
   const tickets: JiraTicket[] = [];
   const seenTokens = new Set<string>();
   let nextPageToken: string | undefined;
@@ -209,7 +227,7 @@ export async function fetchStagingDeploymentTickets(
       }),
     });
     if (!res.ok) {
-      throw new Error(`Jira staging search failed (${res.status}): ${await res.text()}`);
+      throw new Error(`Jira search failed (${res.status}): ${await res.text()}`);
     }
 
     const data = (await res.json()) as {
@@ -240,6 +258,97 @@ export async function fetchStagingDeploymentTickets(
   } while (nextPageToken);
 
   return tickets;
+}
+
+export interface JiraFixVersionUpdateResult {
+  updated: JiraTicket[];
+  failed: Array<{ id: string; key?: string; error: string }>;
+}
+
+export async function setMissingFixVersions(
+  config: JiraUserConfig,
+  fixVersion: string,
+  ticketIds: string[]
+): Promise<JiraFixVersionUpdateResult> {
+  const version = fixVersion.trim();
+  if (!/^\d{4}\.\d{1,2}\.\d{1,2}-\d+$/.test(version) || !ticketIds.length || ticketIds.some((id) => !/^\d+$/.test(id))) {
+    throw new Error("A valid fix version and ticket IDs are required");
+  }
+  const me = await jiraFetch(config, "/rest/api/3/myself", { cache: "no-store", signal: AbortSignal.timeout(30_000) });
+  if (!me.ok) throw new Error("Could not verify the Jira user");
+  const { accountId } = await me.json() as { accountId: string };
+  if (!accountId) throw new Error("Could not verify the Jira user");
+
+  // Version names are shared across projects, but their IDs are project-specific.
+  type ProjectVersion = { id: string; name: string; archived?: boolean };
+  const projectVersions = new Map<string, Promise<ProjectVersion[]>>();
+  const result: JiraFixVersionUpdateResult = { updated: [], failed: [] };
+  const ids = [...new Set(ticketIds)];
+  for (let index = 0; index < ids.length; index += 5) {
+    const outcomes = await Promise.all(ids.slice(index, index + 5).map(async (id) => {
+      let key: string | undefined;
+      try {
+        const path = `/rest/api/3/issue/${encodeURIComponent(id)}`;
+        const response = await jiraFetch(config, `${path}?fields=summary,status,assignee,fixVersions,project`, {
+          cache: "no-store", signal: AbortSignal.timeout(30_000),
+        });
+        if (!response.ok) throw new Error(`Could not read this ticket from Jira (${response.status}).`);
+        const issue = await response.json() as {
+          id: string; key: string;
+          fields: {
+            summary: string;
+            status: { name: string; statusCategory: { key: string } };
+            assignee: { accountId: string } | null;
+            fixVersions: Array<{ name: string }>;
+            project: { id: string; key: string };
+          };
+        };
+        key = issue.key;
+        if (issue.fields.assignee?.accountId !== accountId || issue.fields.status.statusCategory.key === "done") {
+          throw new Error("This ticket is no longer open and assigned to you. Refresh the list.");
+        }
+        if (isFixVersionStatusExcluded(issue.fields.status.name)) {
+          throw new Error("This ticket's status is excluded from Fix version. Refresh the list.");
+        }
+        const ticket: JiraTicket = {
+          id: issue.id, key: issue.key, summary: issue.fields.summary,
+          status: issue.fields.status.name, statusCategory: issue.fields.status.statusCategory.key,
+        };
+        // Treat a retry of a confirmed update as successful, without another write.
+        if (issue.fields.fixVersions.some((item) => item.name === version)) return { ticket };
+        if (issue.fields.fixVersions.length) throw new Error("This ticket already has a fix version. Refresh the list.");
+
+        const project = issue.fields.project;
+        let versions = projectVersions.get(project.id);
+        if (!versions) {
+          versions = fetchJiraPages<ProjectVersion>(config, `/rest/api/3/project/${encodeURIComponent(project.id)}/version`, AbortSignal.timeout(30_000));
+          projectVersions.set(project.id, versions);
+        }
+        let availableVersions: ProjectVersion[];
+        try { availableVersions = await versions; }
+        catch { throw new Error(`Could not load fix versions for ${project.key}. Try again.`); }
+        const target = availableVersions.find((item) => item.name === version && !item.archived);
+        if (!target) throw new Error(`${version} is not available in ${project.key}.`);
+
+        const update = await jiraFetch(config, path, {
+          method: "PUT", signal: AbortSignal.timeout(30_000),
+          // Add rather than replace, preserving any version added concurrently.
+          body: JSON.stringify({ update: { fixVersions: [{ add: { id: target.id } }] } }),
+        });
+        if (!update.ok) throw new Error(`Jira rejected the fix version (${update.status}). Check permissions and editable fields in Jira.`);
+        return { ticket };
+      } catch (error) {
+        return { failure: { id, key, error: error instanceof TypeError || (error instanceof Error && error.name === "TimeoutError")
+          ? "Could not confirm the update. Refresh the list before retrying."
+          : error instanceof Error ? error.message : "Could not update this ticket." } };
+      }
+    }));
+    for (const outcome of outcomes) {
+      if (outcome.ticket) result.updated.push(outcome.ticket);
+      else if (outcome.failure) result.failed.push(outcome.failure);
+    }
+  }
+  return result;
 }
 
 export async function moveStagingTicketsToAcceptance(

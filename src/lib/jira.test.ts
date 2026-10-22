@@ -86,7 +86,7 @@ test("a later page failure does not return a misleading partial ticket list", as
   t.mock.method(globalThis, "fetch", async () => ++calls === 1
     ? Response.json({ issues: [issue(1)], isLast: false, nextPageToken: "page-two" })
     : new Response("Rate limited", { status: 429 }));
-  await assert.rejects(fetchStagingDeploymentTickets(config, "1.2.3"), /Jira staging search failed \(429\)/);
+  await assert.rejects(fetchStagingDeploymentTickets(config, "1.2.3"), /Jira search failed \(429\)/);
 });
 
 test("missing or repeating pagination tokens fail instead of truncating or looping", async (t) => {
