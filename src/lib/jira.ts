@@ -126,6 +126,77 @@ export interface JiraTicket {
   status: string;
 }
 
+const STAGING_EXCLUDED_STATUSES = new Set([
+  "ready for acceptance",
+  "resolved",
+  "ready for release",
+  "closed",
+  "done",
+  "canceled",
+]);
+
+export async function fetchStagingDeploymentTickets(
+  config: JiraUserConfig,
+  fixVersion: string,
+  signal?: AbortSignal
+): Promise<JiraTicket[]> {
+  const version = fixVersion.trim();
+  if (!version) throw new Error("An expected fix version is required");
+
+  // Quote user input as a JQL string, including embedded quotes/backslashes.
+  const jql = `assignee = currentUser() AND fixVersion = ${JSON.stringify(version)} ORDER BY key ASC`;
+  const tickets: JiraTicket[] = [];
+  const seenTokens = new Set<string>();
+  let nextPageToken: string | undefined;
+
+  do {
+    const res = await jiraFetch(config, "/rest/api/3/search/jql", {
+      method: "POST",
+      cache: "no-store",
+      signal,
+      body: JSON.stringify({
+        jql,
+        fields: ["summary", "status"],
+        maxResults: 100,
+        nextPageToken,
+      }),
+    });
+    if (!res.ok) {
+      throw new Error(`Jira staging search failed (${res.status}): ${await res.text()}`);
+    }
+
+    const data = (await res.json()) as {
+      issues: Array<{
+        id: string;
+        key: string;
+        fields: { summary: string; status: { name: string } };
+      }>;
+      isLast: boolean;
+      nextPageToken?: string;
+    };
+    for (const issue of data.issues) {
+      // Filter names here so Jira sites without one of these statuses still
+      // accept the query. Status categories can include other valid statuses.
+      if (STAGING_EXCLUDED_STATUSES.has(issue.fields.status.name.toLowerCase())) continue;
+      tickets.push({
+        id: issue.id,
+        key: issue.key,
+        summary: issue.fields.summary,
+        status: issue.fields.status.name,
+      });
+    }
+
+    if (data.isLast) break;
+    nextPageToken = data.nextPageToken;
+    if (!nextPageToken || seenTokens.has(nextPageToken)) {
+      throw new Error("Jira did not provide a new page token for the remaining tickets");
+    }
+    seenTokens.add(nextPageToken);
+  } while (nextPageToken);
+
+  return tickets;
+}
+
 // The JQL used by the "Sync" button in the tickets drawer when the user
 // hasn't set a custom one (see User.ticketSyncJql). Only tickets assigned
 // to the current user, not yet Done, and in a currently active sprint —
