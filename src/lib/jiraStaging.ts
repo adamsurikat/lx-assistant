@@ -2,6 +2,11 @@ import type { JiraTicket } from "./jira";
 
 export type StagingColumn = "before" | "ready" | "after";
 
+export interface StagingUpdateResult {
+  updated: JiraTicket[];
+  failed: Array<{ id: string; key?: string; error: string }>;
+}
+
 // Jira's status categories do not distinguish acceptance from release.
 // Use the deployment workflow's later statuses as well as completed statuses.
 const AFTER_ACCEPTANCE_STATUSES = new Set([

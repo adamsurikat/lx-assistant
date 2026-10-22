@@ -2,7 +2,7 @@
 
 import { useEffect, useState, type Dispatch, type SetStateAction } from "react";
 import type { JiraTicket } from "@/lib/jira";
-import { groupStagingTickets, type StagingColumn } from "@/lib/jiraStaging";
+import { groupStagingTickets, type StagingColumn, type StagingUpdateResult } from "@/lib/jiraStaging";
 
 const BULK_ACTIONS = [
   "Staging deployment",
@@ -16,10 +16,11 @@ const STAGING_COLUMNS: { id: StagingColumn; title: string }[] = [
   { id: "after", title: "After acceptance" },
 ];
 
-function FixVersionSelect({ value, onChange, initialVersions }: {
+function FixVersionSelect({ value, onChange, initialVersions, disabled }: {
   value: string;
   onChange: Dispatch<SetStateAction<string>>;
   initialVersions: string[] | null;
+  disabled: boolean;
 }) {
   const [versions, setVersions] = useState<string[] | null>(initialVersions);
   const [error, setError] = useState<string | null>(null);
@@ -65,7 +66,7 @@ function FixVersionSelect({ value, onChange, initialVersions }: {
         id="expected-fix-version"
         value={value}
         onChange={(event) => onChange(event.target.value)}
-        disabled={!versions?.length}
+        disabled={disabled || !versions?.length}
         aria-describedby={error ? "fix-versions-error" : undefined}
         className="nb-input w-full px-3 py-2 text-sm disabled:opacity-60"
       >
@@ -91,9 +92,16 @@ function FixVersionSelect({ value, onChange, initialVersions }: {
   );
 }
 
-function StagingDeploymentTickets({ fixVersion }: { fixVersion: string }) {
+function StagingDeploymentTickets({ fixVersion, updating, onUpdatingChange }: {
+  fixVersion: string;
+  updating: boolean;
+  onUpdatingChange: (updating: boolean) => void;
+}) {
   const [result, setResult] = useState<{ tickets: JiraTicket[]; siteUrl: string } | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [selectedIds, setSelectedIds] = useState<string[]>([]);
+  const [updateResult, setUpdateResult] = useState<StagingUpdateResult | null>(null);
+  const [updateError, setUpdateError] = useState<string | null>(null);
 
   useEffect(() => {
     const controller = new AbortController();
@@ -117,12 +125,57 @@ function StagingDeploymentTickets({ fixVersion }: { fixVersion: string }) {
     return () => controller.abort();
   }, [fixVersion]);
 
+  async function moveSelectedTickets() {
+    if (updating || !selectedIds.length) return;
+    onUpdatingChange(true);
+    setUpdateResult(null);
+    setUpdateError(null);
+    try {
+      const response = await fetch("/api/jira/staging-tickets", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ fixVersion, ticketIds: selectedIds }),
+      });
+      if (response.redirected) throw new Error("Your session expired. Sign in again to update tickets.");
+      const data = await response.json();
+      if (!response.ok) throw new Error(data.error || "Could not update tickets. Refresh before retrying.");
+      const outcome: StagingUpdateResult = data;
+      const updated = new Map(outcome.updated.map((ticket) => [ticket.id, ticket]));
+      // Apply confirmed transitions immediately; Jira search can lag updates.
+      setResult((previous) => previous && {
+        ...previous, tickets: previous.tickets.map((ticket) => updated.get(ticket.id) ?? ticket),
+      });
+      setSelectedIds((previous) => previous.filter((id) => !updated.has(id)));
+      setUpdateResult(outcome);
+    } catch (error) {
+      setUpdateError(error instanceof Error ? error.message : "Could not confirm the update. Refresh before retrying.");
+    } finally {
+      onUpdatingChange(false);
+    }
+  }
+
   if (error) return <p role="alert" className="text-sm text-red-700">{error}</p>;
   if (!result) return <p role="status" className="text-sm text-nb-ink/60">Loading tickets…</p>;
   const columns = groupStagingTickets(result.tickets);
+  const allSelected = columns.before.length > 0 && selectedIds.length === columns.before.length;
 
   return (
     <>
+      {updateError && <p role="alert" className="mb-4 text-sm text-red-700">{updateError}</p>}
+      {updateResult && (
+        <div className="mb-4 space-y-2 text-sm">
+          {updateResult.updated.length > 0 && (
+            <p role="status">{updateResult.updated.length} {updateResult.updated.length === 1 ? "ticket is" : "tickets are"} now Ready for Acceptance.</p>
+          )}
+          {updateResult.failed.length > 0 && (
+            <ul role="alert" className="space-y-1 text-red-700">
+              {updateResult.failed.map((failure) => (
+                <li key={failure.id}>{failure.key ?? result.tickets.find((ticket) => ticket.id === failure.id)?.key ?? failure.id}: {failure.error}</li>
+              ))}
+            </ul>
+          )}
+        </div>
+      )}
       {result.tickets.length === 0 && (
         <p role="status" className="mb-4 text-sm text-nb-ink/60">No matching tickets.</p>
       )}
@@ -137,12 +190,49 @@ function StagingDeploymentTickets({ fixVersion }: { fixVersion: string }) {
               <h3 id={`staging-${id}`} className="text-sm font-semibold">{title}</h3>
               <span className="nb-badge shrink-0" aria-label={`${columns[id].length} tickets`}>{columns[id].length}</span>
             </div>
+            {id === "before" && columns.before.length > 0 && (
+              <div className="mb-4 space-y-3">
+                <div className="flex flex-wrap items-center justify-between gap-2 text-sm">
+                  <label className="flex items-center gap-2">
+                    <input
+                      type="checkbox"
+                      checked={allSelected}
+                      ref={(element) => { if (element) element.indeterminate = selectedIds.length > 0 && !allSelected; }}
+                      disabled={updating}
+                      onChange={(event) => setSelectedIds(event.target.checked ? columns.before.map((ticket) => ticket.id) : [])}
+                      className="size-4 accent-nb-orange"
+                    />
+                    Select all
+                  </label>
+                  <span className="text-nb-ink/60">{selectedIds.length} selected</span>
+                </div>
+                <button
+                  type="button"
+                  disabled={updating || selectedIds.length === 0}
+                  onClick={() => void moveSelectedTickets()}
+                  className="nb-btn nb-btn-green w-full px-3 py-2 text-sm"
+                >
+                  {updating ? "Updating…" : "Move to Ready for Acceptance"}
+                </button>
+              </div>
+            )}
             {columns[id].length === 0 ? (
               <p className="text-sm text-nb-ink/60">No tickets.</p>
             ) : (
               <ul className="space-y-3">
                 {columns[id].map((ticket) => (
                   <li key={ticket.id} className="nb-panel-sm min-w-0 break-words p-3">
+                    {id === "before" && (
+                      <input
+                        type="checkbox"
+                        aria-label={`Select ${ticket.key}`}
+                        checked={selectedIds.includes(ticket.id)}
+                        disabled={updating}
+                        onChange={(event) => setSelectedIds((previous) => event.target.checked
+                          ? [...previous, ticket.id] : previous.filter((id) => id !== ticket.id))}
+                        className="mr-2 size-4 align-middle accent-nb-orange"
+                      />
+                    )}
                     <a
                       href={`${result.siteUrl.replace(/\/$/, "")}/browse/${encodeURIComponent(ticket.key)}`}
                       target="_blank"
@@ -168,6 +258,7 @@ export function JiraWorkspace({ initialFixVersions }: { initialFixVersions: stri
   const [selectedAction, setSelectedAction] = useState<string | null>(null);
   const [expectedFixVersion, setExpectedFixVersion] = useState("");
   const [refresh, setRefresh] = useState(0);
+  const [updating, setUpdating] = useState(false);
   const fixVersion = expectedFixVersion.trim();
 
   return (
@@ -176,7 +267,7 @@ export function JiraWorkspace({ initialFixVersions }: { initialFixVersions: stri
         <label htmlFor="expected-fix-version" className="mb-2 block text-sm font-semibold">
           Expected fix version
         </label>
-        <FixVersionSelect value={expectedFixVersion} onChange={setExpectedFixVersion} initialVersions={initialFixVersions} />
+        <FixVersionSelect value={expectedFixVersion} onChange={setExpectedFixVersion} initialVersions={initialFixVersions} disabled={updating} />
         <h2 id="jira-bulk-actions" className="nb-display mb-3 text-lg">Bulk actions</h2>
         <div className="flex flex-col gap-2">
           {BULK_ACTIONS.map((action) => (
@@ -184,6 +275,7 @@ export function JiraWorkspace({ initialFixVersions }: { initialFixVersions: stri
               key={action}
               type="button"
               aria-pressed={selectedAction === action}
+              disabled={updating}
               onClick={() => setSelectedAction(action)}
               className={`rounded-lg px-3 py-3 text-left text-sm font-semibold transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-nb-orange ${
                 selectedAction === action
@@ -202,13 +294,13 @@ export function JiraWorkspace({ initialFixVersions }: { initialFixVersions: stri
             <div className="mb-5 flex flex-wrap items-center justify-between gap-3">
               <h2 className="nb-display text-xl">Staging deployment</h2>
               {fixVersion && (
-                <button type="button" className="nb-btn px-3 py-2 text-sm" onClick={() => setRefresh((value) => value + 1)}>
+                <button type="button" disabled={updating} className="nb-btn px-3 py-2 text-sm" onClick={() => setRefresh((value) => value + 1)}>
                   Refresh
                 </button>
               )}
             </div>
             {fixVersion ? (
-              <StagingDeploymentTickets key={`${fixVersion}:${refresh}`} fixVersion={fixVersion} />
+              <StagingDeploymentTickets key={`${fixVersion}:${refresh}`} fixVersion={fixVersion} updating={updating} onUpdatingChange={setUpdating} />
             ) : (
               <p className="text-sm text-nb-ink/60">Select an expected fix version to find your tickets.</p>
             )}

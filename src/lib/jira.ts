@@ -1,6 +1,7 @@
 import { decryptSecret, encryptSecret } from "@/lib/crypto";
 import { prisma } from "@/lib/prisma";
 import { refreshAccessToken } from "@/lib/atlassian-oauth";
+import { groupStagingTickets, type StagingUpdateResult } from "./jiraStaging";
 import {
   RECENTLY_VIEWED_TICKET_LIMIT,
   RECENTLY_VIEWED_TICKETS_JQL,
@@ -239,6 +240,85 @@ export async function fetchStagingDeploymentTickets(
   } while (nextPageToken);
 
   return tickets;
+}
+
+export async function moveStagingTicketsToAcceptance(
+  config: JiraUserConfig,
+  fixVersion: string,
+  ticketIds: string[]
+): Promise<StagingUpdateResult> {
+  const version = fixVersion.trim();
+  if (!version || !ticketIds.length || ticketIds.some((id) => !/^\d+$/.test(id))) {
+    throw new Error("A fix version and ticket IDs are required");
+  }
+  const me = await jiraFetch(config, "/rest/api/3/myself", {
+    cache: "no-store", signal: AbortSignal.timeout(30_000),
+  });
+  if (!me.ok) throw new Error("Could not verify the Jira user");
+  const { accountId } = await me.json() as { accountId: string };
+  if (!accountId) throw new Error("Could not verify the Jira user");
+
+  const result: StagingUpdateResult = { updated: [], failed: [] };
+  const ids = [...new Set(ticketIds)];
+  // Keep requests bounded, and retain successes if another ticket fails.
+  for (let index = 0; index < ids.length; index += 5) {
+    const outcomes = await Promise.all(ids.slice(index, index + 5).map(async (id) => {
+      let key: string | undefined;
+      try {
+        const signal = AbortSignal.timeout(30_000);
+        const path = `/rest/api/3/issue/${encodeURIComponent(id)}`;
+        // Read each issue directly: Jira search results may lag recent changes.
+        const response = await jiraFetch(config, `${path}?fields=summary,status,assignee,fixVersions`, { cache: "no-store", signal });
+        if (!response.ok) throw new Error(`Could not read this ticket from Jira (${response.status}).`);
+        const issue = await response.json() as {
+          id: string; key: string;
+          fields: {
+            summary: string;
+            status: { name: string; statusCategory?: { key: string } };
+            assignee: { accountId: string } | null;
+            fixVersions: Array<{ name: string }>;
+          };
+        };
+        key = issue.key;
+        if (issue.fields.assignee?.accountId !== accountId || !issue.fields.fixVersions.some((v) => v.name === version)) {
+          throw new Error("This ticket is no longer assigned to you with the selected fix version. Refresh the list.");
+        }
+        const ticket: JiraTicket = {
+          id: issue.id, key: issue.key, summary: issue.fields.summary,
+          status: issue.fields.status.name, statusCategory: issue.fields.status.statusCategory?.key,
+        };
+        const columns = groupStagingTickets([ticket]);
+        // A retry after an interrupted response must not transition it again.
+        if (columns.ready.length) return { ticket };
+        if (!columns.before.length) throw new Error("This ticket is no longer before acceptance. Refresh the list.");
+
+        const transitionsResponse = await jiraFetch(config, `${path}/transitions`, { cache: "no-store", signal });
+        if (!transitionsResponse.ok) throw new Error(`Could not read available transitions (${transitionsResponse.status}).`);
+        const { transitions } = await transitionsResponse.json() as {
+          transitions: Array<{ id: string; to: { name: string; statusCategory?: { key: string } } }>;
+        };
+        const transition = transitions.find((item) => item.to.name.trim().toLowerCase() === "ready for acceptance");
+        if (!transition) throw new Error("No transition to Ready for Acceptance is available from this status.");
+
+        const update = await jiraFetch(config, `${path}/transitions`, {
+          method: "POST", signal, body: JSON.stringify({ transition: { id: transition.id } }),
+        });
+        if (!update.ok) {
+          throw new Error(`Jira rejected the transition (${update.status}). Check permissions and required fields in Jira.`);
+        }
+        return { ticket: { ...ticket, status: transition.to.name, statusCategory: transition.to.statusCategory?.key } };
+      } catch (error) {
+        return { failure: { id, key, error: error instanceof TypeError || (error instanceof Error && error.name === "TimeoutError")
+          ? "Could not confirm the update. Refresh the list before retrying."
+          : error instanceof Error ? error.message : "Could not update this ticket." } };
+      }
+    }));
+    for (const outcome of outcomes) {
+      if (outcome.ticket) result.updated.push(outcome.ticket);
+      else if (outcome.failure) result.failed.push(outcome.failure);
+    }
+  }
+  return result;
 }
 
 // The JQL used by the "Sync" button in the tickets drawer when the user
