@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
-import { fetchStagingDeploymentTickets, type JiraUserConfig } from "./jira";
+import { fetchJiraFixVersions, fetchStagingDeploymentTickets, type JiraUserConfig } from "./jira";
 
 const config: JiraUserConfig = {
   mode: "token",
@@ -85,4 +85,70 @@ test("missing or repeating pagination tokens fail instead of truncating or loopi
     assert.equal(fetch.mock.callCount(), nextPageToken ? 2 : 1);
     fetch.mock.restore();
   }
+});
+
+test("fix versions include every project and version page, merge shared names, and sort numerically descending", async (t) => {
+  const visited: string[] = [];
+  const signal = new AbortController().signal;
+  t.mock.method(globalThis, "fetch", async (input: string, init: RequestInit) => {
+    const url = new URL(input);
+    const startAt = Number(url.searchParams.get("startAt"));
+    visited.push(`${url.pathname}:${startAt}`);
+    assert.equal(init.signal, signal);
+    assert.equal(init.cache, "no-store");
+    assert.equal(new Headers(init.headers).get("Authorization"), `Basic ${Buffer.from("test@example.test:test-token").toString("base64")}`);
+    if (url.pathname === "/rest/api/3/project/search") {
+      return Response.json({ startAt, isLast: startAt === 1, total: 2, values: [{ id: startAt === 0 ? "10000" : "20000" }] });
+    }
+    if (url.pathname === "/rest/api/3/project/10000/version") {
+      return Response.json({ startAt, isLast: startAt === 2, total: 3, values: startAt === 0
+        ? [{ name: "2026.10.21-2" }, { name: "2026.10.21-10" }]
+        : [{ name: "2026.10.21-0", released: true }] });
+    }
+    assert.equal(url.pathname, "/rest/api/3/project/20000/version");
+    return Response.json({ startAt, isLast: true, total: 2, values: [
+      { name: "2026.10.21-2" }, { name: "2025.01.01-0", archived: true },
+    ] });
+  });
+
+  assert.deepEqual(await fetchJiraFixVersions(config, signal), ["2026.10.21-10", "2026.10.21-2", "2026.10.21-0", "2025.01.01-0"]);
+  assert.deepEqual(visited.sort(), [
+    "/rest/api/3/project/search:0", "/rest/api/3/project/search:1",
+    "/rest/api/3/project/10000/version:0", "/rest/api/3/project/10000/version:2",
+    "/rest/api/3/project/20000/version:0",
+  ].sort());
+});
+
+test("an account without visible projects has no fix versions", async (t) => {
+  const fetch = t.mock.method(globalThis, "fetch", async () => Response.json({ values: [], startAt: 0, total: 0, isLast: true }));
+  assert.deepEqual(await fetchJiraFixVersions(config), []);
+  assert.equal(fetch.mock.callCount(), 1);
+});
+
+test("fix versions require a four-digit year, one- or two-digit month/day, and a numeric suffix", async (t) => {
+  const allowed = ["2026.10.21-0", "2026.1.2-3", "2026.01.2-12", "2026.1.02-0", "2026.01.02-10"];
+  const rejected = [
+    "1.2.3", "26.10.21-0", "20260.10.21-0", "2026.001.2-0", "2026.1.002-0",
+    "2026.10.21", "2026.10.21-", "2026.10.21-X", "2026.10.21-1-beta",
+    "2026-10-21-0", "release-2026.10.21-0", " 2026.10.21-0", "2026.10.21-0 ",
+  ];
+  let calls = 0;
+  t.mock.method(globalThis, "fetch", async () => Response.json({
+    startAt: 0, isLast: true,
+    values: ++calls === 1 ? [{ id: "10000" }] : [...allowed, ...rejected].map((name) => ({ name })),
+  }));
+  assert.deepEqual(new Set(await fetchJiraFixVersions(config)), new Set(allowed));
+});
+
+test("version lookup errors fail instead of returning an incomplete dropdown", async (t) => {
+  let calls = 0;
+  t.mock.method(globalThis, "fetch", async () => ++calls === 1
+    ? Response.json({ values: [{ id: "10000" }], startAt: 0, total: 1, isLast: true })
+    : new Response("Rate limited", { status: 429 }));
+  await assert.rejects(fetchJiraFixVersions(config), /Jira version lookup failed \(429\)/);
+});
+
+test("version pagination that stops advancing fails instead of looping", async (t) => {
+  t.mock.method(globalThis, "fetch", async () => Response.json({ values: [], startAt: 0, total: 1, isLast: false }));
+  await assert.rejects(fetchJiraFixVersions(config), /pagination did not advance/);
 });

@@ -126,6 +126,60 @@ export interface JiraTicket {
   status: string;
 }
 
+async function fetchJiraPages<T>(
+  config: JiraUserConfig,
+  path: string,
+  signal?: AbortSignal
+): Promise<T[]> {
+  const values: T[] = [];
+  let startAt = 0;
+  while (true) {
+    const res = await jiraFetch(config, `${path}?startAt=${startAt}&maxResults=100`, {
+      cache: "no-store",
+      signal,
+    });
+    if (!res.ok) {
+      throw new Error(`Jira version lookup failed (${res.status}): ${await res.text()}`);
+    }
+    const page = (await res.json()) as {
+      values: T[];
+      startAt: number;
+      total?: number;
+      isLast?: boolean;
+    };
+    values.push(...page.values);
+    const nextStartAt = page.startAt + page.values.length;
+    if (page.isLast || (page.total !== undefined && nextStartAt >= page.total)) return values;
+    if (nextStartAt <= startAt) throw new Error("Jira version pagination did not advance");
+    startAt = nextStartAt;
+  }
+}
+
+export async function fetchJiraFixVersions(
+  config: JiraUserConfig,
+  signal?: AbortSignal
+): Promise<string[]> {
+  const projects = await fetchJiraPages<{ id: string }>(config, "/rest/api/3/project/search", signal);
+  const names = new Set<string>();
+  // Bound parallel requests when a Jira account can access many projects.
+  for (let index = 0; index < projects.length; index += 5) {
+    const results = await Promise.all(projects.slice(index, index + 5).map((project) =>
+      fetchJiraPages<{ name: string }>(
+        config,
+        `/rest/api/3/project/${encodeURIComponent(project.id)}/version`,
+        signal
+      )
+    ));
+    for (const versions of results) {
+      for (const version of versions) {
+        if (/^\d{4}\.\d{1,2}\.\d{1,2}-\d+$/.test(version.name)) names.add(version.name);
+      }
+    }
+  }
+  // Selecting a shared version name keeps the ticket search across projects.
+  return [...names].sort((a, b) => b.localeCompare(a, "en", { numeric: true }));
+}
+
 const STAGING_EXCLUDED_STATUSES = new Set([
   "ready for acceptance",
   "resolved",

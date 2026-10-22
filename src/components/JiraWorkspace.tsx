@@ -9,14 +9,67 @@ const BULK_ACTIONS = [
   "Production deployment",
 ];
 
+function FixVersionSelect({ value, onChange }: { value: string; onChange: (value: string) => void }) {
+  const [versions, setVersions] = useState<string[] | null>(null);
+  const [error, setError] = useState<string | null>(null);
+  const [attempt, setAttempt] = useState(0);
+
+  useEffect(() => {
+    const controller = new AbortController();
+    async function loadVersions() {
+      try {
+        const response = await fetch("/api/jira/fix-versions", { signal: controller.signal, cache: "no-store" });
+        if (response.redirected) throw new Error("Your session expired. Sign in again to load versions.");
+        const data = await response.json();
+        if (!response.ok) throw new Error(data.error || "Could not load fix versions.");
+        if (!controller.signal.aborted) setVersions(data.versions);
+      } catch (err) {
+        if (!controller.signal.aborted) {
+          setError(err instanceof Error ? err.message : "Could not load fix versions.");
+        }
+      }
+    }
+    void loadVersions();
+    return () => controller.abort();
+  }, [attempt]);
+
+  return (
+    <div className="mb-6">
+      <select
+        id="expected-fix-version"
+        value={value}
+        onChange={(event) => onChange(event.target.value)}
+        disabled={!versions?.length}
+        aria-describedby={error ? "fix-versions-error" : undefined}
+        className="nb-input w-full px-3 py-2 text-sm disabled:opacity-60"
+      >
+        <option value="">
+          {error ? "Could not load versions" : versions === null ? "Loading versions…" : versions.length ? "Select fix version" : "No fix versions found"}
+        </option>
+        {versions?.map((version) => <option key={version} value={version}>{version}</option>)}
+      </select>
+      {error && (
+        <div className="mt-2 text-sm">
+          <p id="fix-versions-error" role="alert" className="text-red-700">{error}</p>
+          <button type="button" className="mt-1 font-semibold underline" onClick={() => {
+            setError(null);
+            setAttempt((value) => value + 1);
+          }}>
+            Retry
+          </button>
+        </div>
+      )}
+    </div>
+  );
+}
+
 function StagingDeploymentTickets({ fixVersion }: { fixVersion: string }) {
   const [result, setResult] = useState<{ tickets: JiraTicket[]; siteUrl: string } | null>(null);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     const controller = new AbortController();
-    // Wait until typing pauses, and discard requests for an older version.
-    const timeout = window.setTimeout(async () => {
+    async function loadTickets() {
       try {
         const response = await fetch(`/api/jira/staging-tickets?${new URLSearchParams({ fixVersion })}`, {
           signal: controller.signal,
@@ -31,11 +84,9 @@ function StagingDeploymentTickets({ fixVersion }: { fixVersion: string }) {
           setError(err instanceof Error ? err.message : "Could not load staging tickets.");
         }
       }
-    }, 400);
-    return () => {
-      window.clearTimeout(timeout);
-      controller.abort();
-    };
+    }
+    void loadTickets();
+    return () => controller.abort();
   }, [fixVersion]);
 
   if (error) return <p role="alert" className="text-sm text-red-700">{error}</p>;
@@ -78,15 +129,7 @@ export function JiraWorkspace() {
         <label htmlFor="expected-fix-version" className="mb-2 block text-sm font-semibold">
           Expected fix version
         </label>
-        <input
-          id="expected-fix-version"
-          type="text"
-          autoComplete="off"
-          value={expectedFixVersion}
-          onChange={(event) => setExpectedFixVersion(event.target.value)}
-          placeholder="e.g. 2026.10.21-0"
-          className="nb-input mb-6 w-full px-3 py-2 text-sm"
-        />
+        <FixVersionSelect value={expectedFixVersion} onChange={setExpectedFixVersion} />
         <h2 id="jira-bulk-actions" className="nb-display mb-3 text-lg">Bulk actions</h2>
         <div className="flex flex-col gap-2">
           {BULK_ACTIONS.map((action) => (
@@ -120,7 +163,7 @@ export function JiraWorkspace() {
             {fixVersion ? (
               <StagingDeploymentTickets key={`${fixVersion}:${refresh}`} fixVersion={fixVersion} />
             ) : (
-              <p className="text-sm text-nb-ink/60">Enter an expected fix version to find your tickets.</p>
+              <p className="text-sm text-nb-ink/60">Select an expected fix version to find your tickets.</p>
             )}
           </>
         )}
