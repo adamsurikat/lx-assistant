@@ -2,37 +2,19 @@
 
 import { useEffect, useState, type Dispatch, type SetStateAction } from "react";
 import type { JiraTicket } from "@/lib/jira";
-import { groupStagingTickets, groupUserAcceptanceTickets, groupProductionDeploymentTickets, type StagingColumn, type StagingUpdateResult } from "@/lib/jiraStaging";
+import type { StagingUpdateResult } from "@/lib/jiraStaging";
+import { groupJiraBoardTickets, type JiraBoardColumn } from "@/lib/jiraBoard";
 
-const BULK_ACTIONS = [
-  "Staging deployment",
-  "User Acceptance",
-  "Production deployment",
-] as const;
-
-type BulkAction = (typeof BULK_ACTIONS)[number];
-
-const STAGING_COLUMNS: { id: StagingColumn; title: string }[] = [
+const BOARD_COLUMNS: { id: JiraBoardColumn; title: string }[] = [
   { id: "before", title: "Before acceptance" },
-  { id: "ready", title: "Ready for Acceptance" },
-  { id: "after", title: "After acceptance" },
+  { id: "acceptance", title: "Waiting for acceptance" },
+  { id: "release", title: "Resolved / Ready for Release" },
+  { id: "done", title: "Done / Closed" },
 ];
 
-const USER_ACCEPTANCE_COLUMNS: { id: StagingColumn; title: string }[] = [
-  { id: "before", title: "Ready for Acceptance" },
-  { id: "ready", title: "Resolved / Ready for Release" },
-  { id: "after", title: "After user acceptance" },
-];
-
-const PRODUCTION_COLUMNS: { id: StagingColumn; title: string }[] = [
-  { id: "before", title: "Ready for Release / Resolved" },
-  { id: "ready", title: "Closed / Done" },
-];
-
-const DEPLOYMENT_VIEWS = {
-  "Staging deployment": { columns: STAGING_COLUMNS, groupTickets: groupStagingTickets },
-  "User Acceptance": { columns: USER_ACCEPTANCE_COLUMNS, groupTickets: groupUserAcceptanceTickets },
-  "Production deployment": { columns: PRODUCTION_COLUMNS, groupTickets: groupProductionDeploymentTickets },
+const BOARD_ACTIONS = {
+  before: { endpoint: "/api/jira/staging-tickets", targetLabel: "Ready for Acceptance" },
+  release: { endpoint: "/api/jira/production-tickets", targetLabel: "Done/Closed" },
 };
 
 function FixVersionSelect({ value, onChange, initialVersions, disabled }: {
@@ -80,7 +62,7 @@ function FixVersionSelect({ value, onChange, initialVersions, disabled }: {
   }, [attempt, onChange]);
 
   return (
-    <div className="mb-6">
+    <div>
       <select
         id="expected-fix-version"
         value={value}
@@ -111,20 +93,15 @@ function FixVersionSelect({ value, onChange, initialVersions, disabled }: {
   );
 }
 
-function JiraDeploymentTickets({ action, fixVersion, updating, onUpdatingChange }: {
-  action: BulkAction;
+function JiraTicketBoard({ fixVersion, updating, onUpdatingChange }: {
   fixVersion: string;
   updating: boolean;
   onUpdatingChange: (updating: boolean) => void;
 }) {
-  const canUpdate = action === "Staging deployment" || action === "Production deployment";
-  const isProduction = action === "Production deployment";
-  const targetLabel = isProduction ? "Done/Closed" : "Ready for Acceptance";
-  const view = DEPLOYMENT_VIEWS[action];
   const [result, setResult] = useState<{ tickets: JiraTicket[]; siteUrl: string } | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
-  const [updateResult, setUpdateResult] = useState<StagingUpdateResult | null>(null);
+  const [updateResult, setUpdateResult] = useState<(StagingUpdateResult & { targetLabel: string }) | null>(null);
   const [updateError, setUpdateError] = useState<string | null>(null);
 
   useEffect(() => {
@@ -149,16 +126,20 @@ function JiraDeploymentTickets({ action, fixVersion, updating, onUpdatingChange 
     return () => controller.abort();
   }, [fixVersion]);
 
-  async function moveSelectedTickets() {
-    if (!canUpdate || updating || !selectedIds.length) return;
+  async function moveSelectedTickets(column: keyof typeof BOARD_ACTIONS) {
+    if (updating || !result) return;
+    const action = BOARD_ACTIONS[column];
+    const ticketIds = groupJiraBoardTickets(result.tickets)[column]
+      .filter((ticket) => selectedIds.includes(ticket.id)).map((ticket) => ticket.id);
+    if (!ticketIds.length) return;
     onUpdatingChange(true);
     setUpdateResult(null);
     setUpdateError(null);
     try {
-      const response = await fetch(isProduction ? "/api/jira/production-tickets" : "/api/jira/staging-tickets", {
+      const response = await fetch(action.endpoint, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ fixVersion, ticketIds: selectedIds }),
+        body: JSON.stringify({ fixVersion, ticketIds }),
       });
       if (response.redirected) throw new Error("Your session expired. Sign in again to update tickets.");
       const data = await response.json();
@@ -170,7 +151,7 @@ function JiraDeploymentTickets({ action, fixVersion, updating, onUpdatingChange 
         ...previous, tickets: previous.tickets.map((ticket) => updated.get(ticket.id) ?? ticket),
       });
       setSelectedIds((previous) => previous.filter((id) => !updated.has(id)));
-      setUpdateResult(outcome);
+      setUpdateResult({ ...outcome, targetLabel: action.targetLabel });
     } catch (error) {
       setUpdateError(error instanceof Error ? error.message : "Could not confirm the update. Refresh before retrying.");
     } finally {
@@ -180,8 +161,7 @@ function JiraDeploymentTickets({ action, fixVersion, updating, onUpdatingChange 
 
   if (error) return <p role="alert" className="text-sm text-red-700">{error}</p>;
   if (!result) return <p role="status" className="text-sm text-nb-ink/60">Loading tickets…</p>;
-  const columns = view.groupTickets(result.tickets);
-  const allSelected = columns.before.length > 0 && selectedIds.length === columns.before.length;
+  const columns = groupJiraBoardTickets(result.tickets);
 
   return (
     <>
@@ -189,7 +169,7 @@ function JiraDeploymentTickets({ action, fixVersion, updating, onUpdatingChange 
       {updateResult && (
         <div className="mb-4 space-y-2 text-sm">
           {updateResult.updated.length > 0 && (
-            <p role="status">{updateResult.updated.length} {updateResult.updated.length === 1 ? "ticket is" : "tickets are"} now {targetLabel}.</p>
+            <p role="status">{updateResult.updated.length} {updateResult.updated.length === 1 ? "ticket is" : "tickets are"} now {updateResult.targetLabel}.</p>
           )}
           {updateResult.failed.length > 0 && (
             <ul role="alert" className="space-y-1 text-red-700">
@@ -203,147 +183,132 @@ function JiraDeploymentTickets({ action, fixVersion, updating, onUpdatingChange 
       {Object.values(columns).every((tickets) => tickets.length === 0) && (
         <p role="status" className="mb-4 text-sm text-nb-ink/60">No matching tickets.</p>
       )}
-      <div className={`grid grid-cols-1 gap-4 ${view.columns.length === 2 ? "lg:grid-cols-2" : "lg:grid-cols-3"}`}>
-        {view.columns.map(({ id, title }) => (
-          <section
-            key={id}
-            aria-labelledby={`deployment-${id}`}
-            className={`min-w-0 rounded-xl border p-3 ${id === "ready" ? "border-nb-green/40 bg-nb-green/10" : "border-nb-ink/10 bg-nb-ink/[0.02]"}`}
-          >
-            <div className="mb-4 flex items-start justify-between gap-2">
-              <h3 id={`deployment-${id}`} className="text-sm font-semibold">{title}</h3>
-              <span className="nb-badge shrink-0" aria-label={`${columns[id].length} tickets`}>{columns[id].length}</span>
-            </div>
-            {canUpdate && id === "before" && columns.before.length > 0 && (
-              <div className="mb-4 space-y-3">
-                <div className="flex flex-wrap items-center justify-between gap-2 text-sm">
-                  <label className="flex items-center gap-2">
-                    <input
-                      type="checkbox"
-                      checked={allSelected}
-                      ref={(element) => { if (element) element.indeterminate = selectedIds.length > 0 && !allSelected; }}
-                      disabled={updating}
-                      onChange={(event) => setSelectedIds(event.target.checked ? columns.before.map((ticket) => ticket.id) : [])}
-                      className="size-4 accent-nb-orange"
-                    />
-                    Select all
-                  </label>
-                  <span className="text-nb-ink/60">{selectedIds.length} selected</span>
-                </div>
-                <button
-                  type="button"
-                  disabled={updating || selectedIds.length === 0}
-                  onClick={() => void moveSelectedTickets()}
-                  className="nb-btn nb-btn-green w-full px-3 py-2 text-sm"
-                >
-                  {updating ? "Updating…" : `Move to ${targetLabel}`}
-                </button>
+      <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-4">
+        {BOARD_COLUMNS.map(({ id, title }) => {
+          const actionColumn = id === "before" || id === "release" ? id : null;
+          const selectedCount = columns[id].filter((ticket) => selectedIds.includes(ticket.id)).length;
+          const allSelected = columns[id].length > 0 && selectedCount === columns[id].length;
+          return (
+            <section
+              key={id}
+              aria-labelledby={`deployment-${id}`}
+              className={`min-w-0 rounded-xl border p-3 ${id === "done" ? "border-nb-green/40 bg-nb-green/10" : "border-nb-ink/10 bg-nb-ink/[0.02]"}`}
+            >
+              <div className="mb-4 flex items-start justify-between gap-2">
+                <h3 id={`deployment-${id}`} className="text-sm font-semibold">{title}</h3>
+                <span className="nb-badge shrink-0" aria-label={`${columns[id].length} tickets`}>{columns[id].length}</span>
               </div>
-            )}
-            {columns[id].length === 0 ? (
-              <p className="text-sm text-nb-ink/60">No tickets.</p>
-            ) : (
-              <ul className="space-y-3">
-                {columns[id].map((ticket) => (
-                  <li
-                    key={ticket.id}
-                    className={`nb-panel-sm relative min-w-0 break-words p-3 focus-within:outline-2 focus-within:outline-offset-2 focus-within:outline-nb-orange ${
-                      canUpdate && id === "before" && selectedIds.includes(ticket.id) ? "ring-2 ring-nb-orange/40" : ""
-                    }`}
+              {actionColumn && columns[id].length > 0 && (
+                <div className="mb-4 space-y-3">
+                  <div className="flex flex-wrap items-center justify-between gap-2 text-sm">
+                    <label className="flex items-center gap-2">
+                      <input
+                        type="checkbox"
+                        checked={allSelected}
+                        ref={(element) => { if (element) element.indeterminate = selectedCount > 0 && !allSelected; }}
+                        disabled={updating}
+                        onChange={(event) => {
+                          const checked = event.target.checked;
+                          const columnIds = new Set(columns[id].map((ticket) => ticket.id));
+                          setSelectedIds((previous) => [
+                            ...previous.filter((ticketId) => !columnIds.has(ticketId)),
+                            ...(checked ? [...columnIds] : []),
+                          ]);
+                        }}
+                        className="size-4 accent-nb-orange"
+                      />
+                      Select all
+                    </label>
+                    <span className="text-nb-ink/60">{selectedCount} selected</span>
+                  </div>
+                  <button
+                    type="button"
+                    disabled={updating || selectedCount === 0}
+                    onClick={() => void moveSelectedTickets(actionColumn)}
+                    className="nb-btn nb-btn-green w-full px-3 py-2 text-sm"
                   >
-                    {canUpdate && id === "before" && (
-                      <>
-                        <label
-                          htmlFor={`deployment-select-${ticket.id}`}
-                          className={`absolute inset-0 z-10 rounded-[inherit] ${updating ? "cursor-default" : "cursor-pointer"}`}
-                        >
-                          <span className="sr-only">Select {ticket.key}</span>
-                        </label>
-                        <input
-                          id={`deployment-select-${ticket.id}`}
-                          type="checkbox"
-                          checked={selectedIds.includes(ticket.id)}
-                          disabled={updating}
-                          onChange={(event) => setSelectedIds((previous) => event.target.checked
-                            ? [...previous, ticket.id] : previous.filter((id) => id !== ticket.id))}
-                          className="relative z-20 mr-2 size-4 align-middle accent-nb-orange"
-                        />
-                      </>
-                    )}
-                    <a
-                      href={`${result.siteUrl.replace(/\/$/, "")}/browse/${encodeURIComponent(ticket.key)}`}
-                      target="_blank"
-                      rel="noreferrer"
-                      className="relative z-20 text-sm font-bold hover:underline"
+                    {updating ? "Updating…" : `Move to ${BOARD_ACTIONS[actionColumn].targetLabel}`}
+                  </button>
+                </div>
+              )}
+              {columns[id].length === 0 ? (
+                <p className="text-sm text-nb-ink/60">No tickets.</p>
+              ) : (
+                <ul className="space-y-3">
+                  {columns[id].map((ticket) => (
+                    <li
+                      key={ticket.id}
+                      className={`nb-panel-sm relative min-w-0 break-words p-3 focus-within:outline-2 focus-within:outline-offset-2 focus-within:outline-nb-orange ${
+                        actionColumn && selectedIds.includes(ticket.id) ? "ring-2 ring-nb-orange/40" : ""
+                      }`}
                     >
-                      {ticket.key} ↗
-                    </a>
-                    <p className="mt-1 text-sm text-nb-ink/80">{ticket.summary}</p>
-                    <span className="mt-3 block text-xs text-nb-ink/60">{ticket.status}</span>
-                  </li>
-                ))}
-              </ul>
-            )}
-          </section>
-        ))}
+                      {actionColumn && (
+                        <>
+                          <label
+                            htmlFor={`deployment-select-${ticket.id}`}
+                            className={`absolute inset-0 z-10 rounded-[inherit] ${updating ? "cursor-default" : "cursor-pointer"}`}
+                          >
+                            <span className="sr-only">Select {ticket.key}</span>
+                          </label>
+                          <input
+                            id={`deployment-select-${ticket.id}`}
+                            type="checkbox"
+                            checked={selectedIds.includes(ticket.id)}
+                            disabled={updating}
+                            onChange={(event) => setSelectedIds((previous) => event.target.checked
+                              ? [...previous, ticket.id] : previous.filter((id) => id !== ticket.id))}
+                            className="relative z-20 mr-2 size-4 align-middle accent-nb-orange"
+                          />
+                        </>
+                      )}
+                      <a
+                        href={`${result.siteUrl.replace(/\/$/, "")}/browse/${encodeURIComponent(ticket.key)}`}
+                        target="_blank"
+                        rel="noreferrer"
+                        className="relative z-20 text-sm font-bold hover:underline"
+                      >
+                        {ticket.key} ↗
+                      </a>
+                      <p className="mt-1 text-sm text-nb-ink/80">{ticket.summary}</p>
+                      <span className="mt-3 block text-xs text-nb-ink/60">{ticket.status}</span>
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </section>
+          );
+        })}
       </div>
     </>
   );
 }
 
 export function JiraWorkspace({ initialFixVersions }: { initialFixVersions: string[] | null }) {
-  const [selectedAction, setSelectedAction] = useState<BulkAction | null>(null);
   const [expectedFixVersion, setExpectedFixVersion] = useState("");
   const [refresh, setRefresh] = useState(0);
   const [updating, setUpdating] = useState(false);
   const fixVersion = expectedFixVersion.trim();
 
   return (
-    <div className="m-3 flex flex-1 flex-col gap-3 md:flex-row">
-      <aside aria-labelledby="jira-bulk-actions" className="nb-panel-sm shrink-0 p-4 md:w-64">
-        <label htmlFor="expected-fix-version" className="mb-2 block text-sm font-semibold">
-          Expected fix version
-        </label>
-        <FixVersionSelect value={expectedFixVersion} onChange={setExpectedFixVersion} initialVersions={initialFixVersions} disabled={updating} />
-        <h2 id="jira-bulk-actions" className="nb-display mb-3 text-lg">Bulk actions</h2>
-        <div className="flex flex-col gap-2">
-          {BULK_ACTIONS.map((action) => (
-            <button
-              key={action}
-              type="button"
-              aria-pressed={selectedAction === action}
-              disabled={updating}
-              onClick={() => setSelectedAction(action)}
-              className={`rounded-lg px-3 py-3 text-left text-sm font-semibold transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-nb-orange ${
-                selectedAction === action
-                  ? "bg-nb-orange/10 text-nb-ink"
-                  : "text-nb-ink/60 hover:bg-nb-orange/10 hover:text-nb-ink"
-              }`}
-            >
-              {action}
-            </button>
-          ))}
+    <main aria-label="Jira workspace" className="nb-panel-sm m-3 min-h-64 min-w-0 flex-1 p-4 md:p-6">
+      <div className="mb-6 flex flex-wrap items-end justify-between gap-4">
+        <div className="w-full sm:w-72">
+          <label htmlFor="expected-fix-version" className="mb-2 block text-sm font-semibold">
+            Fix version
+          </label>
+          <FixVersionSelect value={expectedFixVersion} onChange={setExpectedFixVersion} initialVersions={initialFixVersions} disabled={updating} />
         </div>
-      </aside>
-      <main aria-label="Jira workspace" className="nb-panel-sm min-h-64 min-w-0 flex-1 p-4 md:p-6">
-        {selectedAction && (
-          <>
-            <div className="mb-5 flex flex-wrap items-center justify-between gap-3">
-              <h2 className="nb-display text-xl">{selectedAction}</h2>
-              {fixVersion && (
-                <button type="button" disabled={updating} className="nb-btn px-3 py-2 text-sm" onClick={() => setRefresh((value) => value + 1)}>
-                  Refresh
-                </button>
-              )}
-            </div>
-            {fixVersion ? (
-              <JiraDeploymentTickets key={`${selectedAction}:${fixVersion}:${refresh}`} action={selectedAction} fixVersion={fixVersion} updating={updating} onUpdatingChange={setUpdating} />
-            ) : (
-              <p className="text-sm text-nb-ink/60">Select an expected fix version to find your tickets.</p>
-            )}
-          </>
+        {fixVersion && (
+          <button type="button" disabled={updating} className="nb-btn px-3 py-2 text-sm" onClick={() => setRefresh((value) => value + 1)}>
+            Refresh
+          </button>
         )}
-      </main>
-    </div>
+      </div>
+      {fixVersion ? (
+        <JiraTicketBoard key={`${fixVersion}:${refresh}`} fixVersion={fixVersion} updating={updating} onUpdatingChange={setUpdating} />
+      ) : (
+        <p className="text-sm text-nb-ink/60">Select a fix version to view your tickets.</p>
+      )}
+    </main>
   );
 }
