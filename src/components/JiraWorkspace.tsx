@@ -221,28 +221,41 @@ function StagingDeploymentTickets({ fixVersion, updating, onUpdatingChange }: {
             ) : (
               <ul className="space-y-3">
                 {columns[id].map((ticket) => (
-                  <li key={ticket.id} className="nb-panel-sm min-w-0 break-words p-3">
+                  <li
+                    key={ticket.id}
+                    className={`nb-panel-sm relative min-w-0 break-words p-3 focus-within:outline-2 focus-within:outline-offset-2 focus-within:outline-nb-orange ${
+                      id === "before" && selectedIds.includes(ticket.id) ? "ring-2 ring-nb-orange/40" : ""
+                    }`}
+                  >
                     {id === "before" && (
-                      <input
-                        type="checkbox"
-                        aria-label={`Select ${ticket.key}`}
-                        checked={selectedIds.includes(ticket.id)}
-                        disabled={updating}
-                        onChange={(event) => setSelectedIds((previous) => event.target.checked
-                          ? [...previous, ticket.id] : previous.filter((id) => id !== ticket.id))}
-                        className="mr-2 size-4 align-middle accent-nb-orange"
-                      />
+                      <>
+                        <label
+                          htmlFor={`staging-select-${ticket.id}`}
+                          className={`absolute inset-0 z-10 rounded-[inherit] ${updating ? "cursor-default" : "cursor-pointer"}`}
+                        >
+                          <span className="sr-only">Select {ticket.key}</span>
+                        </label>
+                        <input
+                          id={`staging-select-${ticket.id}`}
+                          type="checkbox"
+                          checked={selectedIds.includes(ticket.id)}
+                          disabled={updating}
+                          onChange={(event) => setSelectedIds((previous) => event.target.checked
+                            ? [...previous, ticket.id] : previous.filter((id) => id !== ticket.id))}
+                          className="relative z-20 mr-2 size-4 align-middle accent-nb-orange"
+                        />
+                      </>
                     )}
                     <a
                       href={`${result.siteUrl.replace(/\/$/, "")}/browse/${encodeURIComponent(ticket.key)}`}
                       target="_blank"
                       rel="noreferrer"
-                      className="text-sm font-bold hover:underline"
+                      className="relative z-20 text-sm font-bold hover:underline"
                     >
                       {ticket.key} ↗
                     </a>
                     <p className="mt-1 text-sm text-nb-ink/80">{ticket.summary}</p>
-                    <span className="nb-badge mt-3">{ticket.status}</span>
+                    <span className="mt-3 block text-xs text-nb-ink/60">{ticket.status}</span>
                   </li>
                 ))}
               </ul>
