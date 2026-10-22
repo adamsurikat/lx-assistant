@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
-import { groupStagingTickets, groupUserAcceptanceTickets } from "./jiraStaging";
+import { groupStagingTickets, groupUserAcceptanceTickets, groupProductionDeploymentTickets } from "./jiraStaging";
 import type { JiraTicket } from "./jira";
 
 function ticket(status: string, statusCategory?: string): JiraTicket {
@@ -20,6 +20,16 @@ test("every ticket appears once in the appropriate staging column, preserving it
 test("empty searches retain all three columns", () => {
   assert.deepEqual(groupStagingTickets([]), { before: [], ready: [], after: [] });
   assert.deepEqual(groupUserAcceptanceTickets([]), { before: [], ready: [], after: [] });
+});
+
+test("Production shows only release-ready or resolved tickets on the left and Closed or Done as correct", () => {
+  const before = [ticket("Ready for Release"), ticket("Resolved", "done"), ticket(" RESOLVED ")];
+  const ready = [ticket("Closed", "done"), ticket("Done", "done"), ticket(" DONE ", "indeterminate")];
+  const excluded = [ticket("Open"), ticket("Ready for Acceptance"), ticket("Canceled", "done"), ticket("Cancelled", "done"), ticket("Archived", "done")];
+  const input = [before[0], ready[0], ...excluded, ...before.slice(1), ...ready.slice(1)];
+  assert.deepEqual(groupProductionDeploymentTickets(input), { before, ready, after: [] });
+  assert.deepEqual(groupProductionDeploymentTickets(excluded), { before: [], ready: [], after: [] });
+  assert.deepEqual(groupProductionDeploymentTickets([]), { before: [], ready: [], after: [] });
 });
 
 test("User Acceptance only shows Ready for Acceptance on the left and preserves correct and later statuses", () => {

@@ -37,3 +37,8 @@ export function groupStagingTickets(tickets: JiraTicket[]): Record<StagingColumn
 export function groupUserAcceptanceTickets(tickets: JiraTicket[]): Record<StagingColumn, JiraTicket[]> {
   return groupTickets(tickets, ["resolved", "ready for release"], ["ready for acceptance"]);
 }
+
+export function groupProductionDeploymentTickets(tickets: JiraTicket[]): Record<StagingColumn, JiraTicket[]> {
+  const columns = groupTickets(tickets, ["closed", "done"], ["ready for release", "resolved"]);
+  return { before: columns.before, ready: columns.ready, after: [] };
+}

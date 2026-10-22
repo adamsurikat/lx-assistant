@@ -2,13 +2,15 @@
 
 import { useEffect, useState, type Dispatch, type SetStateAction } from "react";
 import type { JiraTicket } from "@/lib/jira";
-import { groupStagingTickets, groupUserAcceptanceTickets, type StagingColumn, type StagingUpdateResult } from "@/lib/jiraStaging";
+import { groupStagingTickets, groupUserAcceptanceTickets, groupProductionDeploymentTickets, type StagingColumn, type StagingUpdateResult } from "@/lib/jiraStaging";
 
 const BULK_ACTIONS = [
   "Staging deployment",
   "User Acceptance",
   "Production deployment",
-];
+] as const;
+
+type BulkAction = (typeof BULK_ACTIONS)[number];
 
 const STAGING_COLUMNS: { id: StagingColumn; title: string }[] = [
   { id: "before", title: "Before acceptance" },
@@ -21,6 +23,17 @@ const USER_ACCEPTANCE_COLUMNS: { id: StagingColumn; title: string }[] = [
   { id: "ready", title: "Resolved / Ready for Release" },
   { id: "after", title: "After user acceptance" },
 ];
+
+const PRODUCTION_COLUMNS: { id: StagingColumn; title: string }[] = [
+  { id: "before", title: "Ready for Release / Resolved" },
+  { id: "ready", title: "Closed / Done" },
+];
+
+const DEPLOYMENT_VIEWS = {
+  "Staging deployment": { columns: STAGING_COLUMNS, groupTickets: groupStagingTickets },
+  "User Acceptance": { columns: USER_ACCEPTANCE_COLUMNS, groupTickets: groupUserAcceptanceTickets },
+  "Production deployment": { columns: PRODUCTION_COLUMNS, groupTickets: groupProductionDeploymentTickets },
+};
 
 function FixVersionSelect({ value, onChange, initialVersions, disabled }: {
   value: string;
@@ -99,12 +112,13 @@ function FixVersionSelect({ value, onChange, initialVersions, disabled }: {
 }
 
 function JiraDeploymentTickets({ action, fixVersion, updating, onUpdatingChange }: {
-  action: "Staging deployment" | "User Acceptance";
+  action: BulkAction;
   fixVersion: string;
   updating: boolean;
   onUpdatingChange: (updating: boolean) => void;
 }) {
   const isStaging = action === "Staging deployment";
+  const view = DEPLOYMENT_VIEWS[action];
   const [result, setResult] = useState<{ tickets: JiraTicket[]; siteUrl: string } | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
@@ -164,7 +178,7 @@ function JiraDeploymentTickets({ action, fixVersion, updating, onUpdatingChange 
 
   if (error) return <p role="alert" className="text-sm text-red-700">{error}</p>;
   if (!result) return <p role="status" className="text-sm text-nb-ink/60">Loading tickets…</p>;
-  const columns = isStaging ? groupStagingTickets(result.tickets) : groupUserAcceptanceTickets(result.tickets);
+  const columns = view.groupTickets(result.tickets);
   const allSelected = columns.before.length > 0 && selectedIds.length === columns.before.length;
 
   return (
@@ -187,8 +201,8 @@ function JiraDeploymentTickets({ action, fixVersion, updating, onUpdatingChange 
       {Object.values(columns).every((tickets) => tickets.length === 0) && (
         <p role="status" className="mb-4 text-sm text-nb-ink/60">No matching tickets.</p>
       )}
-      <div className="grid grid-cols-1 gap-4 lg:grid-cols-3">
-        {(isStaging ? STAGING_COLUMNS : USER_ACCEPTANCE_COLUMNS).map(({ id, title }) => (
+      <div className={`grid grid-cols-1 gap-4 ${view.columns.length === 2 ? "lg:grid-cols-2" : "lg:grid-cols-3"}`}>
+        {view.columns.map(({ id, title }) => (
           <section
             key={id}
             aria-labelledby={`deployment-${id}`}
@@ -276,7 +290,7 @@ function JiraDeploymentTickets({ action, fixVersion, updating, onUpdatingChange 
 }
 
 export function JiraWorkspace({ initialFixVersions }: { initialFixVersions: string[] | null }) {
-  const [selectedAction, setSelectedAction] = useState<string | null>(null);
+  const [selectedAction, setSelectedAction] = useState<BulkAction | null>(null);
   const [expectedFixVersion, setExpectedFixVersion] = useState("");
   const [refresh, setRefresh] = useState(0);
   const [updating, setUpdating] = useState(false);
@@ -310,7 +324,7 @@ export function JiraWorkspace({ initialFixVersions }: { initialFixVersions: stri
         </div>
       </aside>
       <main aria-label="Jira workspace" className="nb-panel-sm min-h-64 min-w-0 flex-1 p-4 md:p-6">
-        {(selectedAction === "Staging deployment" || selectedAction === "User Acceptance") && (
+        {selectedAction && (
           <>
             <div className="mb-5 flex flex-wrap items-center justify-between gap-3">
               <h2 className="nb-display text-xl">{selectedAction}</h2>
