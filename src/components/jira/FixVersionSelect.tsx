@@ -2,15 +2,26 @@
 
 import { useEffect, useState, type Dispatch, type SetStateAction } from "react";
 
-export function FixVersionSelect({ value, onChange, initialVersions, disabled }: {
+function readSavedVersion(storageKey?: string): string {
+  try { return storageKey ? window.localStorage.getItem(storageKey) ?? "" : ""; }
+  catch { return ""; }
+}
+
+export function FixVersionSelect({ value, onChange, initialVersions, disabled, storageKey }: {
   value: string;
   onChange: Dispatch<SetStateAction<string>>;
   initialVersions: string[] | null;
   disabled: boolean;
+  storageKey?: string;
 }) {
   const [versions, setVersions] = useState<string[] | null>(initialVersions);
   const [error, setError] = useState<string | null>(null);
   const [attempt, setAttempt] = useState(0);
+
+  useEffect(() => {
+    const saved = readSavedVersion(storageKey);
+    if (saved && initialVersions?.includes(saved)) onChange((selected) => selected || saved);
+  }, [initialVersions, onChange, storageKey]);
 
   useEffect(() => {
     const controller = new AbortController();
@@ -28,7 +39,8 @@ export function FixVersionSelect({ value, onChange, initialVersions, disabled }:
         if (!controller.signal.aborted) {
           setVersions(data.versions);
           setError(null);
-          onChange((selected) => data.versions.includes(selected) ? selected : "");
+          const saved = readSavedVersion(storageKey);
+          onChange((selected) => data.versions.includes(selected) ? selected : data.versions.includes(saved) ? saved : "");
         }
       } catch (err) {
         if (!controller.signal.aborted) {
@@ -44,14 +56,21 @@ export function FixVersionSelect({ value, onChange, initialVersions, disabled }:
       window.clearInterval(interval);
       controller.abort();
     };
-  }, [attempt, onChange]);
+  }, [attempt, onChange, storageKey]);
 
   return (
     <div>
       <select
         id="expected-fix-version"
         value={value}
-        onChange={(event) => onChange(event.target.value)}
+        onChange={(event) => {
+          const selected = event.target.value;
+          onChange(selected);
+          if (storageKey) {
+            try { window.localStorage.setItem(storageKey, selected); }
+            catch { /* Keep the selection usable when browser storage is unavailable. */ }
+          }
+        }}
         disabled={disabled || !versions?.length}
         aria-describedby={error ? "fix-versions-error" : undefined}
         className="nb-input w-full px-3 py-2 text-sm disabled:opacity-60"

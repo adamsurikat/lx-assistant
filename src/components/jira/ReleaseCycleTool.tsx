@@ -224,7 +224,7 @@ export function ReleaseCycleTool({ initialFixVersions, updating, onUpdatingChang
           <label htmlFor="expected-fix-version" className="mb-2 block text-sm font-semibold">
             Fix version
           </label>
-          <FixVersionSelect value={expectedFixVersion} onChange={setExpectedFixVersion} initialVersions={initialFixVersions} disabled={updating} />
+          <FixVersionSelect value={expectedFixVersion} onChange={setExpectedFixVersion} initialVersions={initialFixVersions} disabled={updating} storageKey="jira.releaseCycle.fixVersion" />
         </div>
         {fixVersion && (
           <button type="button" disabled={updating} className="nb-btn px-3 py-2 text-sm" onClick={() => setRefresh((value) => value + 1)}>
