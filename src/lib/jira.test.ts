@@ -13,7 +13,7 @@ function issue(id: number, status = "In Progress") {
   return { id: String(id), key: `TEST-${id}`, fields: { summary: `Ticket ${id}`, status: { name: status } } };
 }
 
-test("staging search loads all pages and excludes only the named statuses", async (t) => {
+test("staging search loads every status across all pages for the assigned user and selected fix version", async (t) => {
   const bodies: Array<{ jql: string; nextPageToken?: string }> = [];
   const signal = new AbortController().signal;
   t.mock.method(globalThis, "fetch", async (url: string, init: RequestInit) => {
@@ -41,8 +41,21 @@ test("staging search loads all pages and excludes only the named statuses", asyn
     { jql: 'assignee = currentUser() AND fixVersion = "1.2.3" ORDER BY key ASC', fields: ["summary", "status"], maxResults: 100 },
     { jql: 'assignee = currentUser() AND fixVersion = "1.2.3" ORDER BY key ASC', fields: ["summary", "status"], maxResults: 100, nextPageToken: "page-two" },
   ]);
-  assert.equal(tickets.length, 101);
-  assert.deepEqual(tickets.at(-1), { id: "108", key: "TEST-108", summary: "Ticket 108", status: "Testing" });
+  assert.equal(tickets.length, 108);
+  assert.deepEqual(tickets.slice(100).map((ticket) => ticket.status), [
+    "Ready for Acceptance", "Resolved", "Ready for Release", "Closed", "Done", "Canceled", "DONE", "Testing",
+  ]);
+  assert.deepEqual(tickets.at(-1), { id: "108", key: "TEST-108", summary: "Ticket 108", status: "Testing", statusCategory: undefined });
+});
+
+test("staging search preserves Jira's category for custom completed statuses", async (t) => {
+  t.mock.method(globalThis, "fetch", async () => Response.json({
+    issues: [{ id: "1", key: "TEST-1", fields: { summary: "Finished ticket", status: { name: "Archived", statusCategory: { key: "done" } } } }],
+    isLast: true,
+  }));
+  assert.deepEqual(await fetchStagingDeploymentTickets(config, "2026.10.21-0"), [
+    { id: "1", key: "TEST-1", summary: "Finished ticket", status: "Archived", statusCategory: "done" },
+  ]);
 });
 
 test("version quotes and backslashes remain inside one JQL value and OAuth uses the cloud endpoint", async (t) => {

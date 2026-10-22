@@ -2,11 +2,18 @@
 
 import { useEffect, useState, type Dispatch, type SetStateAction } from "react";
 import type { JiraTicket } from "@/lib/jira";
+import { groupStagingTickets, type StagingColumn } from "@/lib/jiraStaging";
 
 const BULK_ACTIONS = [
   "Staging deployment",
   "User Acceptance",
   "Production deployment",
+];
+
+const STAGING_COLUMNS: { id: StagingColumn; title: string }[] = [
+  { id: "before", title: "Before acceptance" },
+  { id: "ready", title: "Ready for Acceptance" },
+  { id: "after", title: "After acceptance" },
 ];
 
 function FixVersionSelect({ value, onChange, initialVersions }: {
@@ -112,29 +119,48 @@ function StagingDeploymentTickets({ fixVersion }: { fixVersion: string }) {
 
   if (error) return <p role="alert" className="text-sm text-red-700">{error}</p>;
   if (!result) return <p role="status" className="text-sm text-nb-ink/60">Loading tickets…</p>;
-  if (result.tickets.length === 0) {
-    return <p role="status" className="text-sm text-nb-ink/60">No matching tickets.</p>;
-  }
+  const columns = groupStagingTickets(result.tickets);
 
   return (
-    <ul className="divide-y divide-nb-ink/10">
-      {result.tickets.map((ticket) => (
-        <li key={ticket.id} className="flex flex-wrap items-center justify-between gap-3 py-4 first:pt-0">
-          <div className="min-w-0 flex-1 break-words">
-            <a
-              href={`${result.siteUrl.replace(/\/$/, "")}/browse/${encodeURIComponent(ticket.key)}`}
-              target="_blank"
-              rel="noreferrer"
-              className="text-sm font-bold hover:underline"
-            >
-              {ticket.key} ↗
-            </a>
-            <p className="mt-1 text-sm text-nb-ink/80">{ticket.summary}</p>
-          </div>
-          <span className="nb-badge">{ticket.status}</span>
-        </li>
-      ))}
-    </ul>
+    <>
+      {result.tickets.length === 0 && (
+        <p role="status" className="mb-4 text-sm text-nb-ink/60">No matching tickets.</p>
+      )}
+      <div className="grid grid-cols-1 gap-4 lg:grid-cols-3">
+        {STAGING_COLUMNS.map(({ id, title }) => (
+          <section
+            key={id}
+            aria-labelledby={`staging-${id}`}
+            className={`min-w-0 rounded-xl border p-3 ${id === "ready" ? "border-nb-green/40 bg-nb-green/10" : "border-nb-ink/10 bg-nb-ink/[0.02]"}`}
+          >
+            <div className="mb-4 flex items-start justify-between gap-2">
+              <h3 id={`staging-${id}`} className="text-sm font-semibold">{title}</h3>
+              <span className="nb-badge shrink-0" aria-label={`${columns[id].length} tickets`}>{columns[id].length}</span>
+            </div>
+            {columns[id].length === 0 ? (
+              <p className="text-sm text-nb-ink/60">No tickets.</p>
+            ) : (
+              <ul className="space-y-3">
+                {columns[id].map((ticket) => (
+                  <li key={ticket.id} className="nb-panel-sm min-w-0 break-words p-3">
+                    <a
+                      href={`${result.siteUrl.replace(/\/$/, "")}/browse/${encodeURIComponent(ticket.key)}`}
+                      target="_blank"
+                      rel="noreferrer"
+                      className="text-sm font-bold hover:underline"
+                    >
+                      {ticket.key} ↗
+                    </a>
+                    <p className="mt-1 text-sm text-nb-ink/80">{ticket.summary}</p>
+                    <span className="nb-badge mt-3">{ticket.status}</span>
+                  </li>
+                ))}
+              </ul>
+            )}
+          </section>
+        ))}
+      </div>
+    </>
   );
 }
 

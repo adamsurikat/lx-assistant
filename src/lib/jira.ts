@@ -124,6 +124,7 @@ export interface JiraTicket {
   key: string;
   summary: string;
   status: string;
+  statusCategory?: string;
 }
 
 async function fetchJiraPages<T>(
@@ -180,15 +181,6 @@ export async function fetchJiraFixVersions(
   return [...names].sort((a, b) => b.localeCompare(a, "en", { numeric: true }));
 }
 
-const STAGING_EXCLUDED_STATUSES = new Set([
-  "ready for acceptance",
-  "resolved",
-  "ready for release",
-  "closed",
-  "done",
-  "canceled",
-]);
-
 export async function fetchStagingDeploymentTickets(
   config: JiraUserConfig,
   fixVersion: string,
@@ -223,20 +215,18 @@ export async function fetchStagingDeploymentTickets(
       issues: Array<{
         id: string;
         key: string;
-        fields: { summary: string; status: { name: string } };
+        fields: { summary: string; status: { name: string; statusCategory?: { key: string } } };
       }>;
       isLast: boolean;
       nextPageToken?: string;
     };
     for (const issue of data.issues) {
-      // Filter names here so Jira sites without one of these statuses still
-      // accept the query. Status categories can include other valid statuses.
-      if (STAGING_EXCLUDED_STATUSES.has(issue.fields.status.name.toLowerCase())) continue;
       tickets.push({
         id: issue.id,
         key: issue.key,
         summary: issue.fields.summary,
         status: issue.fields.status.name,
+        statusCategory: issue.fields.status.statusCategory?.key,
       });
     }
 
