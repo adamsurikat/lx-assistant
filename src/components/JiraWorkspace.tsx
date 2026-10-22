@@ -117,7 +117,9 @@ function JiraDeploymentTickets({ action, fixVersion, updating, onUpdatingChange 
   updating: boolean;
   onUpdatingChange: (updating: boolean) => void;
 }) {
-  const isStaging = action === "Staging deployment";
+  const canUpdate = action === "Staging deployment" || action === "Production deployment";
+  const isProduction = action === "Production deployment";
+  const targetLabel = isProduction ? "Done/Closed" : "Ready for Acceptance";
   const view = DEPLOYMENT_VIEWS[action];
   const [result, setResult] = useState<{ tickets: JiraTicket[]; siteUrl: string } | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -148,12 +150,12 @@ function JiraDeploymentTickets({ action, fixVersion, updating, onUpdatingChange 
   }, [fixVersion]);
 
   async function moveSelectedTickets() {
-    if (!isStaging || updating || !selectedIds.length) return;
+    if (!canUpdate || updating || !selectedIds.length) return;
     onUpdatingChange(true);
     setUpdateResult(null);
     setUpdateError(null);
     try {
-      const response = await fetch("/api/jira/staging-tickets", {
+      const response = await fetch(isProduction ? "/api/jira/production-tickets" : "/api/jira/staging-tickets", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ fixVersion, ticketIds: selectedIds }),
@@ -187,7 +189,7 @@ function JiraDeploymentTickets({ action, fixVersion, updating, onUpdatingChange 
       {updateResult && (
         <div className="mb-4 space-y-2 text-sm">
           {updateResult.updated.length > 0 && (
-            <p role="status">{updateResult.updated.length} {updateResult.updated.length === 1 ? "ticket is" : "tickets are"} now Ready for Acceptance.</p>
+            <p role="status">{updateResult.updated.length} {updateResult.updated.length === 1 ? "ticket is" : "tickets are"} now {targetLabel}.</p>
           )}
           {updateResult.failed.length > 0 && (
             <ul role="alert" className="space-y-1 text-red-700">
@@ -212,7 +214,7 @@ function JiraDeploymentTickets({ action, fixVersion, updating, onUpdatingChange 
               <h3 id={`deployment-${id}`} className="text-sm font-semibold">{title}</h3>
               <span className="nb-badge shrink-0" aria-label={`${columns[id].length} tickets`}>{columns[id].length}</span>
             </div>
-            {isStaging && id === "before" && columns.before.length > 0 && (
+            {canUpdate && id === "before" && columns.before.length > 0 && (
               <div className="mb-4 space-y-3">
                 <div className="flex flex-wrap items-center justify-between gap-2 text-sm">
                   <label className="flex items-center gap-2">
@@ -234,7 +236,7 @@ function JiraDeploymentTickets({ action, fixVersion, updating, onUpdatingChange 
                   onClick={() => void moveSelectedTickets()}
                   className="nb-btn nb-btn-green w-full px-3 py-2 text-sm"
                 >
-                  {updating ? "Updating…" : "Move to Ready for Acceptance"}
+                  {updating ? "Updating…" : `Move to ${targetLabel}`}
                 </button>
               </div>
             )}
@@ -246,19 +248,19 @@ function JiraDeploymentTickets({ action, fixVersion, updating, onUpdatingChange 
                   <li
                     key={ticket.id}
                     className={`nb-panel-sm relative min-w-0 break-words p-3 focus-within:outline-2 focus-within:outline-offset-2 focus-within:outline-nb-orange ${
-                      isStaging && id === "before" && selectedIds.includes(ticket.id) ? "ring-2 ring-nb-orange/40" : ""
+                      canUpdate && id === "before" && selectedIds.includes(ticket.id) ? "ring-2 ring-nb-orange/40" : ""
                     }`}
                   >
-                    {isStaging && id === "before" && (
+                    {canUpdate && id === "before" && (
                       <>
                         <label
-                          htmlFor={`staging-select-${ticket.id}`}
+                          htmlFor={`deployment-select-${ticket.id}`}
                           className={`absolute inset-0 z-10 rounded-[inherit] ${updating ? "cursor-default" : "cursor-pointer"}`}
                         >
                           <span className="sr-only">Select {ticket.key}</span>
                         </label>
                         <input
-                          id={`staging-select-${ticket.id}`}
+                          id={`deployment-select-${ticket.id}`}
                           type="checkbox"
                           checked={selectedIds.includes(ticket.id)}
                           disabled={updating}
