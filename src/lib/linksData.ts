@@ -276,21 +276,6 @@ export const LINK_FOLDERS: BookmarkFolder[] = [
   },
   {
     type: "folder",
-    id: "smart-yard",
-    title: "Smart Yard",
-    children: [
-      { type: "link", title: "TLE BELF1 Local", url: "http://localhost:3002/embed?route=/yard-dashboard&state=port:BELF1&token=REDACTED_SMART_YARD_TOKEN" },
-      { type: "link", title: "TLE BELF Local", url: "http://localhost:3002/embed?route=/yard-dashboard&state=port:BELF&token=REDACTED_SMART_YARD_TOKEN" },
-      { type: "link", title: "TLE BELF1 FAT", url: "https://tle.lx.fatikat.com/embed?route=/yard-dashboard&state=port:BELF1&token=REDACTED_SMART_YARD_TOKEN" },
-      { type: "link", title: "TLE BELF FAT", url: "https://tle.lx.fatikat.com/embed?route=/yard-dashboard&state=port:BELF&token=REDACTED_SMART_YARD_TOKEN" },
-      { type: "link", title: "TLE BELF1 Staging", url: "https://tle.lx.stagikat.com/embed?route=/yard-dashboard&state=port:BELF1&token=REDACTED_SMART_YARD_TOKEN" },
-      { type: "link", title: "TLE BELF Staging", url: "https://tle.lx.stagikat.com/embed?route=/yard-dashboard&state=port:BELF&token=REDACTED_SMART_YARD_TOKEN" },
-      { type: "link", title: "TLE BELF1 Production", url: "https://tle.bylynx.com/embed?route=/yard-dashboard&state=port:BELF1&token=REDACTED_SMART_YARD_TOKEN" },
-      { type: "link", title: "TLE BELF Production", url: "https://tle.bylynx.com/embed?route=/yard-dashboard&state=port:BELF&token=REDACTED_SMART_YARD_TOKEN" },
-    ],
-  },
-  {
-    type: "folder",
     id: "tle",
     title: "TLE",
     children: [
