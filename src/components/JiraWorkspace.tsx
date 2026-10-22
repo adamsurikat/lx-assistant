@@ -84,7 +84,7 @@ export function JiraWorkspace() {
           autoComplete="off"
           value={expectedFixVersion}
           onChange={(event) => setExpectedFixVersion(event.target.value)}
-          placeholder="e.g. 1.2.3"
+          placeholder="e.g. 2026.10.21-0"
           className="nb-input mb-6 w-full px-3 py-2 text-sm"
         />
         <h2 id="jira-bulk-actions" className="nb-display mb-3 text-lg">Bulk actions</h2>
