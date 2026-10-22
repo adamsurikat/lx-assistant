@@ -123,7 +123,7 @@ function JiraTicketBoard({ fixVersion, updating, onUpdatingChange }: {
                 <h3 id={`deployment-${id}`} className="text-sm font-semibold">{title}</h3>
                 <span className="nb-badge shrink-0" aria-label={`${columns[id].length} tickets`}>{columns[id].length}</span>
               </div>
-              {actionColumn && columns[id].length > 0 && (
+              {actionColumn && (
                 <div className="mb-4 space-y-3">
                   <div className="flex flex-wrap items-center justify-between gap-2 text-sm">
                     <label className="flex items-center gap-2">
@@ -131,7 +131,7 @@ function JiraTicketBoard({ fixVersion, updating, onUpdatingChange }: {
                         type="checkbox"
                         checked={allSelected}
                         ref={(element) => { if (element) element.indeterminate = selectedCount > 0 && !allSelected; }}
-                        disabled={updating}
+                        disabled={updating || columns[id].length === 0}
                         onChange={(event) => {
                           const checked = event.target.checked;
                           const columnIds = new Set(columns[id].map((ticket) => ticket.id));
@@ -150,7 +150,7 @@ function JiraTicketBoard({ fixVersion, updating, onUpdatingChange }: {
                     type="button"
                     disabled={updating || selectedCount === 0}
                     onClick={() => void moveSelectedTickets(actionColumn)}
-                    className="nb-btn nb-btn-green w-full px-3 py-2 text-sm"
+                    className="nb-btn nb-btn-green w-full px-3 py-2 text-sm disabled:grayscale"
                   >
                     {updating ? "Updating…" : `Move to ${BOARD_ACTIONS[actionColumn].targetLabel}`}
                   </button>
