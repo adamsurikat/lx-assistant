@@ -57,25 +57,25 @@ test("reading cached versions uses only the database and is scoped to the user",
   const first = await user(t);
   const second = await user(t);
   await prisma.jiraFixVersionCache.create({ data: {
-    userId: first, versionsJson: JSON.stringify(["2027.1.1-0", "2026.10.21-0", "2026.7.22-0", "2026.07.21-0", "2026.2.30-0"]),
+    userId: first, versionsJson: JSON.stringify(["2027.1.1-0", "2026.10.21-0", "2026.9.10-0", "2026.09.09-0", "2026.8.12-0", "2026.2.30-0"]),
   } });
   const fetch = t.mock.method(globalThis, "fetch", async () => { throw new Error("Unexpected Jira request"); });
-  assert.deepEqual(await cache.getCachedJiraFixVersions(first), ["2027.1.1-0", "2026.10.21-0", "2026.7.22-0"]);
+  assert.deepEqual(await cache.getCachedJiraFixVersions(first), ["2027.1.1-0", "2026.10.21-0", "2026.9.10-0"]);
   mock.timers.setTime(new Date("2026-10-23T00:00:00Z").getTime());
   assert.deepEqual(await cache.getCachedJiraFixVersions(first), ["2027.1.1-0", "2026.10.21-0"]);
   assert.equal(await cache.getCachedJiraFixVersions(second), null);
   assert.equal(fetch.mock.callCount(), 0);
 });
 
-test("a refresh returns recent and future versions while preserving the full cache across database connections", async (t) => {
+test("a refresh returns and stores only versions from six weeks ago onward", async (t) => {
   const id = await user(t);
-  t.mock.method(globalThis, "fetch", async (url: string) => jiraResponse(url, ["2027.1.1-0", "2026.10.21-0", "2026.7.22-0", "2026.7.21-0", "not-a-release"]));
-  assert.deepEqual(await cache.refreshJiraFixVersions(id), ["2027.1.1-0", "2026.10.21-0", "2026.7.22-0"]);
+  t.mock.method(globalThis, "fetch", async (url: string) => jiraResponse(url, ["2027.1.1-0", "2026.10.21-0", "2026.9.10-0", "2026.9.9-0", "not-a-release"]));
+  assert.deepEqual(await cache.refreshJiraFixVersions(id), ["2027.1.1-0", "2026.10.21-0", "2026.9.10-0"]);
   const { PrismaClient } = await import("@prisma/client");
   const reopened = new PrismaClient({ datasources: { db: { url: process.env.DATABASE_URL } } });
   try {
     const saved = await reopened.jiraFixVersionCache.findUniqueOrThrow({ where: { userId: id } });
-    assert.deepEqual(JSON.parse(saved.versionsJson), ["2027.1.1-0", "2026.10.21-0", "2026.7.22-0", "2026.7.21-0"]);
+    assert.deepEqual(JSON.parse(saved.versionsJson), ["2027.1.1-0", "2026.10.21-0", "2026.9.10-0"]);
     assert.ok(saved.updatedAt instanceof Date);
   } finally { await reopened.$disconnect(); }
 });

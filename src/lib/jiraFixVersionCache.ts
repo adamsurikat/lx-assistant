@@ -2,11 +2,9 @@ import { prisma } from "@/lib/prisma";
 import { fetchJiraFixVersions, getJiraConfigForUser } from "@/lib/jira";
 
 function selectableVersions(versions: string[]): string[] {
-  const today = new Date();
-  const cutoff = new Date(Date.UTC(today.getUTCFullYear(), today.getUTCMonth() - 3, 1));
-  const lastDay = new Date(Date.UTC(cutoff.getUTCFullYear(), cutoff.getUTCMonth() + 1, 0)).getUTCDate();
-  // Three calendar months, clamped to the last day of shorter months.
-  cutoff.setUTCDate(Math.min(today.getUTCDate(), lastDay));
+  const cutoff = new Date();
+  cutoff.setUTCHours(0, 0, 0, 0);
+  cutoff.setUTCDate(cutoff.getUTCDate() - 6 * 7);
 
   return versions.filter((version) => {
     const match = /^(\d{4})\.(\d{1,2})\.(\d{1,2})-\d+$/.exec(version);
@@ -38,14 +36,14 @@ export function refreshJiraFixVersions(userId: string): Promise<string[]> {
   const refresh = (async () => {
     const config = await getJiraConfigForUser(userId);
     const signal = AbortSignal.any([controller.signal, AbortSignal.timeout(60_000)]);
-    const versions = await fetchJiraFixVersions(config, signal);
+    const versions = selectableVersions(await fetchJiraFixVersions(config, signal));
     signal.throwIfAborted();
     await prisma.jiraFixVersionCache.upsert({
       where: { userId },
       create: { userId, versionsJson: JSON.stringify(versions) },
       update: { versionsJson: JSON.stringify(versions) },
     });
-    return selectableVersions(versions);
+    return versions;
   })().finally(() => {
     if (refreshes.get(userId)?.promise === refresh) refreshes.delete(userId);
   });
