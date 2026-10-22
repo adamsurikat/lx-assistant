@@ -117,43 +117,33 @@ function JiraTicketBoard({ fixVersion, updating, onUpdatingChange }: {
             <section
               key={id}
               aria-labelledby={`deployment-${id}`}
-              className={`min-w-0 rounded-xl border p-3 ${id === "done" ? "border-nb-green/40 bg-nb-green/10" : "border-nb-ink/10 bg-nb-ink/[0.02]"}`}
+              className={`flex min-w-0 flex-col rounded-xl border p-3 ${id === "done" ? "border-nb-green/40 bg-nb-green/10" : "border-nb-ink/10 bg-nb-ink/[0.02]"}`}
             >
               <div className="mb-4 flex items-start justify-between gap-2">
                 <h3 id={`deployment-${id}`} className="text-sm font-semibold">{title}</h3>
                 <span className="nb-badge shrink-0" aria-label={`${columns[id].length} tickets`}>{columns[id].length}</span>
               </div>
               {actionColumn && (
-                <div className="mb-4 space-y-3">
-                  <div className="flex flex-wrap items-center justify-between gap-2 text-sm">
-                    <label className="flex items-center gap-2">
-                      <input
-                        type="checkbox"
-                        checked={allSelected}
-                        ref={(element) => { if (element) element.indeterminate = selectedCount > 0 && !allSelected; }}
-                        disabled={updating || columns[id].length === 0}
-                        onChange={(event) => {
-                          const checked = event.target.checked;
-                          const columnIds = new Set(columns[id].map((ticket) => ticket.id));
-                          setSelectedIds((previous) => [
-                            ...previous.filter((ticketId) => !columnIds.has(ticketId)),
-                            ...(checked ? [...columnIds] : []),
-                          ]);
-                        }}
-                        className="size-4 accent-nb-orange"
-                      />
-                      Select all
-                    </label>
-                    <span className="text-nb-ink/60">{selectedCount} selected</span>
-                  </div>
-                  <button
-                    type="button"
-                    disabled={updating || selectedCount === 0}
-                    onClick={() => void moveSelectedTickets(actionColumn)}
-                    className="nb-btn nb-btn-green w-full px-3 py-2 text-sm disabled:grayscale"
-                  >
-                    {updating ? "Updating…" : `Move to ${BOARD_ACTIONS[actionColumn].targetLabel}`}
-                  </button>
+                <div className="mb-4 flex flex-wrap items-center justify-between gap-2 text-sm">
+                  <label className="flex items-center gap-2">
+                    <input
+                      type="checkbox"
+                      checked={allSelected}
+                      ref={(element) => { if (element) element.indeterminate = selectedCount > 0 && !allSelected; }}
+                      disabled={updating || columns[id].length === 0}
+                      onChange={(event) => {
+                        const checked = event.target.checked;
+                        const columnIds = new Set(columns[id].map((ticket) => ticket.id));
+                        setSelectedIds((previous) => [
+                          ...previous.filter((ticketId) => !columnIds.has(ticketId)),
+                          ...(checked ? [...columnIds] : []),
+                        ]);
+                      }}
+                      className="size-4 accent-nb-orange"
+                    />
+                    Select all
+                  </label>
+                  <span className="text-nb-ink/60">{selectedCount} selected</span>
                 </div>
               )}
               {columns[id].length === 0 ? (
@@ -199,6 +189,18 @@ function JiraTicketBoard({ fixVersion, updating, onUpdatingChange }: {
                     </li>
                   ))}
                 </ul>
+              )}
+              {actionColumn && (
+                <div className="mt-auto pt-4">
+                  <button
+                    type="button"
+                    disabled={updating || selectedCount === 0}
+                    onClick={() => void moveSelectedTickets(actionColumn)}
+                    className="nb-btn nb-btn-green w-full px-3 py-2 text-sm disabled:grayscale"
+                  >
+                    {updating ? "Updating…" : `Move to ${BOARD_ACTIONS[actionColumn].targetLabel}`}
+                  </button>
+                </div>
               )}
             </section>
           );
