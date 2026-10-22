@@ -2,7 +2,7 @@
 
 import { useEffect, useState, type Dispatch, type SetStateAction } from "react";
 import type { JiraTicket } from "@/lib/jira";
-import { groupStagingTickets, type StagingColumn, type StagingUpdateResult } from "@/lib/jiraStaging";
+import { groupStagingTickets, groupUserAcceptanceTickets, type StagingColumn, type StagingUpdateResult } from "@/lib/jiraStaging";
 
 const BULK_ACTIONS = [
   "Staging deployment",
@@ -14,6 +14,12 @@ const STAGING_COLUMNS: { id: StagingColumn; title: string }[] = [
   { id: "before", title: "Before acceptance" },
   { id: "ready", title: "Ready for Acceptance" },
   { id: "after", title: "After acceptance" },
+];
+
+const USER_ACCEPTANCE_COLUMNS: { id: StagingColumn; title: string }[] = [
+  { id: "before", title: "Before user acceptance" },
+  { id: "ready", title: "Resolved / Ready for Release" },
+  { id: "after", title: "After user acceptance" },
 ];
 
 function FixVersionSelect({ value, onChange, initialVersions, disabled }: {
@@ -92,11 +98,13 @@ function FixVersionSelect({ value, onChange, initialVersions, disabled }: {
   );
 }
 
-function StagingDeploymentTickets({ fixVersion, updating, onUpdatingChange }: {
+function JiraDeploymentTickets({ action, fixVersion, updating, onUpdatingChange }: {
+  action: "Staging deployment" | "User Acceptance";
   fixVersion: string;
   updating: boolean;
   onUpdatingChange: (updating: boolean) => void;
 }) {
+  const isStaging = action === "Staging deployment";
   const [result, setResult] = useState<{ tickets: JiraTicket[]; siteUrl: string } | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
@@ -113,11 +121,11 @@ function StagingDeploymentTickets({ fixVersion, updating, onUpdatingChange }: {
         });
         if (response.redirected) throw new Error("Your session expired. Sign in again to load tickets.");
         const data = await response.json();
-        if (!response.ok) throw new Error(data.error || "Could not load staging tickets.");
+        if (!response.ok) throw new Error(data.error || "Could not load tickets.");
         if (!controller.signal.aborted) setResult(data);
       } catch (err) {
         if (!controller.signal.aborted) {
-          setError(err instanceof Error ? err.message : "Could not load staging tickets.");
+          setError(err instanceof Error ? err.message : "Could not load tickets.");
         }
       }
     }
@@ -126,7 +134,7 @@ function StagingDeploymentTickets({ fixVersion, updating, onUpdatingChange }: {
   }, [fixVersion]);
 
   async function moveSelectedTickets() {
-    if (updating || !selectedIds.length) return;
+    if (!isStaging || updating || !selectedIds.length) return;
     onUpdatingChange(true);
     setUpdateResult(null);
     setUpdateError(null);
@@ -156,7 +164,7 @@ function StagingDeploymentTickets({ fixVersion, updating, onUpdatingChange }: {
 
   if (error) return <p role="alert" className="text-sm text-red-700">{error}</p>;
   if (!result) return <p role="status" className="text-sm text-nb-ink/60">Loading tickets…</p>;
-  const columns = groupStagingTickets(result.tickets);
+  const columns = isStaging ? groupStagingTickets(result.tickets) : groupUserAcceptanceTickets(result.tickets);
   const allSelected = columns.before.length > 0 && selectedIds.length === columns.before.length;
 
   return (
@@ -180,17 +188,17 @@ function StagingDeploymentTickets({ fixVersion, updating, onUpdatingChange }: {
         <p role="status" className="mb-4 text-sm text-nb-ink/60">No matching tickets.</p>
       )}
       <div className="grid grid-cols-1 gap-4 lg:grid-cols-3">
-        {STAGING_COLUMNS.map(({ id, title }) => (
+        {(isStaging ? STAGING_COLUMNS : USER_ACCEPTANCE_COLUMNS).map(({ id, title }) => (
           <section
             key={id}
-            aria-labelledby={`staging-${id}`}
+            aria-labelledby={`deployment-${id}`}
             className={`min-w-0 rounded-xl border p-3 ${id === "ready" ? "border-nb-green/40 bg-nb-green/10" : "border-nb-ink/10 bg-nb-ink/[0.02]"}`}
           >
             <div className="mb-4 flex items-start justify-between gap-2">
-              <h3 id={`staging-${id}`} className="text-sm font-semibold">{title}</h3>
+              <h3 id={`deployment-${id}`} className="text-sm font-semibold">{title}</h3>
               <span className="nb-badge shrink-0" aria-label={`${columns[id].length} tickets`}>{columns[id].length}</span>
             </div>
-            {id === "before" && columns.before.length > 0 && (
+            {isStaging && id === "before" && columns.before.length > 0 && (
               <div className="mb-4 space-y-3">
                 <div className="flex flex-wrap items-center justify-between gap-2 text-sm">
                   <label className="flex items-center gap-2">
@@ -224,10 +232,10 @@ function StagingDeploymentTickets({ fixVersion, updating, onUpdatingChange }: {
                   <li
                     key={ticket.id}
                     className={`nb-panel-sm relative min-w-0 break-words p-3 focus-within:outline-2 focus-within:outline-offset-2 focus-within:outline-nb-orange ${
-                      id === "before" && selectedIds.includes(ticket.id) ? "ring-2 ring-nb-orange/40" : ""
+                      isStaging && id === "before" && selectedIds.includes(ticket.id) ? "ring-2 ring-nb-orange/40" : ""
                     }`}
                   >
-                    {id === "before" && (
+                    {isStaging && id === "before" && (
                       <>
                         <label
                           htmlFor={`staging-select-${ticket.id}`}
@@ -302,10 +310,10 @@ export function JiraWorkspace({ initialFixVersions }: { initialFixVersions: stri
         </div>
       </aside>
       <main aria-label="Jira workspace" className="nb-panel-sm min-h-64 min-w-0 flex-1 p-4 md:p-6">
-        {selectedAction === "Staging deployment" && (
+        {(selectedAction === "Staging deployment" || selectedAction === "User Acceptance") && (
           <>
             <div className="mb-5 flex flex-wrap items-center justify-between gap-3">
-              <h2 className="nb-display text-xl">Staging deployment</h2>
+              <h2 className="nb-display text-xl">{selectedAction}</h2>
               {fixVersion && (
                 <button type="button" disabled={updating} className="nb-btn px-3 py-2 text-sm" onClick={() => setRefresh((value) => value + 1)}>
                   Refresh
@@ -313,7 +321,7 @@ export function JiraWorkspace({ initialFixVersions }: { initialFixVersions: stri
               )}
             </div>
             {fixVersion ? (
-              <StagingDeploymentTickets key={`${fixVersion}:${refresh}`} fixVersion={fixVersion} updating={updating} onUpdatingChange={setUpdating} />
+              <JiraDeploymentTickets key={`${selectedAction}:${fixVersion}:${refresh}`} action={selectedAction} fixVersion={fixVersion} updating={updating} onUpdatingChange={setUpdating} />
             ) : (
               <p className="text-sm text-nb-ink/60">Select an expected fix version to find your tickets.</p>
             )}

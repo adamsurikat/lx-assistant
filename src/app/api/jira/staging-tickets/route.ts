@@ -29,9 +29,9 @@ export async function GET(request: Request) {
     if (err instanceof JiraNotConfiguredError) {
       return NextResponse.json({ error: err.message }, { status: 409 });
     }
-    if (!request.signal.aborted) console.error("Failed to load staging tickets", err);
+    if (!request.signal.aborted) console.error("Failed to load Jira tickets", err);
     return NextResponse.json(
-      { error: "Could not load staging tickets. Check the fix version and your Jira connection." },
+      { error: "Could not load tickets. Check the fix version and your Jira connection." },
       { status: 502 }
     );
   }
