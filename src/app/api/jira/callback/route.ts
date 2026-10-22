@@ -5,6 +5,7 @@ import { prisma } from "@/lib/prisma";
 import { encryptSecret } from "@/lib/crypto";
 import { exchangeCodeForToken, fetchAccessibleResources } from "@/lib/atlassian-oauth";
 import { STATE_COOKIE } from "@/app/api/jira/connect/route";
+import { invalidateJiraFixVersionCache } from "@/lib/jiraFixVersionCache";
 
 export async function GET(request: Request) {
   const session = await auth();
@@ -74,6 +75,7 @@ export async function GET(request: Request) {
       where: { id: session.user.id },
       data: { jiraEmail: null, jiraSiteUrl: null, jiraApiTokenCipher: null },
     });
+    await invalidateJiraFixVersionCache(session.user.id);
 
     settingsUrl.searchParams.set("jira_connected", "1");
     return NextResponse.redirect(settingsUrl);

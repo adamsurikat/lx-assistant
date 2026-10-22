@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { auth } from "@/auth";
 import { prisma } from "@/lib/prisma";
 import { encryptSecret } from "@/lib/crypto";
+import { invalidateJiraFixVersionCache } from "@/lib/jiraFixVersionCache";
 
 function oauthAvailable(): boolean {
   return Boolean(
@@ -88,6 +89,7 @@ export async function POST(request: Request) {
   // Saving a manual API token supersedes any OAuth connection (a user only
   // has one active Jira connection method at a time).
   await prisma.jiraConnection.deleteMany({ where: { userId: session.user.id } });
+  await invalidateJiraFixVersionCache(session.user.id);
 
   return NextResponse.json({ ok: true });
 }
@@ -105,6 +107,8 @@ export async function DELETE() {
     }),
     prisma.jiraConnection.deleteMany({ where: { userId: session.user.id } }),
   ]);
+
+  await invalidateJiraFixVersionCache(session.user.id);
 
   return NextResponse.json({ ok: true });
 }

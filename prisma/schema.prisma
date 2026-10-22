@@ -32,6 +32,7 @@ model User {
   timeEntries    TimeEntry[]
   tickets        Ticket[]
   jiraConnection JiraConnection?
+  jiraFixVersionCache JiraFixVersionCache?
   postIts        PostIt[]
   googleCalendarEvents GoogleCalendarEvent[]
   linkLayout     UserLinkLayout?
@@ -107,6 +108,15 @@ model JiraConnection {
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+// Last successful version lookup for this user's Jira connection.
+model JiraFixVersionCache {
+  userId       String   @id
+  versionsJson String
+  updatedAt    DateTime @updatedAt
 
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 }
