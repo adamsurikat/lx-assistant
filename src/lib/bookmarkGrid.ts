@@ -204,9 +204,8 @@ export function buildServiceGrid(folder: BookmarkFolder): ServiceGrid {
   // TAPI admin — titles like "TAPI FAT APAC" vs. plain "TAPI FAT"), the
   // untagged links are really the EU deployment rather than some generic
   // fallback, so relabel that column "EU" instead of "Default" for display.
-  // Folders with no APAC counterpart (e.g. NodeRed's plain "Local" entry)
-  // keep the generic "Default" label, since there's no region being
-  // distinguished from.
+  // Folders with no APAC counterpart keep the generic "Default" label,
+  // since there's no region being distinguished from.
   if (tenants.has(DEFAULT_TENANT) && tenants.has(APAC_TENANT)) {
     cells[EU_TENANT] = cells[DEFAULT_TENANT];
     delete cells[DEFAULT_TENANT];
