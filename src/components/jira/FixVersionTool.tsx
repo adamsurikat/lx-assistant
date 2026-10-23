@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import type { JiraTicket, JiraFixVersionUpdateResult } from "@/lib/jira";
 import { FixVersionSelect } from "./FixVersionSelect";
+import { TicketSelection } from "./TicketSelection";
 
 export function FixVersionTool({ initialFixVersions, updating, onUpdatingChange }: {
   initialFixVersions: string[] | null;
@@ -126,16 +127,12 @@ function UnversionedTickets({ initialFixVersions, updating, onUpdatingChange }: 
           <ul className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-3">
             {result.tickets.map((ticket) => (
               <li key={ticket.id} className={`nb-panel-sm relative min-w-0 break-words p-3 focus-within:outline-2 focus-within:outline-offset-2 focus-within:outline-nb-orange ${selectedIds.includes(ticket.id) ? "ring-2 ring-nb-orange/40" : ""}`}>
-                <label htmlFor={`fix-version-select-${ticket.id}`} className={`absolute inset-0 z-10 rounded-[inherit] ${updating ? "cursor-default" : "cursor-pointer"}`}>
-                  <span className="sr-only">Select {ticket.key}</span>
-                </label>
-                <input
+                <TicketSelection
                   id={`fix-version-select-${ticket.id}`}
-                  type="checkbox"
+                  ticketKey={ticket.key}
                   checked={selectedIds.includes(ticket.id)}
                   disabled={updating}
-                  onChange={(event) => setSelectedIds((previous) => event.target.checked ? [...previous, ticket.id] : previous.filter((id) => id !== ticket.id))}
-                  className="relative z-20 mr-2 size-4 align-middle accent-nb-orange"
+                  onChange={(checked) => setSelectedIds((previous) => checked ? [...previous, ticket.id] : previous.filter((id) => id !== ticket.id))}
                 />
                 <a href={`${result.siteUrl.replace(/\/$/, "")}/browse/${encodeURIComponent(ticket.key)}`} target="_blank" rel="noreferrer" className="relative z-20 text-sm font-bold hover:underline">
                   {ticket.key} ↗

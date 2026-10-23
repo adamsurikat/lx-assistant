@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { FixVersionSelect } from "./FixVersionSelect";
+import { TicketSelection } from "./TicketSelection";
 import type { JiraTicket } from "@/lib/jira";
 import type { StagingUpdateResult } from "@/lib/jiraStaging";
 import { groupJiraBoardTickets, type JiraBoardColumn } from "@/lib/jiraBoard";
@@ -159,23 +160,14 @@ function JiraTicketBoard({ fixVersion, updating, onUpdatingChange }: {
                       }`}
                     >
                       {actionColumn && (
-                        <>
-                          <label
-                            htmlFor={`deployment-select-${ticket.id}`}
-                            className={`absolute inset-0 z-10 rounded-[inherit] ${updating ? "cursor-default" : "cursor-pointer"}`}
-                          >
-                            <span className="sr-only">Select {ticket.key}</span>
-                          </label>
-                          <input
-                            id={`deployment-select-${ticket.id}`}
-                            type="checkbox"
-                            checked={selectedIds.includes(ticket.id)}
-                            disabled={updating}
-                            onChange={(event) => setSelectedIds((previous) => event.target.checked
-                              ? [...previous, ticket.id] : previous.filter((id) => id !== ticket.id))}
-                            className="relative z-20 mr-2 size-4 align-middle accent-nb-orange"
-                          />
-                        </>
+                        <TicketSelection
+                          id={`deployment-select-${ticket.id}`}
+                          ticketKey={ticket.key}
+                          checked={selectedIds.includes(ticket.id)}
+                          disabled={updating}
+                          onChange={(checked) => setSelectedIds((previous) => checked
+                            ? [...previous, ticket.id] : previous.filter((id) => id !== ticket.id))}
+                        />
                       )}
                       <a
                         href={`${result.siteUrl.replace(/\/$/, "")}/browse/${encodeURIComponent(ticket.key)}`}
