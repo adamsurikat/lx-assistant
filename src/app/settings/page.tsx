@@ -2,13 +2,13 @@
 
 import { Suspense, useCallback, useEffect, useState } from "react";
 import { useSearchParams } from "next/navigation";
-import { useSession, signIn } from "next-auth/react";
+import { useSession } from "next-auth/react";
+import { PasswordPanel } from "@/components/auth/PasswordPanel";
+import { GoogleCalendarPanel } from "@/components/auth/GoogleCalendarPanel";
 import { AppHeader } from "@/components/AppHeader";
 import { Toast } from "@/components/Toast";
 
 const DEFAULT_JIRA_SITE_URL = "https://surikat.atlassian.net";
-const GOOGLE_CALENDAR_SCOPE =
-  "openid email profile https://www.googleapis.com/auth/calendar.readonly";
 
 const ERROR_MESSAGES: Record<string, string> = {
   unauthorized: "You need to be signed in to connect Jira.",
@@ -264,64 +264,15 @@ function JiraConnectionPanel() {
   );
 }
 
-function GoogleCalendarPanel() {
-  const [connected, setConnected] = useState<boolean | null>(null);
-  const [connecting, setConnecting] = useState(false);
-
-  const loadStatus = () => {
-    fetch("/api/google-calendar/status")
-      .then((res) => res.json())
-      .then((data: { connected: boolean }) => setConnected(data.connected))
-      .catch(() => setConnected(false));
-  };
-
-  useEffect(() => {
-    loadStatus();
-  }, []);
-
-  const handleConnect = async () => {
-    setConnecting(true);
-    // Re-runs the Google OAuth flow requesting the extra calendar scope
-    // (in addition to the base login scope); the account is the same
-    // provider/providerAccountId, so this just upgrades the stored
-    // access/refresh token + scope (see the jwt callback in auth.ts) —
-    // the user isn't signed out or re-linked to a new account.
-    await signIn(
-      "google",
-      { callbackUrl: "/settings" },
-      { access_type: "offline", prompt: "consent", scope: GOOGLE_CALENDAR_SCOPE }
-    );
-  };
-
-  return (
-    <div className="nb-panel space-y-4 p-6">
-      <p className="text-sm font-medium text-nb-ink/70">
-        Optional — grant read-only access to your Google Calendar to see
-        your meetings alongside logged time. Not required to use the app.
-      </p>
-      {connected === null && <p className="text-sm">Checking connection…</p>}
-      {connected === true && (
-        <span className="text-sm font-semibold text-nb-green">✓ Connected</span>
-      )}
-      {connected === false && (
-        <button
-          type="button"
-          onClick={handleConnect}
-          disabled={connecting}
-          className="nb-btn nb-btn-orange px-4 py-2 text-sm font-semibold"
-        >
-          {connecting ? "Connecting…" : "Connect Google Calendar"}
-        </button>
-      )}
-    </div>
-  );
-}
-
 export default function SettingsPage() {
   return (
     <div className="flex h-screen flex-col">
       <AppHeader active="settings" />
       <main className="mx-auto w-full max-w-lg overflow-y-auto p-8 space-y-8">
+        <div>
+          <h1 className="nb-display mb-1 text-2xl">Account password</h1>
+          <PasswordPanel />
+        </div>
         <div>
           <h1 className="nb-display mb-1 text-2xl">Connect Jira</h1>
 
@@ -332,7 +283,9 @@ export default function SettingsPage() {
 
         <div>
           <h1 className="nb-display mb-1 text-2xl">Connect Google Calendar</h1>
-          <GoogleCalendarPanel />
+          <Suspense fallback={<p className="text-sm">Loading…</p>}>
+            <GoogleCalendarPanel />
+          </Suspense>
         </div>
       </main>
     </div>

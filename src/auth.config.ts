@@ -1,31 +1,17 @@
 import type { NextAuthConfig } from "next-auth";
-import Google from "next-auth/providers/google";
 
 /**
- * Edge-safe NextAuth config (no Prisma adapter, no Node-only imports).
- * Used directly by middleware. The full config in auth.ts extends this
- * with the Prisma adapter for use in API routes / server components.
+ * Shared session config without database or password-hashing imports.
+ * The full config in auth.ts adds local credentials and session validation.
  */
 export const authConfig: NextAuthConfig = {
-  providers: [
-    Google({
-      authorization: {
-        params: {
-          // Just basic sign-in for the app itself — Google Calendar's
-          // read-only scope is requested separately (see the "Connect
-          // Google Calendar" flow in Settings) so users aren't forced to
-          // grant calendar access just to log in.
-          scope: "openid email profile",
-        },
-      },
-    }),
-  ],
+  providers: [],
   session: {
     strategy: "jwt",
   },
   callbacks: {
     authorized({ auth: session }) {
-      return !!session?.user;
+      return !!session?.user?.id;
     },
     async jwt({ token, user }) {
       if (user) {

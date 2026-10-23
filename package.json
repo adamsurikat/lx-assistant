@@ -7,7 +7,8 @@
     "build": "next build",
     "start": "next start -p 3456",
     "lint": "eslint",
-    "map:import": "tsx prisma/importMapGeoJSON.ts"
+    "map:import": "tsx prisma/importMapGeoJSON.ts",
+    "auth:setup": "tsx src/lib/passwordSetupCli.ts"
   },
   "dependencies": {
     "@auth/prisma-adapter": "^2.11.3",

@@ -1,6 +1,7 @@
 import { prisma } from "@/lib/prisma";
+import { decryptSecret, encryptSecret } from "./crypto";
+import { getGoogleCalendarConnection, hasCalendarScope, GOOGLE_TOKEN_URL } from "./googleCalendarConnection";
 
-const GOOGLE_TOKEN_URL = "https://oauth2.googleapis.com/token";
 const GOOGLE_CALENDAR_EVENTS_URL =
   "https://www.googleapis.com/calendar/v3/calendars/primary/events";
 
@@ -22,76 +23,47 @@ export interface GoogleCalendarEvent {
   htmlLink?: string;
 }
 
-/**
- * Whether the user has granted the Calendar readonly scope (via the
- * separate "Connect Google Calendar" flow in Settings) — distinct from
- * simply being signed in with Google, which only grants basic profile
- * info. Used to decide whether to fetch/show events for this user at all.
- */
+/** Calendar access is independent of the app's email/password sign-in. */
 export async function isGoogleCalendarConnected(userId: string): Promise<boolean> {
-  const account = await prisma.account.findFirst({
-    where: { userId, provider: "google" },
-    select: { scope: true, access_token: true },
-  });
-  return Boolean(account?.access_token && account.scope?.includes("calendar"));
+  const connection = await getGoogleCalendarConnection(userId);
+  return Boolean(connection && hasCalendarScope(connection.scope));
 }
 
-/**
- * Returns a valid Google OAuth access token for the user's linked Google
- * account, refreshing it via the stored refresh_token if it has expired.
- */
-async function getValidGoogleAccessToken(userId: string): Promise<string> {
-  const account = await prisma.account.findFirst({
-    where: { userId, provider: "google" },
-  });
-  if (!account || !account.access_token) {
-    throw new GoogleCalendarNotConnectedError();
+async function getValidGoogleAccessToken(userId: string): Promise<{ token: string; googleAccountId: string }> {
+  const connection = await getGoogleCalendarConnection(userId);
+  if (!connection || !hasCalendarScope(connection.scope)) throw new GoogleCalendarNotConnectedError();
+  const googleAccountId = connection.googleAccountId;
+  if (connection.expiresAt.getTime() > Date.now() + 60_000) {
+    return { token: decryptSecret(connection.accessTokenCipher), googleAccountId };
   }
-
-  const expiresAt = account.expires_at ?? 0;
-  const isExpired = expiresAt * 1000 < Date.now() + 60_000; // refresh 1 min early
-  if (!isExpired) {
-    return account.access_token;
-  }
-
-  if (!account.refresh_token) {
-    throw new GoogleCalendarNotConnectedError();
-  }
-
+  if (!connection.refreshTokenCipher) throw new GoogleCalendarNotConnectedError();
   const clientId = process.env.AUTH_GOOGLE_ID;
   const clientSecret = process.env.AUTH_GOOGLE_SECRET;
-  if (!clientId || !clientSecret) {
-    throw new Error("AUTH_GOOGLE_ID/AUTH_GOOGLE_SECRET are not configured");
-  }
-
-  const res = await fetch(GOOGLE_TOKEN_URL, {
-    method: "POST",
-    headers: { "Content-Type": "application/x-www-form-urlencoded" },
+  if (!clientId || !clientSecret) throw new Error("Google Calendar is not configured on this server.");
+  const response = await fetch(GOOGLE_TOKEN_URL, {
+    method: "POST", headers: { "Content-Type": "application/x-www-form-urlencoded" }, signal: AbortSignal.timeout(30_000),
     body: new URLSearchParams({
-      client_id: clientId,
-      client_secret: clientSecret,
-      grant_type: "refresh_token",
-      refresh_token: account.refresh_token,
+      client_id: clientId, client_secret: clientSecret,
+      grant_type: "refresh_token", refresh_token: decryptSecret(connection.refreshTokenCipher),
     }),
   });
-
-  if (!res.ok) {
-    const body = await res.text();
-    throw new Error(`Failed to refresh Google access token: ${body}`);
-  }
-
-  const data = (await res.json()) as {
-    access_token: string;
-    expires_in: number;
-  };
-
-  const newExpiresAt = Math.floor(Date.now() / 1000) + data.expires_in;
-  await prisma.account.update({
-    where: { id: account.id },
-    data: { access_token: data.access_token, expires_at: newExpiresAt },
+  if (!response.ok) throw new GoogleCalendarNotConnectedError();
+  const data = await response.json() as { access_token: string; refresh_token?: string; expires_in: number };
+  if (!data.access_token || !Number.isFinite(data.expires_in)) throw new GoogleCalendarNotConnectedError();
+  const updated = await prisma.googleCalendarConnection.updateMany({
+    where: { userId, accessTokenCipher: connection.accessTokenCipher },
+    data: {
+      accessTokenCipher: encryptSecret(data.access_token), expiresAt: new Date(Date.now() + data.expires_in * 1000),
+      ...(data.refresh_token ? { refreshTokenCipher: encryptSecret(data.refresh_token) } : {}),
+    },
   });
-
-  return data.access_token;
+  // A disconnect or reconnect during refresh must not restore the old grant.
+  if (!updated.count) {
+    const current = await prisma.googleCalendarConnection.findUnique({ where: { userId } });
+    if (!current || current.googleAccountId !== googleAccountId) throw new GoogleCalendarNotConnectedError();
+    return { token: decryptSecret(current.accessTokenCipher), googleAccountId };
+  }
+  return { token: data.access_token, googleAccountId };
 }
 
 /**
@@ -104,8 +76,8 @@ async function fetchGoogleCalendarEventsFromApi(
   userId: string,
   timeMin: Date,
   timeMax: Date
-): Promise<GoogleCalendarEvent[]> {
-  const accessToken = await getValidGoogleAccessToken(userId);
+): Promise<{ events: GoogleCalendarEvent[]; googleAccountId: string }> {
+  const { token: accessToken, googleAccountId } = await getValidGoogleAccessToken(userId);
 
   const params = new URLSearchParams({
     timeMin: timeMin.toISOString(),
@@ -135,7 +107,7 @@ async function fetchGoogleCalendarEventsFromApi(
     }>;
   };
 
-  return (data.items ?? [])
+  const events = (data.items ?? [])
     .filter((item) => item.status !== "cancelled" && item.start && item.end)
     .map((item) => {
       const allDay = !item.start!.dateTime;
@@ -148,6 +120,7 @@ async function fetchGoogleCalendarEventsFromApi(
         htmlLink: item.htmlLink,
       };
     });
+  return { events, googleAccountId };
 }
 
 /**
@@ -188,39 +161,44 @@ export async function syncGoogleCalendarEvents(
   timeMin: Date,
   timeMax: Date
 ): Promise<void> {
-  const events = await fetchGoogleCalendarEventsFromApi(userId, timeMin, timeMax);
+  const { events, googleAccountId } = await fetchGoogleCalendarEventsFromApi(userId, timeMin, timeMax);
 
-  for (const event of events) {
-    await prisma.googleCalendarEvent.upsert({
-      where: { userId_googleEventId: { userId, googleEventId: event.id } },
-      create: {
-        userId,
-        googleEventId: event.id,
-        title: event.title,
-        start: new Date(event.start),
-        end: new Date(event.end),
-        allDay: event.allDay,
-        htmlLink: event.htmlLink,
-      },
-      update: {
-        title: event.title,
-        start: new Date(event.start),
-        end: new Date(event.end),
-        allDay: event.allDay,
-        htmlLink: event.htmlLink,
-      },
+  await prisma.$transaction(async (tx) => {
+    const connection = await tx.googleCalendarConnection.findUnique({ where: { userId } });
+    if (!connection || connection.googleAccountId !== googleAccountId) return;
+
+    for (const event of events) {
+      await tx.googleCalendarEvent.upsert({
+        where: { userId_googleEventId: { userId, googleEventId: event.id } },
+        create: {
+          userId,
+          googleEventId: event.id,
+          title: event.title,
+          start: new Date(event.start),
+          end: new Date(event.end),
+          allDay: event.allDay,
+          htmlLink: event.htmlLink,
+        },
+        update: {
+          title: event.title,
+          start: new Date(event.start),
+          end: new Date(event.end),
+          allDay: event.allDay,
+          htmlLink: event.htmlLink,
+        },
+      });
+    }
+
+    const currentIds = new Set(events.map((e) => e.id));
+    const cachedInWindow = await tx.googleCalendarEvent.findMany({
+      where: { userId, start: { lt: timeMax }, end: { gt: timeMin } },
+      select: { id: true, googleEventId: true },
     });
-  }
-
-  const currentIds = new Set(events.map((e) => e.id));
-  const cachedInWindow = await prisma.googleCalendarEvent.findMany({
-    where: { userId, start: { lt: timeMax }, end: { gt: timeMin } },
-    select: { id: true, googleEventId: true },
+    const staleIds = cachedInWindow
+      .filter((row) => !currentIds.has(row.googleEventId))
+      .map((row) => row.id);
+    if (staleIds.length > 0) {
+      await tx.googleCalendarEvent.deleteMany({ where: { id: { in: staleIds } } });
+    }
   });
-  const staleIds = cachedInWindow
-    .filter((row) => !currentIds.has(row.googleEventId))
-    .map((row) => row.id);
-  if (staleIds.length > 0) {
-    await prisma.googleCalendarEvent.deleteMany({ where: { id: { in: staleIds } } });
-  }
 }

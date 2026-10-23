@@ -7,12 +7,12 @@ Copy `.env.local.example` to `.env.local` and fill in your credentials. Generate
 ```dotenv
 # .env.local
 AUTH_SECRET="..."          # Session signing secret
-TOKEN_ENCRYPTION_KEY="..." # Jira credential encryption: 32 bytes, base64
+TOKEN_ENCRYPTION_KEY="..." # Jira/Calendar token encryption: 32 bytes, base64
 AUTH_TRUST_HOST=true       # Localhost or a trusted reverse proxy
 
-# Google OAuth: <origin>/api/auth/callback/google
-AUTH_GOOGLE_ID="..."       # Client ID
-AUTH_GOOGLE_SECRET="..."   # Client secret
+# Optional Google Calendar: <origin>/api/auth/callback/google
+# AUTH_GOOGLE_ID="..."     # Client ID
+# AUTH_GOOGLE_SECRET="..." # Client secret
 
 # Optional Atlassian OAuth: <origin>/api/jira/callback
 # Omit both to use a Jira API token in Settings.
@@ -36,7 +36,7 @@ DATABASE_URL="file:/app/data/dev.db" # Persistent SQLite database
 
 ## Run locally
 
-Use Node.js 26 and configure `.env.local`, then run the commands below. Startup imports `prisma/mapData.geojson` when all map tables are empty; existing maps stay unchanged. Open `http://localhost:3456`, sign in with Google, and connect Jira in Settings.
+Use Node.js 26 and configure `.env.local`, then run the commands below. Open `http://localhost:3456` and register with email/password; connect Jira and optional Google Calendar in Settings. Existing Google-only accounts and forgotten passwords use `npm run auth:setup -- user@example.com` to generate a private, one-hour password setup link. Startup seeds empty maps from `prisma/mapData.geojson`.
 
 ```sh
 npm ci --legacy-peer-deps
@@ -46,7 +46,7 @@ npm run dev
 
 ## Run in Docker
 
-Configure `.env.local` and copy `.env.docker.example` to `.env.docker` for database settings, then start Compose. Open `http://localhost:3456`. Startup applies the schema and seeds empty maps from `prisma/mapData.geojson`; SQLite persists in the `app_data` volume, initially copying `prisma/dev.db` if available.
+Configure `.env.local` and copy `.env.docker.example` to `.env.docker`, then start Compose. Open `http://localhost:3456` and register or sign in; existing accounts can set a password using `docker compose exec app npm run auth:setup -- user@example.com`. Startup applies migrations and seeds empty maps; SQLite persists in `app_data`, initially copying `prisma/dev.db` if available.
 
 ```sh
 docker compose up --build -d
