@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useState, type FormEvent } from "react";
 import { signIn } from "next-auth/react";
+import styles from "./AccountForm.module.css";
 
 type Mode = "login" | "register" | "setup";
 
@@ -54,8 +55,8 @@ export function AccountForm({ mode }: { mode: Mode }) {
   }
 
   return (
-    <main className="flex min-h-screen items-center justify-center bg-nb-green p-6">
-      <div className="nb-panel w-full max-w-sm p-8">
+    <main className={`${styles.page} flex min-h-screen items-center justify-center p-6`}>
+      <div className={`${styles.panel} nb-panel w-full max-w-sm p-8`}>
         <h1 className="nb-display text-center text-3xl">lx-assistant</h1>
         <h2 className="mb-6 mt-2 text-center text-lg font-semibold">{title}</h2>
         {complete ? (
