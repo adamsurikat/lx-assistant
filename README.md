@@ -57,15 +57,29 @@ For the admin's first sign-in, generate a private, single-use password setup lin
 npm run auth:setup -- adam.esbjornsson@surikat.se
 ```
 
+The email argument is required; running `npm run auth:setup` without it prints usage instructions.
+
 Sign in as the admin, open **Settings → User accounts**, and use **Add user**. Copy the generated link and share it privately with that user so they can choose their password. Links expire after one hour. Existing accounts, including Google-only accounts, can get a replacement setup link with `npm run auth:setup -- user@example.com [https://your-app-origin]`. No default passwords are assigned.
 
 ## Run in Docker
 
-Configure `.env.local` (including `ADMIN_EMAIL`) and copy `.env.docker.example` to `.env.docker`, then start Compose. Open `http://localhost:3456` and sign in; use `docker compose exec app npm run auth:setup -- adam.esbjornsson@surikat.se` for the admin's initial password, substituting your configured admin email. Existing accounts can get a setup link using the same command with their email. Startup applies migrations, ensures the admin account exists, and seeds empty maps; SQLite persists in `app_data`, initially copying `prisma/dev.db` if available.
+Configure `.env.local` (including `ADMIN_EMAIL`) and copy `.env.docker.example` to `.env.docker`, then start Compose:
 
 ```sh
 docker compose up --build -d
 ```
+
+On first startup, the container applies database migrations, creates the configured admin account if missing, and seeds empty maps. A newly created admin account has no password yet.
+
+Once the app is running, generate the admin's password setup link:
+
+```sh
+docker compose exec app npm run auth:setup -- adam.esbjornsson@surikat.se http://localhost:3456
+```
+
+Replace the email with your configured `ADMIN_EMAIL` and the URL with the address you use to open the app (for example, `https://your-app.example` for a remote deployment). Open the printed private link within one hour, choose your password, then sign in. The link can only be used once.
+
+This setup is only needed initially; existing passwords survive container restarts and recreation because SQLite persists in the `app_data` volume. On an empty volume, startup copies `prisma/dev.db` if available. Existing accounts can get a replacement setup link using the same command with their email.
 
 ## Deploy to Rancher or another Docker host
 
