@@ -45,41 +45,27 @@ npx prisma migrate dev
 npm run dev
 ```
 
-## User accounts
+## Set up admin account
 
-Public registration is disabled. Set `ADMIN_EMAIL` in `.env.local` or your deployment's environment variables to choose the only admin account. It defaults to `adam.esbjornsson@surikat.se` when unset. The address is trimmed and lowercased; blank or invalid values prevent startup. Startup creates the configured account if it is missing and preserves any existing name, password and data.
-
-Restart the app after changing `ADMIN_EMAIL` (recreate the container with `docker compose up -d --force-recreate` when using Compose). The new address gains admin access and the previous address becomes a regular user; existing accounts and data are retained. This setting is read at runtime, so changing it does not require rebuilding the image.
-
-For the admin's first sign-in, generate a private, single-use password setup link, replacing the address below with your configured `ADMIN_EMAIL`:
+Set `ADMIN_EMAIL` in `.env.local` or your deployment environment; it defaults to `adam.esbjornsson@surikat.se`. Public registration is disabled, and startup creates the admin account without a default password while preserving existing accounts and data. Once the app is running, generate a setup link with the appropriate command below. The email is required; replace it with your configured admin email and use your app's URL.
 
 ```sh
-npm run auth:setup -- adam.esbjornsson@surikat.se
+# Running locally
+npm run auth:setup -- adam.esbjornsson@surikat.se http://localhost:3456
+
+# Running in Docker
+docker compose exec app npm run auth:setup -- adam.esbjornsson@surikat.se http://localhost:3456
 ```
 
-The email argument is required; running `npm run auth:setup` without it prints usage instructions.
-
-Sign in as the admin, open **Settings → User accounts**, and use **Add user**. Copy the generated link and share it privately with that user so they can choose their password. Links expire after one hour. Existing accounts, including Google-only accounts, can get a replacement setup link with `npm run auth:setup -- user@example.com [https://your-app-origin]`. No default passwords are assigned.
+Open the private, single-use link within one hour, choose a password, then sign in. Passwords persist in the database; use the same command for a replacement link. Add other users through **Settings → User accounts → Add user**. After changing `ADMIN_EMAIL`, restart the app or recreate the container with `docker compose up -d --force-recreate`; the previous admin becomes a regular user without losing data.
 
 ## Run in Docker
 
-Configure `.env.local` (including `ADMIN_EMAIL`) and copy `.env.docker.example` to `.env.docker`, then start Compose:
+Configure `.env.local` and copy `.env.docker.example` to `.env.docker`, then start Compose and open `http://localhost:3456`. Startup applies migrations and seeds empty maps; SQLite persists in `app_data`, initially copying `prisma/dev.db` if available.
 
 ```sh
 docker compose up --build -d
 ```
-
-On first startup, the container applies database migrations, creates the configured admin account if missing, and seeds empty maps. A newly created admin account has no password yet.
-
-Once the app is running, generate the admin's password setup link:
-
-```sh
-docker compose exec app npm run auth:setup -- adam.esbjornsson@surikat.se http://localhost:3456
-```
-
-Replace the email with your configured `ADMIN_EMAIL` and the URL with the address you use to open the app (for example, `https://your-app.example` for a remote deployment). Open the printed private link within one hour, choose your password, then sign in. The link can only be used once.
-
-This setup is only needed initially; existing passwords survive container restarts and recreation because SQLite persists in the `app_data` volume. On an empty volume, startup copies `prisma/dev.db` if available. Existing accounts can get a replacement setup link using the same command with their email.
 
 ## Deploy to Rancher or another Docker host
 
