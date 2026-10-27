@@ -3,8 +3,7 @@ import { cookies } from "next/headers";
 import { auth } from "@/auth";
 import { prisma } from "@/lib/prisma";
 import { encryptSecret } from "@/lib/crypto";
-import { exchangeCodeForToken, fetchAccessibleResources } from "@/lib/atlassian-oauth";
-import { STATE_COOKIE } from "@/app/api/jira/connect/route";
+import { exchangeCodeForToken, fetchAccessibleResources, JIRA_STATE_COOKIE } from "@/lib/atlassian-oauth";
 import { invalidateJiraFixVersionCache } from "@/lib/jiraFixVersionCache";
 
 export async function GET(request: Request) {
@@ -18,8 +17,8 @@ export async function GET(request: Request) {
   }
 
   const cookieStore = await cookies();
-  const expectedState = cookieStore.get(STATE_COOKIE)?.value;
-  cookieStore.delete(STATE_COOKIE);
+  const expectedState = cookieStore.get(JIRA_STATE_COOKIE)?.value;
+  cookieStore.delete(JIRA_STATE_COOKIE);
 
   const error = searchParams.get("error");
   const code = searchParams.get("code");

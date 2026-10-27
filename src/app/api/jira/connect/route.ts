@@ -2,9 +2,7 @@ import { NextResponse } from "next/server";
 import { cookies } from "next/headers";
 import crypto from "crypto";
 import { auth } from "@/auth";
-import { buildAuthorizeUrl } from "@/lib/atlassian-oauth";
-
-export const STATE_COOKIE = "jira_oauth_state";
+import { buildAuthorizeUrl, JIRA_STATE_COOKIE } from "@/lib/atlassian-oauth";
 
 export async function GET(request: Request) {
   const session = await auth();
@@ -20,7 +18,7 @@ export async function GET(request: Request) {
 
   const state = crypto.randomBytes(24).toString("base64url");
   const cookieStore = await cookies();
-  cookieStore.set(STATE_COOKIE, state, {
+  cookieStore.set(JIRA_STATE_COOKIE, state, {
     httpOnly: true,
     secure: true,
     sameSite: "lax",

@@ -9,6 +9,7 @@
 // currently signed-in app user (via Google), not sign the user in.
 
 const AUTHORIZE_URL = "https://auth.atlassian.com/authorize";
+export const JIRA_STATE_COOKIE = "jira_oauth_state";
 const TOKEN_URL = "https://auth.atlassian.com/oauth/token";
 const ACCESSIBLE_RESOURCES_URL =
   "https://api.atlassian.com/oauth/token/accessible-resources";

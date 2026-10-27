@@ -89,7 +89,7 @@ export async function POST(request: Request) {
  * Failures are recorded on the entry (lastSyncError) rather than thrown, so the
  * local entry is never lost if Jira is unreachable.
  */
-export async function trySyncToJira(userId: string, timeEntryId: string) {
+async function trySyncToJira(userId: string, timeEntryId: string) {
   const entry = await prisma.timeEntry.findFirst({
     where: { id: timeEntryId, userId },
     include: { ticket: true },
