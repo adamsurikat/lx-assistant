@@ -72,7 +72,6 @@ export function AccountForm({ mode }: { mode: Mode }) {
             <button disabled={busy || (mode === "setup" && !token)} className="nb-btn nb-btn-orange w-full px-4 py-3">{busy ? "Please wait…" : title}</button>
           </form>
         )}
-        {mode === "login" && <details className="mt-5 text-left text-sm text-nb-ink/70"><summary className="cursor-pointer">Forgot password?</summary><p className="mt-2">Ask the server administrator for a password setup link to keep your existing account and data.</p></details>}
       </div>
     </main>
   );
