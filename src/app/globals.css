@@ -38,7 +38,14 @@
 }
 
 body {
-  background: var(--nb-paper);
+  background: linear-gradient(
+    135deg,
+    #eabbd1 0%,
+    #efcbb3 38%,
+    #e3dda9 64%,
+    #b7dbbd 100%
+  );
+  background-attachment: fixed;
   color: var(--nb-ink);
   font-family: var(--font-space-grotesk), Arial, Helvetica, sans-serif;
 }
