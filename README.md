@@ -56,7 +56,7 @@ npm run auth:setup -- adam.esbjornsson@surikat.se http://localhost:3456
 docker compose exec app npm run auth:setup -- adam.esbjornsson@surikat.se http://localhost:3456
 ```
 
-Open the private, single-use link within one hour, choose a password, then sign in. Admin status and passwords persist in the database across restarts. Rerunning the command replaces that admin's setup link; running it for another email adds another admin. Add regular users through **Settings → User accounts → Add user**. When upgrading from `ADMIN_EMAIL`, run this command once for each admin you want to retain, then remove the unused environment variable.
+Open the private, single-use link within one hour, choose a password, then sign in. Admin status and passwords persist in the database across restarts. Rerunning the command replaces that admin's setup link; running it for another email adds another admin. Add regular users through **Settings → User accounts → Add user**.
 
 ## Run in Docker
 
