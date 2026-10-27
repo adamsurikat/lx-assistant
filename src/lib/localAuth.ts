@@ -2,7 +2,7 @@ import { createHash, randomBytes } from "node:crypto";
 import { Prisma } from "@prisma/client";
 import { prisma } from "./prisma";
 import { hashPassword, validPassword, verifyPassword } from "./password";
-import { ADMIN_EMAIL, isAdminEmail } from "./adminPolicy";
+import { getAdminEmail, isAdminEmail } from "./adminPolicy";
 
 export class AuthInputError extends Error {
   constructor(message: string, public status = 400) { super(message); }
@@ -33,9 +33,10 @@ export async function consumeAuthAttempt(identity: string, limit: number, window
 }
 
 export async function ensureAdminAccount() {
+  const email = getAdminEmail();
   return prisma.user.upsert({
-    where: { email: ADMIN_EMAIL },
-    create: { email: ADMIN_EMAIL, name: "Adam Esbjörnsson" },
+    where: { email },
+    create: { email, name: "Administrator" },
     update: {},
     select: { id: true, name: true, email: true },
   });

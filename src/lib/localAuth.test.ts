@@ -5,13 +5,14 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { after, before, beforeEach, test } from "node:test";
 import type { PrismaClient } from "@prisma/client";
-import { ADMIN_EMAIL, isAdminEmail } from "./adminPolicy";
+import { DEFAULT_ADMIN_EMAIL, getAdminEmail, isAdminEmail } from "./adminPolicy";
 
 let directory: string;
 let prisma: PrismaClient;
 let local: typeof import("./localAuth");
 let requests: typeof import("./authRequest");
 const oldUrl = process.env.DATABASE_URL;
+const oldAdminEmail = process.env.ADMIN_EMAIL;
 const password = "correct horse battery staple";
 
 before(async () => {
@@ -23,6 +24,7 @@ before(async () => {
   requests = await import("./authRequest");
 });
 beforeEach(async () => {
+  delete process.env.ADMIN_EMAIL;
   await prisma.user.deleteMany();
   await prisma.authRateLimit.deleteMany();
 });
@@ -30,6 +32,7 @@ after(async () => {
   await prisma?.$disconnect();
   rmSync(directory, { recursive: true, force: true });
   if (oldUrl === undefined) delete process.env.DATABASE_URL; else process.env.DATABASE_URL = oldUrl;
+  if (oldAdminEmail === undefined) delete process.env.ADMIN_EMAIL; else process.env.ADMIN_EMAIL = oldAdminEmail;
 });
 
 test("admin-created accounts normalize emails and activate without Google; login hashes passwords and rejects bad credentials", async (t) => {
@@ -119,9 +122,9 @@ test("account mutations require same-origin JSON, including LAN origins", async 
   await assert.rejects(requests.readAuthJson(request('http://192.168.11.220:3456', 'x'.repeat(4097))), /too large/);
 });
 
-test("the owner is always admin and startup preserves their password, session and data", async () => {
+test("the default owner is admin when ADMIN_EMAIL is unset and startup preserves their password, session and data", async () => {
   const admin = await local.ensureAdminAccount();
-  assert.equal(admin.email, ADMIN_EMAIL);
+  assert.equal(admin.email, DEFAULT_ADMIN_EMAIL);
   assert.equal(isAdminEmail(admin.email), true);
   assert.equal(isAdminEmail(" ADAM.ESBJORNSSON@SURIKAT.SE "), true);
   assert.equal(isAdminEmail("adam.esbjornsson@surikat.se.evil.test"), false);
@@ -142,7 +145,7 @@ test("the owner is always admin and startup preserves their password, session an
 
 test("anonymous users and non-admin users cannot create accounts or list users", async () => {
   const admin = await local.ensureAdminAccount();
-  const member = await prisma.user.create({ data: { email: "member@example.test", name: ADMIN_EMAIL } });
+  const member = await prisma.user.create({ data: { email: "member@example.test", name: DEFAULT_ADMIN_EMAIL } });
   const input = { name: "New user", email: "new@example.test" };
   for (const id of [undefined, "missing", member.id]) {
     const status = id === member.id ? 403 : 401;
@@ -184,8 +187,56 @@ test("invalid invitations and duplicate owner accounts never overwrite existing 
   const admin = await local.ensureAdminAccount();
   await assert.rejects(local.createUserByAdmin(admin.id, { name: "", email: "valid@example.test" }), /Enter a name/);
   await assert.rejects(local.createUserByAdmin(admin.id, { name: "User", email: "invalid" }), /valid email/);
-  await assert.rejects(local.createUserByAdmin(admin.id, { name: "Intruder", email: ADMIN_EMAIL.toUpperCase() }), /already exists/);
+  await assert.rejects(local.createUserByAdmin(admin.id, { name: "Intruder", email: DEFAULT_ADMIN_EMAIL.toUpperCase() }), /already exists/);
   assert.equal(await prisma.user.count(), 1);
   assert.equal(await prisma.passwordSetupToken.count(), 0);
   assert.equal((await local.ensureAdminAccount()).name, admin.name);
+});
+
+test("ADMIN_EMAIL configures the seeded admin and replaces the previous owner's access at runtime", async () => {
+  const previous = await local.ensureAdminAccount();
+  process.env.ADMIN_EMAIL = " New.Owner@Example.test ";
+  assert.equal(getAdminEmail(), "new.owner@example.test");
+  const admin = await local.ensureAdminAccount();
+  assert.equal(admin.email, "new.owner@example.test");
+  assert.equal(admin.name, "Administrator");
+  assert.equal((await local.ensureAdminAccount()).id, admin.id);
+  assert.equal(isAdminEmail(" NEW.OWNER@EXAMPLE.TEST "), true);
+  assert.equal(isAdminEmail(DEFAULT_ADMIN_EMAIL), false);
+  await assert.rejects(local.requireAdminUser(previous.id), /Only the administrator/);
+  await assert.rejects(local.createUserByAdmin(previous.id, { name: "Blocked", email: "blocked@example.test" }), /Only the administrator/);
+  const { user } = await local.createUserByAdmin(admin.id, { name: "Member", email: "member@example.test" });
+  assert.equal(user.isAdmin, false);
+  const users = await local.listUsersForAdmin(admin.id);
+  assert.deepEqual(users.filter((entry) => entry.isAdmin).map((entry) => entry.id), [admin.id]);
+  assert.equal(await prisma.user.count({ where: { id: previous.id } }), 1);
+});
+
+test("configuring an existing user as admin preserves their profile, password and data", async () => {
+  const user = await prisma.user.create({ data: { email: "existing-admin@example.test", name: "Existing owner", jiraApiTokenCipher: "keep-this" } });
+  await prisma.postIt.create({ data: { userId: user.id, text: "Keep my note" } });
+  const token = await local.createPasswordSetupToken(user.email);
+  await local.setPasswordWithToken(token, password);
+  const before = await prisma.user.findUniqueOrThrow({ where: { id: user.id } });
+  process.env.ADMIN_EMAIL = user.email!;
+  const admin = await local.ensureAdminAccount();
+  assert.equal(admin.id, user.id);
+  assert.equal(admin.name, user.name);
+  const after = await prisma.user.findUniqueOrThrow({ where: { id: user.id } });
+  assert.equal(after.passwordHash, before.passwordHash);
+  assert.equal(after.sessionVersion, before.sessionVersion);
+  assert.equal(after.jiraApiTokenCipher, "keep-this");
+  assert.equal(await prisma.postIt.count({ where: { userId: user.id } }), 1);
+  assert.equal(await prisma.user.count(), 1);
+  assert.equal((await local.requireAdminUser(user.id)).id, user.id);
+});
+
+test("blank or invalid ADMIN_EMAIL settings fail without creating or granting an admin account", async () => {
+  for (const value of ["", "   ", "invalid", "one@example.test,two@example.test", `${"x".repeat(255)}@example.test`]) {
+    process.env.ADMIN_EMAIL = value;
+    assert.throws(getAdminEmail, /ADMIN_EMAIL must be a valid email address/);
+    assert.throws(() => isAdminEmail(DEFAULT_ADMIN_EMAIL), /ADMIN_EMAIL must be a valid email address/);
+    await assert.rejects(local.ensureAdminAccount(), /ADMIN_EMAIL must be a valid email address/);
+  }
+  assert.equal(await prisma.user.count(), 0);
 });

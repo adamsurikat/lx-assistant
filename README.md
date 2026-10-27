@@ -9,6 +9,7 @@ Copy `.env.local.example` to `.env.local` and fill in your credentials. Generate
 AUTH_SECRET="..."          # Session signing secret
 TOKEN_ENCRYPTION_KEY="..." # Jira/Calendar token encryption: 32 bytes, base64
 AUTH_TRUST_HOST=true       # Localhost or a trusted reverse proxy
+ADMIN_EMAIL="adam.esbjornsson@surikat.se" # The only admin account
 
 # Optional Google Calendar: <origin>/api/auth/callback/google
 # AUTH_GOOGLE_ID="..."     # Client ID
@@ -46,9 +47,11 @@ npm run dev
 
 ## User accounts
 
-Public registration is disabled. Only `adam.esbjornsson@surikat.se` has admin access, determined on the server from the account's email. Startup creates this account if it is missing and preserves its existing password and data.
+Public registration is disabled. Set `ADMIN_EMAIL` in `.env.local` or your deployment's environment variables to choose the only admin account. It defaults to `adam.esbjornsson@surikat.se` when unset. The address is trimmed and lowercased; blank or invalid values prevent startup. Startup creates the configured account if it is missing and preserves any existing name, password and data.
 
-For the admin's first sign-in, generate a private, single-use password setup link:
+Restart the app after changing `ADMIN_EMAIL` (recreate the container with `docker compose up -d --force-recreate` when using Compose). The new address gains admin access and the previous address becomes a regular user; existing accounts and data are retained. This setting is read at runtime, so changing it does not require rebuilding the image.
+
+For the admin's first sign-in, generate a private, single-use password setup link, replacing the address below with your configured `ADMIN_EMAIL`:
 
 ```sh
 npm run auth:setup -- adam.esbjornsson@surikat.se
@@ -58,7 +61,7 @@ Sign in as the admin, open **Settings → User accounts**, and use **Add user**.
 
 ## Run in Docker
 
-Configure `.env.local` and copy `.env.docker.example` to `.env.docker`, then start Compose. Open `http://localhost:3456` and sign in; use `docker compose exec app npm run auth:setup -- adam.esbjornsson@surikat.se` for the admin's initial password. Existing accounts can get a setup link using the same command with their email. Startup applies migrations, ensures the admin account exists, and seeds empty maps; SQLite persists in `app_data`, initially copying `prisma/dev.db` if available.
+Configure `.env.local` (including `ADMIN_EMAIL`) and copy `.env.docker.example` to `.env.docker`, then start Compose. Open `http://localhost:3456` and sign in; use `docker compose exec app npm run auth:setup -- adam.esbjornsson@surikat.se` for the admin's initial password, substituting your configured admin email. Existing accounts can get a setup link using the same command with their email. Startup applies migrations, ensures the admin account exists, and seeds empty maps; SQLite persists in `app_data`, initially copying `prisma/dev.db` if available.
 
 ```sh
 docker compose up --build -d
