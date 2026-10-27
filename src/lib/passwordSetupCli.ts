@@ -3,16 +3,17 @@ import { loadEnvConfig } from "@next/env";
 loadEnvConfig(process.cwd());
 
 async function main() {
-  const [email, origin = "http://localhost:3456"] = process.argv.slice(2);
-  if (!email) throw new Error("Usage: npm run auth:setup -- user@example.com [http://localhost:3456]");
+  const args = process.argv.slice(2);
+  const [email, origin = "http://localhost:3456"] = args;
+  if (!email || args.length > 2) throw new Error("Usage: npm run auth:setup -- admin@example.com [http://localhost:3456]\nCreates or promotes an admin account and prints a password setup link.");
   const url = new URL("/set-password", origin);
   if (!["http:", "https:"].includes(url.protocol)) throw new Error("Use an HTTP or HTTPS app URL.");
-  const { createPasswordSetupToken, ensureAdminAccount } = await import("./localAuth");
+  const { setupAdminAccount } = await import("./localAuth");
   const { prisma } = await import("./prisma");
   try {
-    await ensureAdminAccount();
-    url.hash = new URLSearchParams({ token: await createPasswordSetupToken(email) }).toString();
-    console.log(`Open this private, single-use link within one hour:\n${url}`);
+    const { user, token } = await setupAdminAccount(email);
+    url.hash = new URLSearchParams({ token }).toString();
+    console.log(`Admin account ready: ${user.email}\nOpen this private, single-use link within one hour:\n${url}`);
   } finally { await prisma.$disconnect(); }
 }
 

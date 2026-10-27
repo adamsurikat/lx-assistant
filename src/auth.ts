@@ -3,7 +3,6 @@ import Credentials from "next-auth/providers/credentials";
 import { prisma } from "@/lib/prisma";
 import { authConfig } from "@/auth.config";
 import { authenticateUser, AuthInputError } from "@/lib/localAuth";
-import { isAdminEmail } from "@/lib/adminPolicy";
 
 class RateLimited extends CredentialsSignin { code = "rate_limited"; }
 
@@ -24,12 +23,12 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
     async jwt({ token, user }) {
       const userId = user?.id ?? token.userId;
       if (typeof userId !== "string") return null;
-      const current = await prisma.user.findUnique({ where: { id: userId }, select: { sessionVersion: true, email: true } });
+      const current = await prisma.user.findUnique({ where: { id: userId }, select: { sessionVersion: true, email: true, isAdmin: true } });
       if (!current || (!user && (token.sessionVersion ?? 0) !== current.sessionVersion)) return null;
       token.userId = userId;
       token.sessionVersion = current.sessionVersion;
       token.email = current.email;
-      token.isAdmin = isAdminEmail(current.email);
+      token.isAdmin = current.isAdmin;
       return token;
     },
   },

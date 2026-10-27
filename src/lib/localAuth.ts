@@ -2,7 +2,6 @@ import { createHash, randomBytes } from "node:crypto";
 import { Prisma } from "@prisma/client";
 import { prisma } from "./prisma";
 import { hashPassword, validPassword, verifyPassword } from "./password";
-import { getAdminEmail, isAdminEmail } from "./adminPolicy";
 
 export class AuthInputError extends Error {
   constructor(message: string, public status = 400) { super(message); }
@@ -32,21 +31,26 @@ export async function consumeAuthAttempt(identity: string, limit: number, window
   if (row.attempts > limit) throw new AuthInputError("Too many attempts. Try again in 15 minutes.", 429);
 }
 
-export async function ensureAdminAccount() {
-  const email = getAdminEmail();
-  return prisma.user.upsert({
+// Called by the server-side auth:setup command, never by a public endpoint.
+export async function setupAdminAccount(emailInput: unknown) {
+  const email = normalizeEmail(emailInput);
+  const token = randomBytes(32).toString("base64url");
+  const setup = { tokenHash: tokenHash(token), expiresAt: new Date(Date.now() + 60 * 60_000) };
+  // Persist the role and setup link together, preserving existing credentials and data.
+  const user = await prisma.user.upsert({
     where: { email },
-    create: { email, name: "Administrator" },
-    update: {},
-    select: { id: true, name: true, email: true },
+    create: { email, name: "Administrator", isAdmin: true, passwordSetupToken: { create: setup } },
+    update: { isAdmin: true, passwordSetupToken: { upsert: { create: setup, update: setup } } },
+    select: { id: true, name: true, email: true, isAdmin: true },
   });
+  return { user, token };
 }
 
 export async function requireAdminUser(userId: string | undefined) {
   if (!userId) throw new AuthInputError("Sign in to manage users.", 401);
-  const user = await prisma.user.findUnique({ where: { id: userId }, select: { id: true, email: true } });
+  const user = await prisma.user.findUnique({ where: { id: userId }, select: { id: true, email: true, isAdmin: true } });
   if (!user) throw new AuthInputError("Sign in to manage users.", 401);
-  if (!isAdminEmail(user.email)) throw new AuthInputError("Only the administrator can manage users.", 403);
+  if (!user.isAdmin) throw new AuthInputError("Only administrators can manage users.", 403);
   return user;
 }
 
@@ -54,10 +58,10 @@ export async function listUsersForAdmin(userId: string | undefined) {
   await requireAdminUser(userId);
   const users = await prisma.user.findMany({
     orderBy: { createdAt: "asc" },
-    select: { id: true, name: true, email: true, passwordHash: true },
+    select: { id: true, name: true, email: true, isAdmin: true, passwordHash: true },
   });
   return users.map(({ passwordHash, ...user }) => ({
-    ...user, isAdmin: isAdminEmail(user.email), passwordSet: Boolean(passwordHash),
+    ...user, passwordSet: Boolean(passwordHash),
   }));
 }
 
@@ -72,10 +76,10 @@ export async function createUserByAdmin(userId: string | undefined, input: { nam
   try {
     // Create the account and its single-use invitation atomically. No default password.
     const user = await prisma.user.create({
-      data: { name, email, passwordSetupToken: { create: { tokenHash: tokenHash(token), expiresAt } } },
-      select: { id: true, name: true, email: true },
+      data: { name, email, isAdmin: false, passwordSetupToken: { create: { tokenHash: tokenHash(token), expiresAt } } },
+      select: { id: true, name: true, email: true, isAdmin: true },
     });
-    return { user: { ...user, isAdmin: isAdminEmail(user.email), passwordSet: false }, token, expiresAt };
+    return { user: { ...user, passwordSet: false }, token, expiresAt };
   } catch (error) {
     if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === "P2002") {
       throw new AuthInputError("An account already exists for this email.", 409);

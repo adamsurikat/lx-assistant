@@ -9,7 +9,6 @@ Copy `.env.local.example` to `.env.local` and fill in your credentials. Generate
 AUTH_SECRET="..."          # Session signing secret
 TOKEN_ENCRYPTION_KEY="..." # Jira/Calendar token encryption: 32 bytes, base64
 AUTH_TRUST_HOST=true       # Localhost or a trusted reverse proxy
-ADMIN_EMAIL="adam.esbjornsson@surikat.se" # The only admin account
 
 # Optional Google Calendar: <origin>/api/auth/callback/google
 # AUTH_GOOGLE_ID="..."     # Client ID
@@ -37,7 +36,7 @@ DATABASE_URL="file:/app/data/dev.db" # Persistent SQLite database
 
 ## Run locally
 
-Use Node.js 26 and configure `.env.local`, then run the commands below. Open `http://localhost:3456` and sign in with email/password; connect Jira and optional Google Calendar in Settings. Startup ensures the admin account exists and seeds empty maps from `prisma/mapData.geojson`.
+Use Node.js 26 and configure `.env.local`, then run the commands below. Open `http://localhost:3456` and sign in with email/password; connect Jira and optional Google Calendar in Settings. Startup seeds empty maps from `prisma/mapData.geojson`.
 
 ```sh
 npm ci --legacy-peer-deps
@@ -47,7 +46,7 @@ npm run dev
 
 ## Set up admin account
 
-Set `ADMIN_EMAIL` in `.env.local` or your deployment environment; it defaults to `adam.esbjornsson@surikat.se`. Public registration is disabled, and startup creates the admin account without a default password while preserving existing accounts and data. Once the app is running, generate a setup link with the appropriate command below. The email is required; replace it with your configured admin email and use your app's URL.
+Public registration is disabled. Once the database migrations are applied, run `auth:setup` to create an admin account or promote an existing user, preserving their password and data. The command prints a password setup link. Use the required email argument to choose the admin and replace the URL with your app's address; for Docker, start the container first.
 
 ```sh
 # Running locally
@@ -57,7 +56,7 @@ npm run auth:setup -- adam.esbjornsson@surikat.se http://localhost:3456
 docker compose exec app npm run auth:setup -- adam.esbjornsson@surikat.se http://localhost:3456
 ```
 
-Open the private, single-use link within one hour, choose a password, then sign in. Passwords persist in the database; use the same command for a replacement link. Add other users through **Settings → User accounts → Add user**. After changing `ADMIN_EMAIL`, restart the app or recreate the container with `docker compose up -d --force-recreate`; the previous admin becomes a regular user without losing data.
+Open the private, single-use link within one hour, choose a password, then sign in. Admin status and passwords persist in the database across restarts. Rerunning the command replaces that admin's setup link; running it for another email adds another admin. Add regular users through **Settings → User accounts → Add user**. When upgrading from `ADMIN_EMAIL`, run this command once for each admin you want to retain, then remove the unused environment variable.
 
 ## Run in Docker
 

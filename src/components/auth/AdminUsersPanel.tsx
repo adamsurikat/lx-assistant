@@ -69,7 +69,7 @@ export function AdminUsersPanel() {
     <section aria-labelledby="users-heading" className="space-y-3">
       <h1 id="users-heading" className="nb-display text-2xl">User accounts</h1>
       <div className="nb-panel space-y-5 p-6">
-        <p className="text-sm text-nb-ink/70">Only you can add users. Each new user chooses their password using a private setup link.</p>
+        <p className="text-sm text-nb-ink/70">Only admins can add users. Each new user chooses their password using a private setup link.</p>
         <form onSubmit={submit} className="space-y-4">
           <label className="block text-sm font-semibold">Name
             <input name="name" autoComplete="off" required maxLength={100} className="nb-input mt-1 w-full px-3 py-2" />
