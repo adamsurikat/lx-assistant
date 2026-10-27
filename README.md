@@ -36,7 +36,7 @@ DATABASE_URL="file:/app/data/dev.db" # Persistent SQLite database
 
 ## Run locally
 
-Use Node.js 26 and configure `.env.local`, then run the commands below. Open `http://localhost:3456` and register with email/password; connect Jira and optional Google Calendar in Settings. Existing Google-only accounts and forgotten passwords use `npm run auth:setup -- user@example.com` to generate a private, one-hour password setup link. Startup seeds empty maps from `prisma/mapData.geojson`.
+Use Node.js 26 and configure `.env.local`, then run the commands below. Open `http://localhost:3456` and sign in with email/password; connect Jira and optional Google Calendar in Settings. Startup ensures the admin account exists and seeds empty maps from `prisma/mapData.geojson`.
 
 ```sh
 npm ci --legacy-peer-deps
@@ -44,9 +44,21 @@ npx prisma migrate dev
 npm run dev
 ```
 
+## User accounts
+
+Public registration is disabled. Only `adam.esbjornsson@surikat.se` has admin access, determined on the server from the account's email. Startup creates this account if it is missing and preserves its existing password and data.
+
+For the admin's first sign-in, generate a private, single-use password setup link:
+
+```sh
+npm run auth:setup -- adam.esbjornsson@surikat.se
+```
+
+Sign in as the admin, open **Settings → User accounts**, and use **Add user**. Copy the generated link and share it privately with that user so they can choose their password. Links expire after one hour. Existing accounts, including Google-only accounts, can get a replacement setup link with `npm run auth:setup -- user@example.com [https://your-app-origin]`. No default passwords are assigned.
+
 ## Run in Docker
 
-Configure `.env.local` and copy `.env.docker.example` to `.env.docker`, then start Compose. Open `http://localhost:3456` and register or sign in; existing accounts can set a password using `docker compose exec app npm run auth:setup -- user@example.com`. Startup applies migrations and seeds empty maps; SQLite persists in `app_data`, initially copying `prisma/dev.db` if available.
+Configure `.env.local` and copy `.env.docker.example` to `.env.docker`, then start Compose. Open `http://localhost:3456` and sign in; use `docker compose exec app npm run auth:setup -- adam.esbjornsson@surikat.se` for the admin's initial password. Existing accounts can get a setup link using the same command with their email. Startup applies migrations, ensures the admin account exists, and seeds empty maps; SQLite persists in `app_data`, initially copying `prisma/dev.db` if available.
 
 ```sh
 docker compose up --build -d

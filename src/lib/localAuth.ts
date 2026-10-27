@@ -2,6 +2,7 @@ import { createHash, randomBytes } from "node:crypto";
 import { Prisma } from "@prisma/client";
 import { prisma } from "./prisma";
 import { hashPassword, validPassword, verifyPassword } from "./password";
+import { ADMIN_EMAIL, isAdminEmail } from "./adminPolicy";
 
 export class AuthInputError extends Error {
   constructor(message: string, public status = 400) { super(message); }
@@ -31,19 +32,52 @@ export async function consumeAuthAttempt(identity: string, limit: number, window
   if (row.attempts > limit) throw new AuthInputError("Too many attempts. Try again in 15 minutes.", 429);
 }
 
-export async function registerUser(input: { name?: unknown; email?: unknown; password?: unknown }) {
+export async function ensureAdminAccount() {
+  return prisma.user.upsert({
+    where: { email: ADMIN_EMAIL },
+    create: { email: ADMIN_EMAIL, name: "Adam Esbjörnsson" },
+    update: {},
+    select: { id: true, name: true, email: true },
+  });
+}
+
+export async function requireAdminUser(userId: string | undefined) {
+  if (!userId) throw new AuthInputError("Sign in to manage users.", 401);
+  const user = await prisma.user.findUnique({ where: { id: userId }, select: { id: true, email: true } });
+  if (!user) throw new AuthInputError("Sign in to manage users.", 401);
+  if (!isAdminEmail(user.email)) throw new AuthInputError("Only the administrator can manage users.", 403);
+  return user;
+}
+
+export async function listUsersForAdmin(userId: string | undefined) {
+  await requireAdminUser(userId);
+  const users = await prisma.user.findMany({
+    orderBy: { createdAt: "asc" },
+    select: { id: true, name: true, email: true, passwordHash: true },
+  });
+  return users.map(({ passwordHash, ...user }) => ({
+    ...user, isAdmin: isAdminEmail(user.email), passwordSet: Boolean(passwordHash),
+  }));
+}
+
+export async function createUserByAdmin(userId: string | undefined, input: { name?: unknown; email?: unknown }) {
+  await requireAdminUser(userId);
   const email = normalizeEmail(input.email);
   const name = typeof input.name === "string" ? input.name.trim() : "";
   if (!name || name.length > 100) throw new AuthInputError("Enter a name of up to 100 characters.");
-  if (!validPassword(input.password)) throw new AuthInputError("Use a password between 12 and 128 characters.");
-  await consumeAuthAttempt("register:all", 30);
-  await consumeAuthAttempt(`register:${email}`, 5);
-  const passwordHash = await hashPassword(input.password);
+  await consumeAuthAttempt(`create-user:${userId}`, 30);
+  const token = randomBytes(32).toString("base64url");
+  const expiresAt = new Date(Date.now() + 60 * 60_000);
   try {
-    return await prisma.user.create({ data: { name, email, passwordHash }, select: { id: true, name: true, email: true } });
+    // Create the account and its single-use invitation atomically. No default password.
+    const user = await prisma.user.create({
+      data: { name, email, passwordSetupToken: { create: { tokenHash: tokenHash(token), expiresAt } } },
+      select: { id: true, name: true, email: true },
+    });
+    return { user: { ...user, isAdmin: isAdminEmail(user.email), passwordSet: false }, token, expiresAt };
   } catch (error) {
     if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === "P2002") {
-      throw new AuthInputError("Unable to register this email. Sign in or ask the server administrator for a password setup link.", 409);
+      throw new AuthInputError("An account already exists for this email.", 409);
     }
     throw error;
   }

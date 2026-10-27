@@ -1,3 +1,3 @@
-import { AccountForm } from "@/components/auth/AccountForm";
+import { redirect } from "next/navigation";
 
-export default function RegisterPage() { return <AccountForm mode="register" />; }
+export default function RegisterPage() { redirect("/login"); }

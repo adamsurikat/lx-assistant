@@ -5,6 +5,7 @@ import { useSearchParams } from "next/navigation";
 import { useSession } from "next-auth/react";
 import { PasswordPanel } from "@/components/auth/PasswordPanel";
 import { GoogleCalendarPanel } from "@/components/auth/GoogleCalendarPanel";
+import { AdminUsersPanel } from "@/components/auth/AdminUsersPanel";
 import { AppHeader } from "@/components/AppHeader";
 import { Toast } from "@/components/Toast";
 
@@ -265,10 +266,12 @@ function JiraConnectionPanel() {
 }
 
 export default function SettingsPage() {
+  const { data: session } = useSession();
   return (
     <div className="flex h-screen flex-col">
       <AppHeader active="settings" />
       <main className="mx-auto w-full max-w-lg overflow-y-auto p-8 space-y-8">
+        {session?.user?.isAdmin && <AdminUsersPanel />}
         <div>
           <h1 className="nb-display mb-1 text-2xl">Account password</h1>
           <PasswordPanel />
