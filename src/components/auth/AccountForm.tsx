@@ -72,7 +72,7 @@ export function AccountForm({ mode }: { mode: Mode }) {
             <button disabled={busy || (mode === "setup" && !token)} className="nb-btn nb-btn-orange w-full px-4 py-3">{busy ? "Please wait…" : title}</button>
           </form>
         )}
-        {mode === "login" && <div className="mt-5 space-y-3 text-center text-sm"><p className="text-nb-ink/70">Accounts are created by the administrator.</p><details className="text-nb-ink/70"><summary className="cursor-pointer">Forgot password or previously used Google?</summary><p className="mt-2">Ask the server administrator for a password setup link to keep your existing account and data.</p></details></div>}
+        {mode === "login" && <details className="mt-5 text-center text-sm text-nb-ink/70"><summary className="cursor-pointer">Forgot password?</summary><p className="mt-2">Ask the server administrator for a password setup link to keep your existing account and data.</p></details>}
       </div>
     </main>
   );
