@@ -1,12 +1,18 @@
 .page {
   --nb-orange: #527560;
-  background: linear-gradient(135deg, #e7bad0 0%, #b8d6c1 100%);
+  background: linear-gradient(
+    135deg,
+    #eabbd1 0%,
+    #efcbb3 38%,
+    #e3dda9 64%,
+    #b7dbbd 100%
+  );
 }
 
 .page .panel {
-  background: #efdae3;
+  background: #fafafa;
 }
 
 .page input {
-  background: #f6e7ee;
+  background: #fcfcfc;
 }
