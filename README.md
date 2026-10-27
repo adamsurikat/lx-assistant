@@ -44,6 +44,14 @@ npx prisma migrate dev
 npm run dev
 ```
 
+## Run in Docker
+
+Configure `.env.local` and copy `.env.docker.example` to `.env.docker`, then start Compose and open `http://localhost:3456`. Startup applies migrations and seeds empty maps; SQLite persists in `app_data`, initially copying `prisma/dev.db` if available.
+
+```sh
+docker compose up --build -d
+```
+
 ## Set up admin account
 
 Public registration is disabled. Once the database migrations are applied, run `auth:setup` to create an admin account or promote an existing user, preserving their password and data. The command prints a password setup link. Use the required email argument to choose the admin and replace the URL with your app's address; for Docker, start the container first.
@@ -57,14 +65,6 @@ docker compose exec app npm run auth:setup -- adam.esbjornsson@surikat.se http:/
 ```
 
 Open the private, single-use link within one hour, choose a password, then sign in. Admin status and passwords persist in the database across restarts. Rerunning the command replaces that admin's setup link; running it for another email adds another admin. Add regular users through **Settings → User accounts → Add user**.
-
-## Run in Docker
-
-Configure `.env.local` and copy `.env.docker.example` to `.env.docker`, then start Compose and open `http://localhost:3456`. Startup applies migrations and seeds empty maps; SQLite persists in `app_data`, initially copying `prisma/dev.db` if available.
-
-```sh
-docker compose up --build -d
-```
 
 ## Deploy to Rancher or another Docker host
 
