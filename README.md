@@ -54,8 +54,6 @@ docker compose up --build -d
 
 ## Set up admin account
 
-Public registration is disabled. Once the database migrations are applied, run `auth:setup` to create an admin account or promote an existing user, preserving their password and data. The command prints a password setup link. Use the required email argument to choose the admin and replace the URL with your app's address; for Docker, start the container first.
-
 ```sh
 # Running locally
 npm run auth:setup -- adam.esbjornsson@surikat.se http://localhost:3456
