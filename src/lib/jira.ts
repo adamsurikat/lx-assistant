@@ -398,61 +398,78 @@ async function moveDeploymentTickets(
   for (let index = 0; index < ids.length; index += 5) {
     const outcomes = await Promise.all(ids.slice(index, index + 5).map(async (id) => {
       let key: string | undefined;
+      let reachedTest = false;
+      let lastKnownTicket: JiraTicket | undefined;
       try {
         const signal = AbortSignal.timeout(30_000);
         const path = `/rest/api/3/issue/${encodeURIComponent(id)}`;
-        // Read each issue directly: Jira search results may lag recent changes.
-        const response = await jiraFetch(config, `${path}?fields=summary,status,assignee,fixVersions`, { cache: "no-store", signal });
-        if (!response.ok) throw new Error(`Could not read this ticket from Jira (${response.status}).`);
-        const issue = await response.json() as {
-          id: string; key: string;
-          fields: {
-            summary: string;
-            status: { name: string; statusCategory?: { key: string } };
-            assignee: { accountId: string } | null;
-            fixVersions: Array<{ name: string }>;
+        while (true) {
+          // Read each issue directly: Jira search results may lag recent changes.
+          const response = await jiraFetch(config, `${path}?fields=summary,status,assignee,fixVersions`, { cache: "no-store", signal });
+          if (!response.ok) throw new Error(`Could not read this ticket from Jira (${response.status}).`);
+          const issue = await response.json() as {
+            id: string; key: string;
+            fields: {
+              summary: string;
+              status: { name: string; statusCategory?: { key: string } };
+              assignee: { accountId: string } | null;
+              fixVersions: Array<{ name: string }>;
+            };
           };
-        };
-        key = issue.key;
-        if (issue.fields.assignee?.accountId !== accountId || !issue.fields.fixVersions.some((v) => v.name === version)) {
-          throw new Error("This ticket is no longer assigned to you with the selected fix version. Refresh the list.");
-        }
-        const ticket: JiraTicket = {
-          id: issue.id, key: issue.key, summary: issue.fields.summary,
-          status: issue.fields.status.name, statusCategory: issue.fields.status.statusCategory?.key,
-        };
-        const targetStatuses = deployment === "production"
-          ? [ticket.key.split("-")[0].toUpperCase() === "SURHD" ? "Closed" : "Done"]
-          : deployment === "acceptance" ? ["Resolved", "Ready for Release"] : ["Ready for Acceptance"];
-        const normalizedTargets = targetStatuses.map((status) => status.toLowerCase());
-        const columns = deployment === "production" ? groupProductionDeploymentTickets([ticket])
-          : deployment === "acceptance" ? groupUserAcceptanceTickets([ticket]) : groupStagingTickets([ticket]);
-        // A retry after an interrupted response must not transition it again.
-        if (normalizedTargets.includes(ticket.status.trim().toLowerCase())) return { ticket };
-        if (!columns.before.length) throw new Error(deployment === "production"
-          ? "This ticket is no longer Ready for Release or Resolved. Refresh the list."
-          : deployment === "acceptance" ? "This ticket is no longer Ready for Acceptance. Refresh the list."
-          : "This ticket is no longer before acceptance. Refresh the list.");
+          key = issue.key;
+          const ticket: JiraTicket = {
+            id: issue.id, key: issue.key, summary: issue.fields.summary,
+            status: issue.fields.status.name, statusCategory: issue.fields.status.statusCategory?.key,
+          };
+          lastKnownTicket = ticket;
+          if (issue.fields.assignee?.accountId !== accountId || !issue.fields.fixVersions.some((v) => v.name === version)) {
+            throw new Error("This ticket is no longer assigned to you with the selected fix version. Refresh the list.");
+          }
+          const targetStatuses = deployment === "production"
+            ? [ticket.key.split("-")[0].toUpperCase() === "SURHD" ? "Closed" : "Done"]
+            : deployment === "acceptance" ? ["Resolved", "Ready for Release"] : ["Ready for Acceptance"];
+          const normalizedTargets = targetStatuses.map((status) => status.toLowerCase());
+          const columns = deployment === "production" ? groupProductionDeploymentTickets([ticket])
+            : deployment === "acceptance" ? groupUserAcceptanceTickets([ticket]) : groupStagingTickets([ticket]);
+          // A retry after an interrupted response must not transition it again.
+          if (normalizedTargets.includes(ticket.status.trim().toLowerCase())) return { ticket };
+          if (!columns.before.length) throw new Error(deployment === "production"
+            ? "This ticket is no longer Ready for Release or Resolved. Refresh the list."
+            : deployment === "acceptance" ? "This ticket is no longer Ready for Acceptance. Refresh the list."
+            : "This ticket is no longer before acceptance. Refresh the list.");
 
-        const transitionsResponse = await jiraFetch(config, `${path}/transitions`, { cache: "no-store", signal });
-        if (!transitionsResponse.ok) throw new Error(`Could not read available transitions (${transitionsResponse.status}).`);
-        const { transitions } = await transitionsResponse.json() as {
-          transitions: Array<{ id: string; to: { name: string; statusCategory?: { key: string } } }>;
-        };
-        const transition = transitions.find((item) => normalizedTargets.includes(item.to.name.trim().toLowerCase()));
-        if (!transition) throw new Error(`No transition to ${targetStatuses.join(" or ")} is available from this status.`);
+          const transitionsResponse = await jiraFetch(config, `${path}/transitions`, { cache: "no-store", signal });
+          if (!transitionsResponse.ok) throw new Error(`Could not read available transitions (${transitionsResponse.status}).`);
+          const { transitions } = await transitionsResponse.json() as {
+            transitions: Array<{ id: string; to: { name: string; statusCategory?: { key: string } } }>;
+          };
+          const directTransition = transitions.find((item) => normalizedTargets.includes(item.to.name.trim().toLowerCase()));
+          // Only staging may take this intermediate step, and at most once.
+          // Jira must supply fresh transitions after the step, since IDs vary by workflow.
+          const transition = directTransition ?? (deployment === "staging" && !reachedTest
+            && ticket.status.trim().toLowerCase() !== "ready for test"
+            ? transitions.find((item) => item.to.name.trim().toLowerCase() === "ready for test")
+            : undefined);
+          if (!transition) throw new Error(`No transition to ${targetStatuses.join(" or ")} is available from this status.`);
 
-        const update = await jiraFetch(config, `${path}/transitions`, {
-          method: "POST", signal, body: JSON.stringify({ transition: { id: transition.id } }),
-        });
-        if (!update.ok) {
-          throw new Error(`Jira rejected the transition (${update.status}). Check permissions and required fields in Jira.`);
+          const update = await jiraFetch(config, `${path}/transitions`, {
+            method: "POST", signal, body: JSON.stringify({ transition: { id: transition.id } }),
+          });
+          if (!update.ok) {
+            throw new Error(`Jira rejected the transition (${update.status}). Check permissions and required fields in Jira.`);
+          }
+          lastKnownTicket = { ...ticket, status: transition.to.name, statusCategory: transition.to.statusCategory?.key };
+          if (directTransition) return { ticket: lastKnownTicket };
+          reachedTest = true;
         }
-        return { ticket: { ...ticket, status: transition.to.name, statusCategory: transition.to.statusCategory?.key } };
       } catch (error) {
-        return { failure: { id, key, error: error instanceof TypeError || (error instanceof Error && error.name === "TimeoutError")
+        const message = error instanceof TypeError || (error instanceof Error && error.name === "TimeoutError")
           ? "Could not confirm the update. Refresh the list before retrying."
-          : error instanceof Error ? error.message : "Could not update this ticket." } };
+          : error instanceof Error ? error.message : "Could not update this ticket.";
+        return { failure: { id, key,
+          error: reachedTest ? `Reached Ready for Test. ${message}` : message,
+          ...(reachedTest ? { ticket: lastKnownTicket } : {}),
+        } };
       }
     }));
     for (const outcome of outcomes) {

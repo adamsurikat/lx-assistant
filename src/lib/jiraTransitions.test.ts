@@ -31,6 +31,7 @@ test("selected tickets use their own transition IDs by destination status, with 
     }
     assert.equal(init.cache, "no-store");
     if (url.pathname.endsWith("/transitions")) return Response.json({ transitions: [
+      { id: "unnecessary-test", to: { name: "Ready for Test" } },
       { id: "wrong", name: "Ready for Acceptance", to: { name: "Done" } },
       { id: `transition-${id}`, name: "Deploy to staging", to: { name: "Ready for Acceptance", statusCategory: { key: "indeterminate" } } },
     ] });
@@ -43,6 +44,174 @@ test("selected tickets use their own transition IDs by destination status, with 
   assert.deepEqual(result.updated.map(({ id, status }) => ({ id, status })), [
     { id: "1", status: "Ready for Acceptance" }, { id: "2", status: "Ready for Acceptance" },
   ]);
+});
+
+test("staging follows each ticket's Ready for Test step and reloads its transitions before acceptance", async (t) => {
+  const statuses = new Map<string, string>();
+  const calls = new Map<string, string[]>();
+  t.mock.method(globalThis, "fetch", async (input: string, init: RequestInit) => {
+    if (input.endsWith("/myself")) return Response.json({ accountId: "current-user" });
+    const id = /\/issue\/(\d+)/.exec(input)![1];
+    assert.ok(["1", "2"].includes(id));
+    const status = statuses.get(id) ?? "In Progress";
+    const readyForTest = id === "1" ? "Ready for Test" : " READY FOR TEST ";
+    const atTest = status === readyForTest;
+    const history = calls.get(id) ?? [];
+    calls.set(id, history);
+    if (init.method === "POST") {
+      const transitionId = JSON.parse(init.body as string).transition.id;
+      assert.equal(transitionId, `${atTest ? "accept" : "test"}-${id}`);
+      history.push(transitionId);
+      statuses.set(id, atTest ? "Ready for Acceptance" : readyForTest);
+      return new Response(null, { status: 204 });
+    }
+    assert.equal(init.cache, "no-store");
+    if (input.endsWith("/transitions")) {
+      history.push("transitions");
+      return Response.json({ transitions: [
+        { id: "wrong", name: "Ready for Test", to: { name: "Done" } },
+        { id: `${atTest ? "accept" : "test"}-${id}`, name: "Next step", to: {
+          name: atTest ? "Ready for Acceptance" : readyForTest, statusCategory: { key: "indeterminate" },
+        } },
+      ] });
+    }
+    history.push("issue");
+    return Response.json(issue(id, status));
+  });
+  const result = await moveStagingTicketsToAcceptance(config, version, ["1", "2", "1"]);
+  assert.deepEqual(result.failed, []);
+  assert.deepEqual(result.updated.map(({ id, status }) => ({ id, status })), [
+    { id: "1", status: "Ready for Acceptance" }, { id: "2", status: "Ready for Acceptance" },
+  ]);
+  for (const id of ["1", "2"]) {
+    assert.deepEqual(calls.get(id), ["issue", "transitions", `test-${id}`, "issue", "transitions", `accept-${id}`]);
+  }
+});
+
+test("an unavailable second step reports intermediate progress and a retry resumes from Ready for Test", async (t) => {
+  let status = "In Progress";
+  let allowAcceptance = false;
+  const writes: string[] = [];
+  t.mock.method(globalThis, "fetch", async (input: string, init: RequestInit) => {
+    if (input.endsWith("/myself")) return Response.json({ accountId: "current-user" });
+    if (init.method === "POST") {
+      const transitionId = JSON.parse(init.body as string).transition.id;
+      writes.push(transitionId);
+      assert.ok(writes.length <= 2, "Must not loop through Ready for Test");
+      status = transitionId === "test" ? "Ready for Test" : "Ready for Acceptance";
+      return new Response(null, { status: 204 });
+    }
+    if (input.endsWith("/transitions")) return Response.json({ transitions: [
+      { id: "test", to: { name: "Ready for Test" } },
+      ...(allowAcceptance ? [{ id: "accept", to: { name: "Ready for Acceptance" } }] : []),
+    ] });
+    return Response.json(issue("1", status));
+  });
+  const partial = await moveStagingTicketsToAcceptance(config, version, ["1"]);
+  assert.deepEqual(writes, ["test"]);
+  assert.deepEqual(partial.updated, []);
+  assert.match(partial.failed[0].error, /Reached Ready for Test.*No transition to Ready for Acceptance/);
+  assert.equal(partial.failed[0].ticket?.status, "Ready for Test");
+
+  const stillBlocked = await moveStagingTicketsToAcceptance(config, version, ["1"]);
+  assert.deepEqual(writes, ["test"], "An existing Ready for Test status must not be repeated");
+  assert.equal(stillBlocked.failed.length, 1);
+
+  allowAcceptance = true;
+  const retried = await moveStagingTicketsToAcceptance(config, version, ["1"]);
+  assert.deepEqual(writes, ["test", "accept"]);
+  assert.deepEqual(retried.failed, []);
+  assert.equal(retried.updated[0].status, "Ready for Acceptance");
+});
+
+test("staging rechecks scope and status after the intermediate step before another write", async (t) => {
+  for (const changed of ["assignee", "fixVersion", "laterStatus", "alreadyAccepted"]) {
+    await t.test(changed, async (t) => {
+      let moved = false;
+      const writes: string[] = [];
+      t.mock.method(globalThis, "fetch", async (input: string, init: RequestInit) => {
+        if (input.endsWith("/myself")) return Response.json({ accountId: "current-user" });
+        if (init.method === "POST") {
+          writes.push(JSON.parse(init.body as string).transition.id);
+          assert.equal(moved, false, "The refreshed issue must prevent another write");
+          moved = true;
+          return new Response(null, { status: 204 });
+        }
+        if (input.endsWith("/transitions")) return Response.json({ transitions: [
+          { id: "test", to: { name: "Ready for Test" } },
+        ] });
+        const data = issue("1", moved ? "Ready for Test" : "In Progress");
+        if (moved && changed === "assignee") data.fields.assignee = { accountId: "someone-else" };
+        if (moved && changed === "fixVersion") data.fields.fixVersions = [];
+        if (moved && changed === "laterStatus") data.fields.status.name = "Ready for Release";
+        if (moved && changed === "alreadyAccepted") data.fields.status.name = "Ready for Acceptance";
+        return Response.json(data);
+      });
+      const result = await moveStagingTicketsToAcceptance(config, version, ["1"]);
+      assert.deepEqual(writes, ["test"]);
+      if (changed === "alreadyAccepted") {
+        assert.deepEqual(result.failed, []);
+        assert.equal(result.updated[0].status, "Ready for Acceptance");
+      } else {
+        assert.deepEqual(result.updated, []);
+        assert.match(result.failed[0].error, /Reached Ready for Test.*no longer/);
+        assert.equal(result.failed[0].ticket?.status, changed === "laterStatus" ? "Ready for Release" : "Ready for Test");
+      }
+    });
+  }
+});
+
+test("intermediate workflow failures retain other successes and never retry a rejected or uncertain write", async (t) => {
+  const statuses = new Map<string, string>();
+  const writes: string[] = [];
+  t.mock.method(globalThis, "fetch", async (input: string, init: RequestInit) => {
+    if (input.endsWith("/myself")) return Response.json({ accountId: "current-user" });
+    const id = /\/issue\/(\d+)/.exec(input)![1];
+    const atTest = statuses.get(id) === "Ready for Test";
+    if (init.method === "POST") {
+      writes.push(`${id}:${atTest ? "accept" : "test"}`);
+      if (id === "1" || (id === "2" && atTest)) return new Response(null, { status: 400 });
+      if (id === "3" && atTest) throw new TypeError("fetch failed");
+      if (id === "4") throw new DOMException("Timed out", "TimeoutError");
+      statuses.set(id, atTest ? "Ready for Acceptance" : "Ready for Test");
+      return new Response(null, { status: 204 });
+    }
+    if (input.endsWith("/transitions")) return Response.json({ transitions: [
+      { id: atTest ? "accept" : "test", to: { name: atTest ? "Ready for Acceptance" : "Ready for Test" } },
+    ] });
+    return Response.json(issue(id, statuses.get(id)));
+  });
+  const result = await moveStagingTicketsToAcceptance(config, version, ["1", "2", "3", "4", "5"]);
+  assert.deepEqual(result.updated.map(({ id }) => id), ["5"]);
+  assert.deepEqual(result.failed.map(({ id }) => id), ["1", "2", "3", "4"]);
+  assert.equal(result.failed[0].ticket, undefined);
+  assert.match(result.failed[0].error, /rejected the transition/);
+  assert.match(result.failed[1].error, /Reached Ready for Test.*required fields/);
+  assert.match(result.failed[2].error, /Reached Ready for Test.*Could not confirm/);
+  assert.equal(result.failed[1].ticket?.status, "Ready for Test");
+  assert.equal(result.failed[2].ticket?.status, "Ready for Test");
+  assert.equal(result.failed[3].ticket, undefined);
+  assert.match(result.failed[3].error, /Could not confirm/);
+  assert.deepEqual(writes.sort(), ["1:test", "2:accept", "2:test", "3:accept", "3:test", "4:test", "5:accept", "5:test"]);
+});
+
+test("acceptance and production do not take the staging intermediate step", async (t) => {
+  t.mock.method(globalThis, "fetch", async (input: string, init: RequestInit) => {
+    assert.notEqual(init.method, "POST");
+    if (input.endsWith("/myself")) return Response.json({ accountId: "current-user" });
+    if (input.endsWith("/transitions")) return Response.json({ transitions: [
+      { id: "test", to: { name: "Ready for Test" } },
+    ] });
+    const id = /\/issue\/(\d+)/.exec(input)![1];
+    return Response.json(issue(id, id === "1" ? "Ready for Acceptance" : "Ready for Release"));
+  });
+  for (const result of [
+    await moveAcceptanceTicketsToRelease(config, version, ["1"]),
+    await moveProductionTicketsToDone(config, version, ["2"]),
+  ]) {
+    assert.deepEqual(result.updated, []);
+    assert.match(result.failed[0].error, /No transition/);
+  }
 });
 
 test("fresh issue details reject other assignees, unassigned tickets, other versions, and later statuses", async (t) => {

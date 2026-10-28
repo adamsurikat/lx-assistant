@@ -73,9 +73,14 @@ function JiraTicketBoard({ fixVersion, updating, onUpdatingChange }: {
       if (!response.ok) throw new Error(data.error || "Could not update tickets. Refresh before retrying.");
       const outcome: StagingUpdateResult = data;
       const updated = new Map(outcome.updated.map((ticket) => [ticket.id, ticket]));
-      // Apply confirmed transitions immediately; Jira search can lag updates.
+      const lastKnown = new Map([
+        ...outcome.failed.flatMap(({ ticket }) => ticket ? [[ticket.id, ticket] as const] : []),
+        ...updated,
+      ]);
+      // Show intermediate progress too, while keeping failed tickets selected for retry.
+      // Jira search can lag these confirmed changes.
       setResult((previous) => previous && {
-        ...previous, tickets: previous.tickets.map((ticket) => updated.get(ticket.id) ?? ticket),
+        ...previous, tickets: previous.tickets.map((ticket) => lastKnown.get(ticket.id) ?? ticket),
       });
       setSelectedIds((previous) => previous.filter((id) => !updated.has(id)));
       setUpdateResult({ ...outcome, targetLabel: action.targetLabel });
@@ -185,6 +190,9 @@ function JiraTicketBoard({ fixVersion, updating, onUpdatingChange }: {
               )}
               {actionColumn && (
                 <div className="mt-auto pt-4">
+                  {actionColumn === "before" && (
+                    <p className="mb-2 text-xs text-nb-ink/60">Moves through Ready for Test when needed.</p>
+                  )}
                   <button
                     type="button"
                     disabled={updating || selectedCount === 0}

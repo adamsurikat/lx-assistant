@@ -4,7 +4,7 @@ export type StagingColumn = "before" | "ready" | "after";
 
 export interface StagingUpdateResult {
   updated: JiraTicket[];
-  failed: Array<{ id: string; key?: string; error: string }>;
+  failed: Array<{ id: string; key?: string; error: string; ticket?: JiraTicket }>;
 }
 
 // Jira's status categories do not distinguish acceptance from release.
